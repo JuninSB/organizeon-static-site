@@ -85,16 +85,7 @@ async function startApplication(
   appStarted = true;
 
   const proxyServer = getSelectedProxyServer();
-  const wispBase =
-    `${config.apiOrigin.replace(/^http/, "ws")}${config.apiPrefix}/wisp/`;
-  window.__FERN_WISP_URL__ =
-    proxyServer.id === "organizeon"
-      ? token
-        ? isWispBandwidthLimitEnabled()
-          ? `${wispBase}limited/${encodeURIComponent(token)}/`
-          : `${wispBase}${encodeURIComponent(token)}/`
-        : wispBase
-      : proxyServer.url;
+  window.__FERN_WISP_URL__ = buildProxyWispUrl(proxyServer, token);
   window.organizeonProxyServer = Object.freeze({
     id: proxyServer.id,
     name: proxyServer.name,
@@ -647,6 +638,19 @@ function getSelectedProxyServer() {
   );
 }
 
+function buildProxyWispUrl(
+  proxyServer,
+  token = localStorage.getItem(tokenStorageKey),
+) {
+  if (proxyServer.id !== "organizeon") return proxyServer.url;
+  const wispBase =
+    `${config.apiOrigin.replace(/^http/, "ws")}${config.apiPrefix}/wisp/`;
+  if (!token) return wispBase;
+  return isWispBandwidthLimitEnabled()
+    ? `${wispBase}limited/${encodeURIComponent(token)}/`
+    : `${wispBase}${encodeURIComponent(token)}/`;
+}
+
 function isWispBandwidthLimitEnabled() {
   return localStorage.getItem(wispBandwidthStorageKey) !== "off";
 }
@@ -862,6 +866,29 @@ function showProxyServerDialog() {
         display: block; margin-top: 4px; color: #8ea69f;
         font-size: 12px; line-height: 1.4;
       }
+      #organizeon-proxy-dialog .connection {
+        display: flex; align-items: center; gap: 6px; margin-top: 7px;
+        color: #88a099; font-size: 11px; font-weight: 650;
+      }
+      #organizeon-proxy-dialog .connection::before {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: #71817d; content: "";
+      }
+      #organizeon-proxy-dialog .connection.online {
+        color: #66e8c9;
+      }
+      #organizeon-proxy-dialog .connection.online::before {
+        background: #4ee0bd; box-shadow: 0 0 9px rgba(78,224,189,.7);
+      }
+      #organizeon-proxy-dialog .connection.offline {
+        color: #ff9da5;
+      }
+      #organizeon-proxy-dialog .connection.offline::before {
+        background: #ff6b75;
+      }
+      #organizeon-proxy-dialog .option.best {
+        box-shadow: inset 0 0 0 1px rgba(84,227,194,.18);
+      }
       #organizeon-proxy-dialog .beta {
         margin-left: 7px; padding: 2px 6px; border-radius: 999px;
         color: #fbd38d; background: rgba(245,158,11,.13);
@@ -890,7 +917,9 @@ function showProxyServerDialog() {
       <h2 id="organizeon-proxy-title">Escolher servidor proxy</h2>
       <p class="intro">
         Isto escolhe o servidor WISP. Ultraviolet e Scramjet continuam
-        disponíveis separadamente em Settings → Proxy.
+        disponíveis separadamente em Settings → Proxy. A latência abaixo é
+        o tempo completo para abrir o WebSocket neste dispositivo, não ping
+        ICMP.
       </p>
       <div class="options"></div>
       <p class="warning">
@@ -916,6 +945,7 @@ function showProxyServerDialog() {
         <strong></strong>
         ${option.beta ? '<small class="beta">BETA</small>' : ""}
         <span class="description"></span>
+        <span class="connection">Medindo latência WebSocket…</span>
       </span>
     `;
     button.querySelector("strong").textContent = option.name;
@@ -943,6 +973,99 @@ function showProxyServerDialog() {
     if (event.target === wrapper) wrapper.remove();
   });
   document.body.appendChild(wrapper);
+  measureProxyServerOptions(wrapper);
+}
+
+async function measureProxyServerOptions(dialog) {
+  const token = localStorage.getItem(tokenStorageKey);
+  const measurements = await Promise.all(
+    proxyServerOptions.map(async (option) => {
+      const button = dialog.querySelector(
+        `[data-proxy-id="${option.id}"]`,
+      );
+      const connection = button?.querySelector(".connection");
+      const result = await measureWispHandshake(
+        buildProxyWispUrl(option, token),
+      );
+      if (!dialog.isConnected || !button || !connection) return result;
+      connection.classList.add(result.online ? "online" : "offline");
+      connection.textContent = result.online
+        ? `Saudável · ${result.latencyMs} ms`
+        : result.reason;
+      return { ...result, button, connection };
+    }),
+  );
+  const healthy = measurements.filter(
+    (measurement) => measurement.online && measurement.button,
+  );
+  if (!healthy.length) return;
+  const best = healthy.reduce((current, measurement) =>
+    measurement.latencyMs < current.latencyMs ? measurement : current,
+  );
+  best.button.classList.add("best");
+  best.connection.textContent += " · melhor";
+}
+
+function measureWispHandshake(url) {
+  return new Promise((resolve) => {
+    const startedAt = performance.now();
+    let settled = false;
+    let socket;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      try {
+        socket?.close(1000, "Latency check complete");
+      } catch {}
+      resolve(result);
+    };
+    const timeout = window.setTimeout(() => {
+      finish({ online: false, latencyMs: null, reason: "Tempo esgotado" });
+    }, 6000);
+    try {
+      socket = new WebSocket(url);
+      socket.addEventListener(
+        "open",
+        () => {
+          finish({
+            online: true,
+            latencyMs: Math.max(1, Math.round(performance.now() - startedAt)),
+            reason: null,
+          });
+        },
+        { once: true },
+      );
+      socket.addEventListener(
+        "error",
+        () => {
+          finish({
+            online: false,
+            latencyMs: null,
+            reason: "Indisponível deste dispositivo",
+          });
+        },
+        { once: true },
+      );
+      socket.addEventListener(
+        "close",
+        () => {
+          finish({
+            online: false,
+            latencyMs: null,
+            reason: "Conexão recusada",
+          });
+        },
+        { once: true },
+      );
+    } catch {
+      finish({
+        online: false,
+        latencyMs: null,
+        reason: "URL incompatível",
+      });
+    }
+  });
 }
 
 function setupMobileMode() {

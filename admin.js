@@ -13,6 +13,8 @@ const state = {
   permissions: [],
   monitoring: null,
   monitorSocket: null,
+  monitorRefreshPending: false,
+  monitorRefreshStartedAt: 0,
   requestDomain: "all",
   logs: [],
   logSocket: null,
@@ -74,6 +76,9 @@ document
 document
   .getElementById("monitor-activate")
   .addEventListener("click", toggleMonitoring);
+document
+  .getElementById("monitor-refresh")
+  .addEventListener("click", refreshMonitoringRoutes);
 document
   .getElementById("request-domain-select")
   .addEventListener("change", (event) => {
@@ -188,6 +193,13 @@ function renderMonitoring(monitoring) {
       : "Activate monitoring";
   toggle.classList.toggle("danger", Boolean(state.monitorSocket));
   toggle.classList.toggle("primary", !state.monitorSocket);
+  const refresh = document.getElementById("monitor-refresh");
+  refresh.disabled =
+    state.monitorSocket?.readyState !== WebSocket.OPEN ||
+    state.monitorRefreshPending;
+  refresh.textContent = state.monitorRefreshPending
+    ? "↻ Atualizando…"
+    : "↻ Atualizar";
   if (!monitoring.active) return;
 
   document.getElementById("cpu-value").textContent =
@@ -310,10 +322,23 @@ function connectMonitoring() {
 
   socket.addEventListener("message", (event) => {
     try {
-      renderMonitoring(JSON.parse(event.data));
+      const snapshot = JSON.parse(event.data);
+      const newestRouteCheck = Math.max(
+        0,
+        ...(snapshot.service?.routes || []).map(
+          (route) => new Date(route.checkedAt || 0).getTime() || 0,
+        ),
+      );
+      if (newestRouteCheck >= state.monitorRefreshStartedAt) {
+        state.monitorRefreshPending = false;
+      }
+      renderMonitoring(snapshot);
     } catch {
       showToast("Snapshot de monitoramento inválido.");
     }
+  });
+  socket.addEventListener("open", () => {
+    renderMonitoring(state.monitoring);
   });
   socket.addEventListener("close", () => {
     if (state.monitorSocket !== socket) return;
@@ -332,9 +357,27 @@ function connectMonitoring() {
   });
 }
 
+function refreshMonitoringRoutes() {
+  const socket = state.monitorSocket;
+  if (!socket || socket.readyState !== WebSocket.OPEN) return;
+  state.monitorRefreshPending = true;
+  state.monitorRefreshStartedAt = Date.now();
+  renderMonitoring(state.monitoring);
+  socket.send(JSON.stringify({ type: "refresh-routes" }));
+  window.setTimeout(() => {
+    if (!state.monitorRefreshPending) return;
+    state.monitorRefreshPending = false;
+    state.monitorRefreshStartedAt = 0;
+    renderMonitoring(state.monitoring);
+    showToast("A atualização das rotas demorou mais que o esperado.");
+  }, 6500);
+}
+
 function disconnectMonitoring() {
   const socket = state.monitorSocket;
   state.monitorSocket = null;
+  state.monitorRefreshPending = false;
+  state.monitorRefreshStartedAt = 0;
   socket?.close(1000, "Monitoring disabled");
   renderMonitoring({
     ...state.monitoring,

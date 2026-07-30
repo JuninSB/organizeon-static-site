@@ -116,6 +116,9 @@
       }
       .routes-heading h2 { margin: 0; font-size: 15px; }
       .routes-heading small { color: var(--muted); }
+      .routes-heading-actions {
+        display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+      }
       .route-url {
         display: block; max-width: 430px; overflow: hidden;
         color: #9fc8bd; text-overflow: ellipsis; white-space: nowrap;
@@ -310,6 +313,13 @@
         .back-button { width: 100%; }
         .section-title { align-items: stretch; flex-direction: column; }
         .section-title > button { width: 100%; }
+        .routes-heading {
+          align-items: stretch; flex-direction: column;
+        }
+        .routes-heading-actions {
+          align-items: stretch; flex-direction: column;
+        }
+        .routes-heading-actions .button { width: 100%; }
         .terminal { min-height: 0; }
         #view-terminal .section-title { gap: 8px; margin-bottom: 9px; }
         #view-terminal .section-title p { display: none; }
@@ -445,11 +455,14 @@
           <section class="card routes-card">
             <div class="routes-heading">
               <h2>Domínios e rotas</h2>
-              <small>Checagem real a cada 30 segundos durante o monitoramento</small>
+              <div class="routes-heading-actions">
+                <small>HTTP completo (DNS + TCP + TLS + resposta), não ICMP</small>
+                <button class="button" id="monitor-refresh" type="button" disabled>↻ Atualizar</button>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Serviço</th><th>Rota</th><th>Status</th><th>Resposta</th></tr></thead>
+                <thead><tr><th>Serviço</th><th>Rota</th><th>Status</th><th>HTTP completo</th></tr></thead>
                 <tbody id="routes-status-body">
                   <tr><td colspan="4">Ative o monitoramento para verificar as rotas.</td></tr>
                 </tbody>
