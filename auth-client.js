@@ -30,8 +30,10 @@ let controlReady = false;
 let controlReconnectTimer = null;
 let controlReconnectAttempts = 0;
 let maintainControlConnection = false;
+let dashboardPanelCleanup = null;
 window.organizeonOpenProxyServerDialog = showProxyServerDialog;
 window.organizeonResetAndLogout = resetAuthenticationForDataWipe;
+window.organizeonOpenQuickApp = openQuickApp;
 setupMobileMode();
 window.addEventListener("storage", (event) => {
   if (
@@ -506,52 +508,93 @@ function navigateClientRoute(route) {
 
 function openDashboardWindow() {
   const dashboardUrl = new URL("admin.html", document.baseURI).href;
-  const source = `<!doctype html>
-    <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <meta name="theme-color" content="#07100e">
-        <title>OrganizeOn — Dashboard</title>
-        <style>
-          html,body,iframe{width:100%;height:100%;height:100dvh;margin:0}
-          body{overflow:hidden;background:#07100e}
-          iframe{position:fixed;inset:0;border:0}
-        </style>
-      </head>
-      <body>
-        <iframe id="dashboard" src=${JSON.stringify(dashboardUrl)}
-          title="OrganizeOn Dashboard"
-          allow="clipboard-read; clipboard-write"></iframe>
-        <script>
-          addEventListener("message",function(event){
-            var frame=document.getElementById("dashboard");
-            if(event.source===frame.contentWindow&&
-              event.data&&event.data.type==="organizeon:open-main"){
-              close();
-            }
-          });
-        <\/script>
-      </body>
-    </html>`;
-  const blobUrl = URL.createObjectURL(
-    new Blob([source], { type: "text/html" }),
-  );
-  const opened = window.open(blobUrl, "_blank");
-  if (opened) {
-    try {
-      opened.opener = null;
-    } catch {}
+  const dashboardOrigin = new URL(dashboardUrl).origin;
+  dashboardPanelCleanup?.();
+
+  const panel = document.createElement("section");
+  panel.id = "organizeon-dashboard-panel";
+  panel.setAttribute("aria-label", "Dashboard administrativo");
+  panel.style.cssText =
+    "position:fixed;inset:0;width:100%;height:100%;height:100dvh;" +
+    "z-index:2147483647;background:#07100e";
+
+  const frame = document.createElement("iframe");
+  frame.title = "OrganizeOn Dashboard";
+  frame.src = dashboardUrl;
+  frame.allow = "clipboard-read; clipboard-write";
+  frame.style.cssText =
+    "display:block;width:100%;height:100%;border:0;background:#07100e";
+  panel.appendChild(frame);
+  document.body.appendChild(panel);
+
+  const removeDashboard = () => {
+    window.removeEventListener("message", closeDashboard);
+    panel.remove();
+    if (dashboardPanelCleanup === removeDashboard) {
+      dashboardPanelCleanup = null;
+    }
+  };
+  const closeDashboard = (event) => {
+    if (
+      event.source !== frame.contentWindow ||
+      event.origin !== dashboardOrigin ||
+      event.data?.type !== "organizeon:open-main"
+    ) {
+      return;
+    }
+    removeDashboard();
+  };
+  dashboardPanelCleanup = removeDashboard;
+  window.addEventListener("message", closeDashboard);
+}
+
+async function openQuickApp(app, navigate) {
+  const handledByOriginalLauncher = new Set([
+    "yt",
+    "gfn",
+    "bw",
+    "games",
+    "roblox",
+    "chat",
+    "play",
+  ]);
+  if (
+    !app ||
+    handledByOriginalLauncher.has(app.id) ||
+    typeof navigate !== "function"
+  ) {
+    return false;
   }
-  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
-  if (!opened) {
+
+  let url = String(app.url || "").trim();
+  if (!url) return true;
+  if (!/^[a-z][a-z\d+.-]*:/i.test(url)) url = `https://${url}`;
+
+  try {
+    const parsedUrl = new URL(url);
+    if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+      throw new Error("unsupported_protocol");
+    }
+    url = parsedUrl.href;
+  } catch {
     showConnectionStatus(
-      "Popup bloqueado",
-      "Permita popups para abrir o Dashboard em outra aba.",
+      "Aplicativo inválido",
+      "Edite o app e informe uma URL válida.",
       undefined,
-      3500,
+      3200,
     );
+    return true;
   }
+
+  showConnectionStatus(
+    `Abrindo ${app.name || "aplicativo"}…`,
+    `Usando ${getSelectedProxyServer().name} pela conexão atual.`,
+  );
+  navigate({
+    to: "/search",
+    search: { query: window.btoa(url) },
+  });
+  return true;
 }
 
 function getSelectedProxyServer() {
@@ -757,6 +800,26 @@ function setupMobileMode() {
     }
     html.organizeon-mobile nav {
       max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
+    }
+    html.organizeon-mobile nav[class~="fixed"][class~="top-0"] {
+      padding: 8px !important; overflow: visible !important;
+      flex-wrap: nowrap !important;
+    }
+    html.organizeon-mobile nav[class~="fixed"][class~="top-0"]
+      > div:first-child {
+      min-width: 0; overflow-x: auto; scrollbar-width: none;
+    }
+    html.organizeon-mobile nav[class~="fixed"][class~="top-0"]
+      > div:first-child::-webkit-scrollbar {
+      display: none;
+    }
+    html.organizeon-mobile nav[class~="fixed"][class~="top-0"]
+      > div:first-child > * {
+      flex: 0 0 auto;
+    }
+    html.organizeon-mobile nav[class~="fixed"][class~="top-0"]
+      > div:last-child {
+      flex: 0 0 auto;
     }
     html.organizeon-mobile img,
     html.organizeon-mobile video,
