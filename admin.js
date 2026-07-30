@@ -56,6 +56,9 @@ document.getElementById("back-link").addEventListener("click", () => {
   window.location.href = new URL("./", document.baseURI).href;
 });
 document
+  .getElementById("logout-button")
+  .addEventListener("click", logout);
+document
   .getElementById("monitor-toggle")
   .addEventListener("click", toggleMonitoring);
 document
@@ -116,6 +119,23 @@ async function initialize() {
   document.getElementById("monitor-activate").hidden =
     !result.account.permissions.includes("admin.monitoring");
   renderMonitoring(result.monitoring);
+}
+
+async function logout() {
+  const button = document.getElementById("logout-button");
+  button.disabled = true;
+  try {
+    await api("/auth/logout", { method: "POST" });
+  } finally {
+    disconnectMonitoring();
+    disconnectTerminal();
+    localStorage.removeItem(tokenKey);
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: "organizeon:open-main" }, "*");
+    } else {
+      window.location.replace(new URL("./", document.baseURI).href);
+    }
+  }
 }
 
 function showView(name) {

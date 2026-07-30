@@ -56,6 +56,9 @@
       .nav button:hover, .nav button.active {
         color: var(--green); background: rgba(74, 234, 198, .1);
       }
+      .nav button.logout:hover {
+        color: #ffadb2; background: rgba(255, 99, 109, .09);
+      }
       .account {
         position: absolute; right: 16px; bottom: 18px; left: 16px; padding: 13px;
         border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
@@ -224,6 +227,7 @@
           <button class="active" data-view="overview">◫ <span>Overview</span></button>
           <button data-view="users" data-permission="admin.users">♙ <span>Users</span></button>
           <button data-view="terminal" data-permission="admin.terminal">⌘ <span>Terminal</span></button>
+          <button class="logout" id="logout-button" type="button">⇥ <span>Sair</span></button>
         </nav>
         <div class="account"><strong id="account-name">—</strong><small id="account-role">—</small></div>
       </aside>

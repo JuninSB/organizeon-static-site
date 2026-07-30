@@ -31,7 +31,20 @@ let controlReconnectTimer = null;
 let controlReconnectAttempts = 0;
 let maintainControlConnection = false;
 window.organizeonOpenProxyServerDialog = showProxyServerDialog;
+window.organizeonResetAndLogout = resetAuthenticationForDataWipe;
 setupMobileMode();
+window.addEventListener("storage", (event) => {
+  if (
+    event.key === tokenStorageKey &&
+    event.oldValue &&
+    event.newValue === null
+  ) {
+    maintainControlConnection = false;
+    window.clearTimeout(controlReconnectTimer);
+    controlSocket?.close(1000, "Logged out in another tab");
+    window.location.reload();
+  }
+});
 
 if (!config?.authenticationRequired) {
   startApplication();
@@ -427,6 +440,7 @@ function configureAccountNavigation(account) {
           ? '<button class="item dashboard" type="button">◫ <span>Dashboard</span><small class="badge">ADMIN</small></button>'
           : ""
       }
+      <button class="item logout" type="button">⇥ <span>Sair</span></button>
     </aside>
   `;
   navigation.querySelector(".account strong").textContent =
@@ -459,6 +473,10 @@ function configureAccountNavigation(account) {
       openDashboardWindow();
       navigation.classList.remove("open");
     });
+  navigation.querySelector(".logout").addEventListener("click", () => {
+    navigation.classList.remove("open");
+    window.organizeonAuth.logout();
+  });
   document.body.appendChild(navigation);
 }
 
@@ -961,6 +979,19 @@ function scheduleExpiration(expiresAt) {
     localStorage.removeItem(tokenStorageKey);
     window.location.reload();
   }, delay);
+}
+
+async function resetAuthenticationForDataWipe() {
+  try {
+    await apiRequest("/auth/logout", { method: "POST" });
+  } catch (error) {
+    console.warn("Não foi possível invalidar o cookie da API:", error);
+  } finally {
+    maintainControlConnection = false;
+    window.clearTimeout(controlReconnectTimer);
+    controlSocket?.close(1000, "Site data reset");
+    localStorage.removeItem(tokenStorageKey);
+  }
 }
 
 window.organizeonAuth = Object.freeze({
