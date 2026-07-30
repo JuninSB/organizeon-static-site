@@ -2,6 +2,24 @@ const config = window.__ORGANIZEON_CONFIG__;
 const tokenStorageKey = "organizeon-access-token";
 const proxyServerStorageKey = "organizeon-proxy-server";
 const wispBandwidthStorageKey = "organizeon-wisp-bandwidth-limit";
+const browserIdentityStorageKey = "organizeon-browser-identity";
+const browserIdentityOptions = Object.freeze([
+  Object.freeze({
+    id: "edge",
+    name: "Microsoft Edge",
+    description: "Compatibilidade com sites feitos para navegadores Chromium.",
+  }),
+  Object.freeze({
+    id: "duckduckgo",
+    name: "DuckDuckGo",
+    description: "Identidade do navegador DuckDuckGo com proteção de privacidade.",
+  }),
+  Object.freeze({
+    id: "firefox",
+    name: "Mozilla Firefox",
+    description: "Identidade Gecko/Firefox para sites que distinguem o navegador.",
+  }),
+]);
 const proxyServerOptions = Object.freeze([
   Object.freeze({
     id: "organizeon",
@@ -38,6 +56,7 @@ window.organizeonOpenQuickApp = openQuickApp;
 setupMobileMode();
 hideDefaultHomepageShortcuts();
 setupWispBandwidthSetting();
+setupBrowserIdentitySetting();
 window.addEventListener("storage", (event) => {
   if (
     event.key === tokenStorageKey &&
@@ -85,7 +104,13 @@ async function startApplication(
   appStarted = true;
 
   const proxyServer = getSelectedProxyServer();
+  const browserIdentity = getSelectedBrowserIdentity();
   window.__FERN_WISP_URL__ = buildProxyWispUrl(proxyServer, token);
+  window.__ORGANIZEON_USER_AGENT__ = browserIdentity.userAgent;
+  window.organizeonBrowserIdentity = Object.freeze({
+    id: browserIdentity.id,
+    name: browserIdentity.name,
+  });
   window.organizeonProxyServer = Object.freeze({
     id: proxyServer.id,
     name: proxyServer.name,
@@ -653,6 +678,186 @@ function buildProxyWispUrl(
 
 function isWispBandwidthLimitEnabled() {
   return localStorage.getItem(wispBandwidthStorageKey) !== "off";
+}
+
+function getSelectedBrowserIdentity() {
+  const selectedId =
+    localStorage.getItem(browserIdentityStorageKey) || "firefox";
+  const selected =
+    browserIdentityOptions.find((option) => option.id === selectedId) ||
+    browserIdentityOptions[2];
+  const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(
+    navigator.userAgent,
+  );
+  const userAgents = mobile
+    ? {
+        edge:
+          "Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36 " +
+          "EdgA/138.0.0.0",
+        duckduckgo:
+          "Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36 " +
+          "DuckDuckGo/5",
+        firefox:
+          "Mozilla/5.0 (Android 13; Mobile; rv:140.0) " +
+          "Gecko/140.0 Firefox/140.0",
+      }
+    : {
+        edge:
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 " +
+          "Safari/537.36 Edg/138.0.0.0",
+        duckduckgo:
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 " +
+          "Safari/537.36 DuckDuckGo/5",
+        firefox:
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) " +
+          "Gecko/20100101 Firefox/140.0",
+      };
+  return { ...selected, userAgent: userAgents[selected.id] };
+}
+
+function setupBrowserIdentitySetting() {
+  const style = document.createElement("style");
+  style.id = "organizeon-browser-identity-setting-styles";
+  style.textContent = `
+    #organizeon-browser-identity-setting {
+      padding: 20px; border: 1px solid hsl(var(--border));
+      border-radius: 12px; background: hsl(var(--card) / .8);
+    }
+    #organizeon-browser-identity-setting .row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px;
+    }
+    #organizeon-browser-identity-setting h2 {
+      margin: 0; color: hsl(var(--foreground)); font-size: 18px;
+      font-weight: 600;
+    }
+    #organizeon-browser-identity-setting p {
+      margin: 5px 0 0; max-width: 650px;
+      color: hsl(var(--muted-foreground)); font-size: 13px;
+      line-height: 1.5;
+    }
+    #organizeon-browser-identity-setting .controls {
+      display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
+    }
+    #organizeon-browser-identity-setting select,
+    #organizeon-browser-identity-setting button {
+      min-height: 40px; padding: 0 12px; border-radius: 8px;
+      border: 1px solid hsl(var(--border)); font: inherit;
+    }
+    #organizeon-browser-identity-setting select {
+      color: hsl(var(--foreground)); background: hsl(var(--background));
+    }
+    #organizeon-browser-identity-setting button {
+      border-color: hsl(var(--primary) / .35);
+      color: hsl(var(--primary-foreground));
+      background: hsl(var(--primary)); font-weight: 600; cursor: pointer;
+    }
+    #organizeon-browser-identity-setting button:disabled {
+      opacity: .5; cursor: default;
+    }
+    @media (max-width: 760px) {
+      #organizeon-browser-identity-setting { padding: 16px; }
+      #organizeon-browser-identity-setting .row {
+        align-items: stretch; flex-direction: column;
+      }
+      #organizeon-browser-identity-setting .controls {
+        width: 100%; flex-direction: column; align-items: stretch;
+      }
+      #organizeon-browser-identity-setting select,
+      #organizeon-browser-identity-setting button { width: 100%; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const apply = () => {
+    const settingsHeading = [...document.querySelectorAll("h1")].find(
+      (heading) => heading.textContent?.trim().toLowerCase() === "settings",
+    );
+    const existing = document.getElementById(
+      "organizeon-browser-identity-setting",
+    );
+    if (!settingsHeading) {
+      existing?.remove();
+      return;
+    }
+    if (existing) return;
+    const settingsContainer = settingsHeading.closest(
+      '[class~="max-w-5xl"]',
+    );
+    if (!settingsContainer) return;
+
+    const card = document.createElement("section");
+    card.id = "organizeon-browser-identity-setting";
+    card.setAttribute("aria-labelledby", "organizeon-browser-identity-title");
+    const row = document.createElement("div");
+    row.className = "row";
+    const copy = document.createElement("div");
+    const title = document.createElement("h2");
+    title.id = "organizeon-browser-identity-title";
+    title.textContent = "Identidade do navegador";
+    const description = document.createElement("p");
+    description.textContent =
+      "Escolhe como os sites abertos pelo proxy reconhecem o navegador. " +
+      "A alteração vale para Ultraviolet e Scramjet após recarregar o cliente.";
+    copy.append(title, description);
+
+    const controls = document.createElement("div");
+    controls.className = "controls";
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", "Identidade do navegador");
+    browserIdentityOptions.forEach((identity) => {
+      const option = document.createElement("option");
+      option.value = identity.id;
+      option.textContent = identity.name;
+      select.appendChild(option);
+    });
+    select.value = getSelectedBrowserIdentity().id;
+    select.title =
+      browserIdentityOptions.find((item) => item.id === select.value)
+        ?.description || "";
+
+    const applyButton = document.createElement("button");
+    applyButton.type = "button";
+    applyButton.textContent = "Aplicar";
+    applyButton.disabled = true;
+    select.addEventListener("change", () => {
+      applyButton.disabled =
+        select.value === getSelectedBrowserIdentity().id;
+      select.title =
+        browserIdentityOptions.find((item) => item.id === select.value)
+          ?.description || "";
+    });
+    applyButton.addEventListener("click", () => {
+      localStorage.setItem(browserIdentityStorageKey, select.value);
+      restartClientAtMain();
+    });
+    controls.append(select, applyButton);
+    row.append(copy, controls);
+    card.appendChild(row);
+
+    const bandwidthCard = document.getElementById(
+      "organizeon-bandwidth-setting",
+    );
+    if (bandwidthCard?.parentElement === settingsContainer) {
+      bandwidthCard.insertAdjacentElement("afterend", card);
+    } else {
+      const headerBlock = settingsHeading.parentElement;
+      if (headerBlock?.parentElement === settingsContainer) {
+        headerBlock.insertAdjacentElement("afterend", card);
+      } else {
+        settingsContainer.prepend(card);
+      }
+    }
+  };
+
+  const observer = new MutationObserver(apply);
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.addEventListener("popstate", apply);
+  apply();
 }
 
 function setupWispBandwidthSetting() {

@@ -6315,9 +6315,11 @@ Several C libraries are used, and their licenses are listed below:
 var LibcurlClient = class {
   wisp;
   proxy;
+  userAgent;
   constructor(options) {
     this.wisp = options.wisp;
     this.proxy = options.proxy;
+    this.userAgent = options.userAgent || navigator.userAgent;
     if (!this.wisp.endsWith("/")) {
       throw new TypeError("The Wisp URL must end with a trailing forward slash.");
     }
@@ -6351,6 +6353,12 @@ var LibcurlClient = class {
   async meta() {
   }
   async request(remote, method, body, headers, signal) {
+    headers = Object.fromEntries(
+      Object.entries(headers || {}).filter(
+        ([name]) => name.toLowerCase() !== "user-agent"
+      )
+    );
+    headers["User-Agent"] = this.userAgent;
     let payload = await libcurl.fetch(remote.href, {
       method,
       headers,
@@ -6375,6 +6383,12 @@ var LibcurlClient = class {
     };
   }
   connect(url, protocols, requestHeaders, onopen, onmessage, onclose, onerror) {
+    requestHeaders = Object.fromEntries(
+      Object.entries(requestHeaders || {}).filter(
+        ([name]) => name.toLowerCase() !== "user-agent"
+      )
+    );
+    requestHeaders["User-Agent"] = this.userAgent;
     let socket = new libcurl.WebSocket(url.toString(), protocols, {
       headers: requestHeaders
     });

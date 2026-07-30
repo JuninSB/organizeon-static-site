@@ -1515,7 +1515,7 @@ var EpoxyTransport = class {
   async init() {
     await epoxy_bundled_default();
     let options = new EpoxyClientOptions();
-    options.user_agent = navigator.userAgent;
+    options.user_agent = this.opts.userAgent || navigator.userAgent;
     opts.forEach((x) => this.setopt(options, x));
     this.client = new EpoxyClient(this.wisp, options);
     this.ready = true;
@@ -1525,6 +1525,12 @@ var EpoxyTransport = class {
   async request(remote, method, body, headers, signal) {
     if (body instanceof Blob)
       body = await body.arrayBuffer();
+    headers = Object.fromEntries(
+      Object.entries(headers || {}).filter(
+        ([name]) => name.toLowerCase() !== "user-agent"
+      )
+    );
+    headers["User-Agent"] = this.opts.userAgent || navigator.userAgent;
     try {
       let res = await this.client.fetch(remote.href, { method, body, headers, redirect: "manual" });
       return {
@@ -1539,6 +1545,13 @@ var EpoxyTransport = class {
     }
   }
   connect(url, protocols, requestHeaders, onopen, onmessage, onclose, onerror) {
+    requestHeaders = Object.fromEntries(
+      Object.entries(requestHeaders || {}).filter(
+        ([name]) => name.toLowerCase() !== "user-agent"
+      )
+    );
+    requestHeaders["User-Agent"] =
+      this.opts.userAgent || navigator.userAgent;
     let handlers = new EpoxyHandlers(
       onopen,
       onclose,

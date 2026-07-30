@@ -469,7 +469,13 @@ async function U() {
   if (!(!m || !y))
     try {
       (await m.getTransport()) ||
-        (await m.setTransport(y.path, [{ wisp: y.wisp }]));
+        (await m.setTransport(y.path, [
+          {
+            wisp: y.wisp,
+            userAgent:
+              window.__ORGANIZEON_USER_AGENT__ || navigator.userAgent,
+          },
+        ]));
     } catch {}
 }
 document.addEventListener("visibilitychange", () => {
@@ -565,7 +571,13 @@ async function de(o, e) {
       console.log("Service worker ready"));
     const w = new Z(`${window.__groveBase}${D}/worker.js`),
       s = `${window.__groveBase}${e === "scramjet" ? F : H}/index.mjs`;
-    (await w.setTransport(s, [{ wisp: a }]),
+    (await w.setTransport(s, [
+      {
+        wisp: a,
+        userAgent:
+          window.__ORGANIZEON_USER_AGENT__ || navigator.userAgent,
+      },
+    ]),
       (m = w),
       (y = { path: s, wisp: a }),
       console.log(
