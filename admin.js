@@ -105,6 +105,15 @@ document
   .getElementById("terminal-disconnect")
   .addEventListener("click", disconnectTerminal);
 document
+  .getElementById("terminal-scroll-up")
+  .addEventListener("click", () => terminalView.scrollLines(-12));
+document
+  .getElementById("terminal-scroll-down")
+  .addEventListener("click", () => terminalView.scrollLines(12));
+document
+  .getElementById("terminal-scroll-bottom")
+  .addEventListener("click", () => terminalView.scrollToBottom());
+document
   .getElementById("terminal-form")
   .addEventListener("submit", sendTerminalCommand);
 window.addEventListener("resize", () => {
@@ -728,7 +737,13 @@ function connectTerminal() {
       );
     }
   });
-  socket.addEventListener("close", () => {
+  socket.addEventListener("close", (event) => {
+    if (!socket.organizeonDisconnectMessageShown) {
+      appendTerminal(
+        `\r\n\x1b[33mConexão do terminal encerrada${event.reason ? `: ${event.reason}` : "."}\x1b[0m\r\n`,
+      );
+      socket.organizeonDisconnectMessageShown = true;
+    }
     setTerminalConnectionState("disconnected");
     setTerminalStatus("Desconectado");
     document.getElementById("terminal-input").disabled = true;
@@ -742,8 +757,13 @@ function connectTerminal() {
 }
 
 function disconnectTerminal() {
-  if (state.terminal?.readyState < WebSocket.CLOSING) {
-    state.terminal.close(1000, "Admin disconnected");
+  const socket = state.terminal;
+  if (socket?.readyState < WebSocket.CLOSING) {
+    appendTerminal(
+      "\r\n\x1b[33mTerminal desconectado pelo administrador.\x1b[0m\r\n",
+    );
+    socket.organizeonDisconnectMessageShown = true;
+    socket.close(1000, "Admin disconnected");
   }
   state.terminal = null;
   document.getElementById("terminal-input").disabled = true;

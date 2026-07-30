@@ -206,12 +206,21 @@
         display: flex; align-items: center; justify-content: space-between;
         padding: 13px 15px; border-bottom: 1px solid var(--line); background: #091411;
       }
+      .terminal-toolbar-actions {
+        display: flex; align-items: center; gap: 7px;
+      }
+      .terminal-scroll-button {
+        min-width: 38px; min-height: 32px; padding: 0 8px;
+        color: #bce6da; font-size: 11px;
+      }
       .terminal-scroll-hint { display: none; color: var(--muted); font-size: 10px; }
       .terminal-output {
         height: 500px; padding: 12px; overflow: hidden;
       }
       .terminal-output .xterm { height: 100%; padding: 5px; }
       .terminal-output .xterm-viewport {
+        overflow-y: scroll !important;
+        touch-action: pan-y;
         scrollbar-color: rgba(93, 240, 200, .28) #030807;
       }
       .terminal-form { display: flex; border-top: 1px solid var(--line); }
@@ -318,7 +327,14 @@
         .terminal-output .xterm {
           width: max(100%, 540px); min-width: 540px; padding: 2px;
         }
-        .terminal-toolbar { min-height: 38px; gap: 7px; padding: 6px 9px; font-size: 11px; }
+        .terminal-toolbar {
+          min-height: 38px; gap: 7px; padding: 6px 9px;
+          flex-wrap: wrap; font-size: 11px;
+        }
+        .terminal-toolbar-actions {
+          width: 100%; display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
         .terminal-scroll-hint { display: inline; margin-left: auto; }
         .terminal-toolbar .button {
           min-height: 30px; padding-inline: 8px; font-size: 11px;
@@ -499,7 +515,16 @@
             <button class="button primary" id="terminal-connect" type="button">Conectar terminal</button>
           </div>
           <div class="card terminal">
-            <div class="terminal-toolbar"><span id="terminal-status">Desconectado</span><small class="terminal-scroll-hint">← deslize →</small><button class="button danger" id="terminal-disconnect" type="button" hidden>Desconectar</button></div>
+            <div class="terminal-toolbar">
+              <span id="terminal-status">Desconectado</span>
+              <small class="terminal-scroll-hint">← deslize →</small>
+              <div class="terminal-toolbar-actions">
+                <button class="button terminal-scroll-button" id="terminal-scroll-up" type="button" title="Subir no histórico">↑</button>
+                <button class="button terminal-scroll-button" id="terminal-scroll-down" type="button" title="Descer no histórico">↓</button>
+                <button class="button terminal-scroll-button" id="terminal-scroll-bottom" type="button" title="Ir ao final">Fim</button>
+                <button class="button danger" id="terminal-disconnect" type="button" hidden>Desconectar</button>
+              </div>
+            </div>
             <div class="terminal-output" id="terminal-output" aria-label="Saída do terminal"></div>
             <form class="terminal-form" id="terminal-form"><span>$</span><input id="terminal-input" autocomplete="off" spellcheck="false" disabled /></form>
           </div>
