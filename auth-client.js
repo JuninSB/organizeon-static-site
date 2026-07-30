@@ -456,16 +456,7 @@ function configureAccountNavigation(account) {
   navigation
     .querySelector(".dashboard")
     ?.addEventListener("click", () => {
-      if (window.parent !== window) {
-        window.parent.postMessage(
-          { type: "organizeon:open-dashboard" },
-          "*",
-        );
-      } else {
-        const dashboardUrl = new URL("./", document.baseURI);
-        dashboardUrl.searchParams.set("dashboard", "1");
-        window.open(dashboardUrl.href, "_blank", "noopener");
-      }
+      openDashboardWindow();
       navigation.classList.remove("open");
     });
   document.body.appendChild(navigation);
@@ -493,6 +484,56 @@ function navigateClientRoute(route) {
 
   window.history.pushState({}, "", target);
   window.dispatchEvent(new PopStateEvent("popstate"));
+}
+
+function openDashboardWindow() {
+  const dashboardUrl = new URL("admin.html", document.baseURI).href;
+  const source = `<!doctype html>
+    <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <meta name="theme-color" content="#07100e">
+        <title>OrganizeOn — Dashboard</title>
+        <style>
+          html,body,iframe{width:100%;height:100%;height:100dvh;margin:0}
+          body{overflow:hidden;background:#07100e}
+          iframe{position:fixed;inset:0;border:0}
+        </style>
+      </head>
+      <body>
+        <iframe id="dashboard" src=${JSON.stringify(dashboardUrl)}
+          title="OrganizeOn Dashboard"
+          allow="clipboard-read; clipboard-write"></iframe>
+        <script>
+          addEventListener("message",function(event){
+            var frame=document.getElementById("dashboard");
+            if(event.source===frame.contentWindow&&
+              event.data&&event.data.type==="organizeon:open-main"){
+              close();
+            }
+          });
+        <\/script>
+      </body>
+    </html>`;
+  const blobUrl = URL.createObjectURL(
+    new Blob([source], { type: "text/html" }),
+  );
+  const opened = window.open(blobUrl, "_blank");
+  if (opened) {
+    try {
+      opened.opener = null;
+    } catch {}
+  }
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+  if (!opened) {
+    showConnectionStatus(
+      "Popup bloqueado",
+      "Permita popups para abrir o Dashboard em outra aba.",
+      undefined,
+      3500,
+    );
+  }
 }
 
 function getSelectedProxyServer() {
