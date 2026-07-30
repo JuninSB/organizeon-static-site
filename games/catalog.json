@@ -18,8 +18,8 @@
       "category": "Arcade",
       "entry": "library/brick-rush.html",
       "cover": "covers/brick-rush.svg",
-      "size": 2764,
-      "sha256": "a777a08dabb6396bc512c74010206acae3d45c317fb1fc02551b52b4d16c9bec"
+      "size": 2988,
+      "sha256": "83e6ea5c6ad26ad48adf7469b193625452c1c91182e95248807ac03d6db6bcfb"
     },
     {
       "id": "memory-flip",
@@ -28,8 +28,8 @@
       "category": "Puzzle",
       "entry": "library/memory-flip.html",
       "cover": "covers/memory-flip.svg",
-      "size": 2459,
-      "sha256": "557d69a47daa945e7ae74badc2dc5e53a3abbfb7cb81cd04e2b570103083fd21"
+      "size": 3696,
+      "sha256": "61f32037725dcdfbb11d7203c98d9bcbd79f18a652a867fc95f36a2a08eb3cc8"
     },
     {
       "id": "space-dodge",
