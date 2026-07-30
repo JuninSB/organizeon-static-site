@@ -47,7 +47,7 @@ window.addEventListener("storage", (event) => {
     maintainControlConnection = false;
     window.clearTimeout(controlReconnectTimer);
     controlSocket?.close(1000, "Logged out in another tab");
-    window.location.reload();
+    restartClientAtMain();
   }
 });
 
@@ -534,6 +534,14 @@ function navigateClientRoute(route) {
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
+function restartClientAtMain() {
+  // Settings and search are virtual SPA routes. Reloading one of those paths
+  // directly makes static hosts such as GitHub Pages look for a real file and
+  // return 404, so move history to the actual client root before reloading.
+  navigateClientRoute("/");
+  window.location.reload();
+}
+
 function openDashboardWindow() {
   const dashboardUrl = new URL("admin.html", document.baseURI).href;
   const dashboardOrigin = new URL(dashboardUrl).origin;
@@ -761,7 +769,7 @@ function setupWispBandwidthSetting() {
       } else {
         localStorage.removeItem(wispBandwidthStorageKey);
       }
-      window.location.reload();
+      restartClientAtMain();
     });
     controls.append(select, applyButton);
     row.append(copy, controls);
@@ -929,7 +937,7 @@ function showProxyServerDialog() {
   });
   wrapper.querySelector(".apply").addEventListener("click", () => {
     localStorage.setItem(proxyServerStorageKey, pendingId);
-    window.location.reload();
+    restartClientAtMain();
   });
   wrapper.addEventListener("click", (event) => {
     if (event.target === wrapper) wrapper.remove();
@@ -1252,7 +1260,7 @@ function scheduleExpiration(expiresAt) {
     maintainControlConnection = false;
     controlSocket?.close(1000, "Session expired");
     localStorage.removeItem(tokenStorageKey);
-    window.location.reload();
+    restartClientAtMain();
   }, delay);
 }
 
@@ -1278,7 +1286,7 @@ window.organizeonAuth = Object.freeze({
       window.clearTimeout(controlReconnectTimer);
       controlSocket?.close(1000, "Logout");
       localStorage.removeItem(tokenStorageKey);
-      window.location.reload();
+      restartClientAtMain();
     }
   },
 });

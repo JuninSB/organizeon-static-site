@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voltando ao OrganizeOn…</title>
+    <style>
+      html {
+        color-scheme: dark;
+        background: #07100e;
+        color: #dff7ef;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+      }
+    </style>
+    <script>
+      (function () {
+        var root =
+          location.hostname.endsWith(".github.io")
+            ? "/" + location.pathname.split("/").filter(Boolean)[0] + "/"
+            : "/";
+        location.replace(location.origin + root);
+      })();
+    </script>
+  </head>
+  <body>Voltando ao OrganizeOn…</body>
+</html>
