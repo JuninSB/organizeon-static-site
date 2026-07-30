@@ -288,6 +288,11 @@
         var versionStorageKey = "organizeon-update-version-v2";
         var manifestStorageKey = "organizeon-update-manifest-v2";
         var fileHashesStorageKey = "organizeon-update-files-v2";
+        var loaderVersion = "2.0.0";
+        window.__ORGANIZEON_LOADER_VERSION__ = loaderVersion;
+        var latestLoaderVersion = "";
+        var indexUpdateRequired = false;
+        var ignoreIndexUpdate = false;
         var pendingManifest = null;
         var pendingFiles = [];
         var pendingBytes = 0;
@@ -297,6 +302,12 @@
         var running = false;
 
         cancelButton.addEventListener("click", function () {
+          if (indexUpdateRequired) {
+            indexUpdateRequired = false;
+            ignoreIndexUpdate = true;
+            prepareUpdate();
+            return;
+          }
           status.textContent =
             "Download cancelado. Você pode iniciar quando estiver pronto.";
           status.classList.remove("error");
@@ -343,11 +354,69 @@
         async function prepareUpdate() {
           confirmButton.disabled = true;
           cancelButton.disabled = true;
+          confirmButton.textContent = "Verificando…";
+          cancelButton.textContent = "Cancelar";
           confirmationTitle.textContent = "Procurando atualizações…";
           confirmationText.textContent =
             "Consultando a versão mais recente do cliente.";
 
           try {
+            if (!ignoreIndexUpdate) {
+              var loaderVersionUrl = new URL(
+                "index-version.txt",
+                baseUrl,
+              );
+              loaderVersionUrl.searchParams.set(
+                "_",
+                Date.now().toString(),
+              );
+              var loaderVersionResponse = await fetch(
+                loaderVersionUrl,
+                { cache: "no-store" },
+              );
+              if (!loaderVersionResponse.ok) {
+                throw new Error(
+                  "Versão do index indisponível (HTTP " +
+                    loaderVersionResponse.status +
+                    ").",
+                );
+              }
+              latestLoaderVersion = (
+                await loaderVersionResponse.text()
+              ).trim();
+              if (
+                !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(
+                  latestLoaderVersion,
+                )
+              ) {
+                throw new Error(
+                  "O servidor retornou uma versão de index inválida.",
+                );
+              }
+              if (
+                compareVersions(
+                  latestLoaderVersion,
+                  loaderVersion,
+                ) > 0
+              ) {
+                indexUpdateRequired = true;
+                confirmationTitle.textContent =
+                  "Kernel do cliente desatualizado";
+                confirmationText.textContent =
+                  "Este index usa o kernel " +
+                  loaderVersion +
+                  ", mas o servidor já está no " +
+                  latestLoaderVersion +
+                  ". Baixe o novo index para receber correções do updater.";
+                confirmButton.textContent = "Baixar novo index";
+                cancelButton.textContent =
+                  "Continuar temporariamente";
+                confirmButton.disabled = false;
+                cancelButton.disabled = false;
+                return;
+              }
+            }
+
             var versionUrl = new URL("version.txt", baseUrl);
             versionUrl.searchParams.set("_", Date.now().toString());
             var versionResponse = await fetch(versionUrl, {
@@ -455,6 +524,22 @@
         }
 
         async function beginDownload() {
+          if (indexUpdateRequired) {
+            var download = document.createElement("a");
+            download.href = "https://organizeon.com.br/d1";
+            download.target = "_blank";
+            download.rel = "noopener";
+            document.body.appendChild(download);
+            download.click();
+            download.remove();
+            confirmationTitle.textContent = "Download iniciado";
+            confirmationText.textContent =
+              "Substitua o index antigo pelo arquivo novo. Você também pode continuar nesta versão temporariamente.";
+            confirmButton.textContent = "Baixar novamente";
+            cancelButton.textContent =
+              "Continuar nesta versão";
+            return;
+          }
           if (running) return;
           if (!pendingManifest || pendingFiles.length === 0) {
             await prepareUpdate();
@@ -798,6 +883,17 @@
             return (bytes / 1024).toFixed(1) + " KB";
           }
           return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        }
+
+        function compareVersions(left, right) {
+          var leftParts = left.split(".").map(Number);
+          var rightParts = right.split(".").map(Number);
+          for (var index = 0; index < 3; index += 1) {
+            if (leftParts[index] !== rightParts[index]) {
+              return leftParts[index] - rightParts[index];
+            }
+          }
+          return 0;
         }
       })();
     </script>
