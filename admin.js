@@ -2,6 +2,12 @@ import { Terminal } from "./vendor/xterm.mjs";
 
 const config = window.__ORGANIZEON_CONFIG__;
 const tokenKey = "organizeon-access-token";
+const dashboardMobile =
+  window.matchMedia("(max-width: 700px)").matches ||
+  navigator.userAgentData?.mobile === true ||
+  /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(
+    navigator.userAgent,
+  );
 const state = {
   account: null,
   permissions: [],
@@ -16,8 +22,8 @@ const terminalView = new Terminal({
   disableStdin: true,
   fontFamily:
     '"JetBrains Mono", "Fira Code", "Cascadia Mono", monospace',
-  fontSize: 13,
-  lineHeight: 1.25,
+  fontSize: dashboardMobile ? 10 : 13,
+  lineHeight: dashboardMobile ? 1.15 : 1.25,
   scrollback: 5000,
   theme: {
     background: "#030807",
@@ -550,13 +556,7 @@ function ensureTerminalOpen() {
 }
 
 function setupDashboardMobileMode() {
-  const mobile =
-    window.matchMedia("(max-width: 700px)").matches ||
-    navigator.userAgentData?.mobile === true ||
-    /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(
-      navigator.userAgent,
-    );
-  if (!mobile) return;
+  if (!dashboardMobile) return;
   document.documentElement.classList.add("organizeon-mobile");
   window.setTimeout(() => showToast("Modo mobile ativado", 3200), 50);
 }

@@ -131,6 +131,7 @@
         display: flex; align-items: center; justify-content: space-between;
         padding: 13px 15px; border-bottom: 1px solid var(--line); background: #091411;
       }
+      .terminal-scroll-hint { display: none; color: var(--muted); font-size: 10px; }
       .terminal-output {
         height: 500px; padding: 12px; overflow: hidden;
       }
@@ -155,6 +156,10 @@
       input, select {
         width: 100%; min-height: 42px; padding: 0 11px; border: 1px solid var(--line);
         border-radius: 9px; color: var(--text); background: #07110f; outline: 0;
+      }
+      input[type="checkbox"] {
+        width: 16px; height: 16px; min-height: 0; padding: 0;
+        flex: 0 0 16px; accent-color: var(--green);
       }
       .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .checks label { display: flex; align-items: center; gap: 8px; margin: 0; }
@@ -207,12 +212,81 @@
         .section-title { align-items: stretch; flex-direction: column; }
         .section-title > button { width: 100%; }
         .terminal { min-height: 0; }
-        .terminal-output { height: min(54dvh, 480px); padding: 6px; }
-        .terminal-toolbar { gap: 9px; }
-        .terminal-toolbar .button { min-height: 38px; padding-inline: 10px; }
-        .terminal-form input { font-size: 16px; }
-        .table-wrap { max-width: calc(100vw - 24px); }
-        th, td { padding: 11px 12px; white-space: nowrap; }
+        #view-terminal .section-title { gap: 8px; margin-bottom: 9px; }
+        #view-terminal .section-title p { display: none; }
+        #view-terminal .section-title > button {
+          width: auto; min-height: 34px; padding-inline: 10px;
+          align-self: flex-start; font-size: 12px;
+        }
+        .terminal-output {
+          height: max(56dvh, calc(100dvh - 295px));
+          padding: 4px; overflow: auto;
+          overscroll-behavior: contain; touch-action: pan-x pan-y;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(93, 240, 200, .36) #030807;
+        }
+        .terminal-output .xterm {
+          width: max(100%, 540px); min-width: 540px; padding: 2px;
+        }
+        .terminal-toolbar { min-height: 38px; gap: 7px; padding: 6px 9px; font-size: 11px; }
+        .terminal-scroll-hint { display: inline; margin-left: auto; }
+        .terminal-toolbar .button {
+          min-height: 30px; padding-inline: 8px; font-size: 11px;
+        }
+        .terminal-form span { padding: 9px 0 9px 10px; font-size: 12px; }
+        .terminal-form input { min-height: 38px; padding: 8px 9px; font-size: 13px; }
+        .table-wrap {
+          max-width: none; overflow: visible; border: 0; background: transparent;
+          box-shadow: none;
+        }
+        .table-wrap table, .table-wrap tbody { display: block; width: 100%; }
+        .table-wrap thead { display: none; }
+        .table-wrap tr {
+          display: grid; grid-template-columns: minmax(0, 1fr) minmax(132px, 1fr);
+          gap: 10px; margin-bottom: 12px; padding: 13px;
+          border: 1px solid var(--line); border-radius: 14px;
+          background: var(--panel);
+        }
+        .table-wrap td {
+          min-width: 0; padding: 0; border: 0; white-space: normal;
+        }
+        .table-wrap td::before {
+          display: block; margin-bottom: 5px; color: var(--muted);
+          font-size: 9px; font-weight: 750; letter-spacing: .08em;
+          text-transform: uppercase;
+        }
+        .table-wrap td:nth-child(1)::before { content: "Conta"; }
+        .table-wrap td:nth-child(2)::before { content: "Tipo"; }
+        .table-wrap td:nth-child(3)::before { content: "Permissões"; }
+        .table-wrap td:nth-child(4)::before { content: "Status"; }
+        .table-wrap td:nth-child(5)::before { content: "Ações"; }
+        .table-wrap td:nth-child(3), .table-wrap td:nth-child(5) {
+          grid-column: 1 / -1;
+        }
+        .table-wrap td:nth-child(2) select {
+          width: 100%; min-width: 128px; min-height: 42px;
+          padding-inline: 10px; font-size: 14px;
+        }
+        .permissions { display: grid; grid-template-columns: 1fr; gap: 3px; }
+        .permissions label {
+          display: flex; align-items: center; gap: 7px; min-height: 27px;
+          margin: 0;
+        }
+        .permissions small {
+          min-width: 0; padding: 2px 6px; overflow-wrap: anywhere;
+          font-size: 10px;
+        }
+        .table-wrap td:nth-child(4) {
+          display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start;
+          gap: 5px; font-size: 11px;
+        }
+        .table-wrap td:nth-child(4)::before { width: 100%; }
+        .table-wrap td:nth-child(5) .button {
+          min-height: 34px; padding-inline: 10px; font-size: 11px;
+        }
+        dialog select { min-height: 46px; font-size: 15px; }
+        .checks { grid-template-columns: 1fr; }
+        .checks label { min-height: 30px; overflow-wrap: anywhere; }
       }
     </style>
   </head>
@@ -275,7 +349,7 @@
             <button class="button primary" id="terminal-connect" type="button">Conectar terminal</button>
           </div>
           <div class="card terminal">
-            <div class="terminal-toolbar"><span id="terminal-status">Desconectado</span><button class="button danger" id="terminal-disconnect" type="button" hidden>Desconectar</button></div>
+            <div class="terminal-toolbar"><span id="terminal-status">Desconectado</span><small class="terminal-scroll-hint">← deslize →</small><button class="button danger" id="terminal-disconnect" type="button" hidden>Desconectar</button></div>
             <div class="terminal-output" id="terminal-output" aria-label="Saída do terminal"></div>
             <form class="terminal-form" id="terminal-form"><span>$</span><input id="terminal-input" autocomplete="off" spellcheck="false" disabled /></form>
           </div>
