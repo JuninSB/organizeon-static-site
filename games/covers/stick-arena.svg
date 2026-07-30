@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400">
+  <rect width="640" height="400" rx="28" fill="#10292d"/>
+  <path d="M0 305h640v95H0z" fill="#173b30"/>
+  <g stroke="#68e5c5" stroke-width="14" stroke-linecap="round" fill="#68e5c5">
+    <circle cx="205" cy="130" r="29"/><path d="M205 160v91m0-62-70 26m70-20 76-35m-76 91-55 64m55-64 58 61"/>
+  </g>
+  <g stroke="#ff7488" stroke-width="14" stroke-linecap="round" fill="#ff7488">
+    <circle cx="445" cy="130" r="29"/><path d="M445 160v91m0-61-76-35m76 35 67 28m-67 33-64 52m64-52 55 64"/>
+  </g>
+  <path d="M270 90h100" stroke="#fff" stroke-width="8"/><text x="292" y="78" fill="#fff" font-family="system-ui,sans-serif" font-size="27" font-weight="900">VS</text>
+  <text x="32" y="366" fill="#eafff8" font-family="system-ui,sans-serif" font-size="38" font-weight="900">STICK ARENA</text>
+</svg>

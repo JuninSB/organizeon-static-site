@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Stick Arena</title>
+  <style>
+    *{box-sizing:border-box;user-select:none;-webkit-user-select:none;touch-action:none}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#07100e;color:#eafff8;font-family:system-ui,sans-serif}
+    body{display:grid;place-items:center}
+    .game{position:relative;width:min(100vw,calc(100dvh * 1.73));aspect-ratio:900/520;max-height:100dvh}
+    canvas{display:block;width:100%;height:100%;background:linear-gradient(#132b2e 0 68%,#19372e 68%);border:0}
+    .tip{position:absolute;left:50%;top:12px;translate:-50% 0;width:max-content;max-width:90%;padding:7px 12px;border-radius:999px;background:#07100ecc;color:#a8c9c0;font-size:clamp(9px,2vw,13px);text-align:center}
+  </style>
+</head>
+<body>
+  <main class="game">
+    <canvas width="900" height="520" aria-label="Stick Arena"></canvas>
+    <div class="tip">A/D mover · W pular · S defender · J soco · K chute · combine movimento + ataque</div>
+  </main>
+  <script>
+    const canvas=document.querySelector("canvas"),ctx=canvas.getContext("2d");
+    const keys=new Set();
+    const ground=410;
+    let ended=false,last=performance.now();
+    const player=fighter(180,"#66e6c5",1),bot=fighter(720,"#ff7185",-1);
+    function fighter(x,color,facing){return{x,y:ground,vx:0,vy:0,color,facing,hp:100,cool:0,attack:"",attackTime:0,flash:0}}
+    addEventListener("keydown",e=>{keys.add(e.code);keys.add(e.key.toLowerCase());if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code))e.preventDefault();if(ended&&(e.code==="Space"||e.code==="Enter"))reset()});
+    addEventListener("keyup",e=>{keys.delete(e.code);keys.delete(e.key.toLowerCase())});
+    function reset(){Object.assign(player,fighter(180,"#66e6c5",1));Object.assign(bot,fighter(720,"#ff7185",-1));ended=false}
+    function attack(f,type){if(f.cool>0||ended)return;f.attack=type;f.attackTime=type==="kick"?.22:.16;f.cool=type==="kick"?.58:.38}
+    function hit(attacker,target,range,damage){if(attacker.attackTime<=0||attacker.attackTime>.09)return;if(Math.abs(attacker.x-target.x)>range)return;if(Math.sign(target.x-attacker.x)!==attacker.facing)return;const blocking=target===player&&(keys.has("KeyS")||keys.has("s"));target.hp=Math.max(0,target.hp-damage*(blocking?.25:1));target.vx=attacker.facing*(blocking?90:260);target.flash=.12;attacker.attackTime=0;if(target.hp<=0)ended=true}
+    function updatePlayer(dt){
+      const dir=(keys.has("KeyD")||keys.has("d")||keys.has("ArrowRight")?1:0)-(keys.has("KeyA")||keys.has("a")||keys.has("ArrowLeft")?1:0);
+      const blocking=keys.has("KeyS")||keys.has("s")||keys.has("ArrowDown");
+      player.vx+=dir*(blocking?500:1050)*dt;if(dir)player.facing=dir;
+      if((keys.has("KeyW")||keys.has("w")||keys.has("ArrowUp"))&&player.y>=ground)player.vy=-620;
+      if(keys.has("KeyJ")||keys.has("j"))attack(player,"punch");
+      if(keys.has("KeyK")||keys.has("k"))attack(player,"kick");
+    }
+    function updateBot(dt){
+      const distance=player.x-bot.x;bot.facing=Math.sign(distance)||bot.facing;
+      if(Math.abs(distance)>105)bot.vx+=bot.facing*720*dt;
+      else if(bot.cool<=0)attack(bot,Math.random()<.42?"kick":"punch");
+      if(Math.abs(distance)<70&&Math.random()<.015)bot.vx-=bot.facing*180;
+    }
+    function physics(f,dt){
+      f.cool=Math.max(0,f.cool-dt);f.attackTime=Math.max(0,f.attackTime-dt);f.flash=Math.max(0,f.flash-dt);
+      f.vy+=1450*dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=Math.pow(.0015,dt);
+      if(f.y>ground){f.y=ground;f.vy=0}f.x=Math.max(42,Math.min(858,f.x));
+    }
+    function step(now){
+      const dt=Math.min(.033,(now-last)/1000);last=now;
+      if(!ended){updatePlayer(dt);updateBot(dt);physics(player,dt);physics(bot,dt);hit(player,bot,player.attack==="kick"?125:92,player.attack==="kick"?13:8);hit(bot,player,bot.attack==="kick"?125:92,bot.attack==="kick"?11:7)}
+      draw();requestAnimationFrame(step)
+    }
+    function limb(x1,y1,len,angle){const x2=x1+Math.cos(angle)*len,y2=y1+Math.sin(angle)*len;ctx.lineTo(x2,y2);return[x2,y2]}
+    function drawFighter(f){
+      const x=f.x,y=f.y,attack=f.attackTime>0,phase=f.attackTime;
+      ctx.strokeStyle=f.flash>0?"#fff":f.color;ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=10;ctx.lineCap="round";
+      ctx.beginPath();ctx.arc(x,y-142,24,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.moveTo(x,y-116);ctx.lineTo(x,y-48);
+      const armAngle=attack?(f.attack==="kick"?.2:-.05)*f.facing:1.15*f.facing;
+      ctx.moveTo(x,y-100);limb(x,y-100,attack?76:55,armAngle);
+      ctx.moveTo(x,y-96);limb(x,y-96,52,Math.PI-armAngle);
+      const kick=attack&&f.attack==="kick";
+      ctx.moveTo(x,y-48);limb(x,y-48,kick?92:68,kick?.08*f.facing:1.15);
+      ctx.moveTo(x,y-48);limb(x,y-48,68,Math.PI-1.15);ctx.stroke();
+      if(f===player&&(keys.has("KeyS")||keys.has("s"))){ctx.strokeStyle="#b9fff0aa";ctx.lineWidth=6;ctx.beginPath();ctx.arc(x+f.facing*22,y-93,55,-1.2,1.2);ctx.stroke()}
+    }
+    function health(x,y,w,value,color,alignRight=false){ctx.fillStyle="#07100eaa";ctx.fillRect(x,y,w,22);ctx.fillStyle=color;const fill=w*value/100;ctx.fillRect(alignRight?x+w-fill:x,y,fill,22)}
+    function draw(){
+      ctx.clearRect(0,0,900,520);const sky=ctx.createLinearGradient(0,0,0,410);sky.addColorStop(0,"#102b31");sky.addColorStop(1,"#31504a");ctx.fillStyle=sky;ctx.fillRect(0,0,900,410);ctx.fillStyle="#18372d";ctx.fillRect(0,410,900,110);
+      ctx.strokeStyle="#70e8ca22";ctx.lineWidth=2;for(let x=0;x<900;x+=60){ctx.beginPath();ctx.moveTo(x,410);ctx.lineTo(450+(x-450)*1.5,520);ctx.stroke()}
+      health(40,36,330,player.hp,player.color);health(530,36,330,bot.hp,bot.color,true);
+      ctx.fillStyle="#dffaf3";ctx.font="800 18px system-ui";ctx.fillText("VOCÊ",40,28);ctx.textAlign="right";ctx.fillText("CPU",860,28);ctx.textAlign="left";
+      drawFighter(player);drawFighter(bot);
+      if(ended){ctx.fillStyle="#06100ddd";ctx.fillRect(0,0,900,520);ctx.textAlign="center";ctx.fillStyle=player.hp>0?"#68e5c5":"#ff8090";ctx.font="900 62px system-ui";ctx.fillText(player.hp>0?"VOCÊ VENCEU!":"CPU VENCEU",450,235);ctx.fillStyle="#d8eee8";ctx.font="700 24px system-ui";ctx.fillText("Espaço ou Enter para jogar novamente",450,285);ctx.textAlign="left"}
+    }
+    requestAnimationFrame(step);
+  </script>
+</body>
+</html>

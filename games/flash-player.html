@@ -5,9 +5,15 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
     <title>OrganizeOn Flash Player</title>
     <style>
-      html,body,#stage { width:100%; height:100%; margin:0; overflow:hidden; background:#050807 }
-      #stage { display:grid; place-items:center }
-      ruffle-player { width:100%; height:100% }
+      html,body,#stage {
+        width:100%; height:100%; height:100dvh; margin:0; overflow:hidden;
+        background:#050807; touch-action:none; overscroll-behavior:none
+      }
+      #stage { display:grid; place-items:center; min-width:0; min-height:0 }
+      ruffle-player {
+        display:block; width:100%; height:100%; max-width:100%; max-height:100%;
+        min-width:0; min-height:0; contain:size layout paint
+      }
       #status { color:#8edfc9; font:600 14px system-ui,sans-serif }
       #status.error { color:#ff9ca8; padding:24px; text-align:center }
     </style>
@@ -17,6 +23,10 @@
         publicPath: new URL("./runtime/ruffle/", document.baseURI).href,
         autoplay: "on",
         unmuteOverlay: "hidden",
+        scale: "showAll",
+        forceScale: true,
+        letterbox: "on",
+        salign: "",
         warnOnUnsupportedContent: true
       };
     </script>
@@ -40,9 +50,14 @@
           await player.ruffle().load({
             url: new URL(entry, document.baseURI).href,
             autoplay: "on",
-            unmuteOverlay: "hidden"
+            unmuteOverlay: "hidden",
+            scale: "showAll",
+            forceScale: true,
+            letterbox: "on",
+            salign: ""
           });
           player.focus();
+          installDirectTouchMouse(player);
         } catch (error) {
           const message = document.createElement("div");
           message.id = "status";
@@ -70,6 +85,106 @@
         }));
         player.focus();
       });
+
+      function installDirectTouchMouse(target) {
+        const touches = new Map();
+        let pendingClick = 0;
+        let lastTap = null;
+        let twoFingerGesture = false;
+        const actualTarget = () =>
+          target.shadowRoot?.querySelector("canvas") || target;
+
+        const emitMouse = (type, point, button = 0) => {
+          const receiver = actualTarget();
+          receiver.dispatchEvent(new MouseEvent(type, {
+            clientX: point.x,
+            clientY: point.y,
+            screenX: point.x,
+            screenY: point.y,
+            button,
+            buttons: type === "mousedown" ? (button === 2 ? 2 : 1) : 0,
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            view: window
+          }));
+        };
+        const clickAt = (point, button) => {
+          emitMouse("mousemove", point, button);
+          emitMouse("mousedown", point, button);
+          emitMouse("mouseup", point, button);
+          emitMouse(button === 2 ? "contextmenu" : "click", point, button);
+          target.focus();
+        };
+
+        target.addEventListener("pointerdown", (event) => {
+          if (event.pointerType !== "touch") return;
+          event.preventDefault();
+          const point = { x: event.clientX, y: event.clientY };
+          touches.set(event.pointerId, { ...point, startX: point.x, startY: point.y });
+          if (touches.size > 1) twoFingerGesture = true;
+          emitMouse("mousemove", point);
+          target.setPointerCapture?.(event.pointerId);
+        }, { passive: false, capture: true });
+
+        target.addEventListener("pointermove", (event) => {
+          const point = touches.get(event.pointerId);
+          if (!point) return;
+          event.preventDefault();
+          point.x = event.clientX;
+          point.y = event.clientY;
+          emitMouse("mousemove", point);
+        }, { passive: false, capture: true });
+
+        const finishTouch = (event) => {
+          const point = touches.get(event.pointerId);
+          if (!point) return;
+          event.preventDefault();
+          point.x = event.clientX;
+          point.y = event.clientY;
+          touches.delete(event.pointerId);
+          const moved = Math.hypot(point.x - point.startX, point.y - point.startY) > 12;
+          if (touches.size) return;
+          if (twoFingerGesture) {
+            clearTimeout(pendingClick);
+            pendingClick = 0;
+            clickAt(point, 2);
+            twoFingerGesture = false;
+            lastTap = null;
+            return;
+          }
+          if (moved) {
+            emitMouse("mousemove", point);
+            lastTap = null;
+            return;
+          }
+          const now = performance.now();
+          if (
+            lastTap &&
+            now - lastTap.time < 330 &&
+            Math.hypot(point.x - lastTap.x, point.y - lastTap.y) < 34
+          ) {
+            clearTimeout(pendingClick);
+            pendingClick = 0;
+            clickAt(point, 2);
+            lastTap = null;
+          } else {
+            lastTap = { ...point, time: now };
+            pendingClick = setTimeout(() => {
+              clickAt(point, 0);
+              pendingClick = 0;
+            }, 340);
+          }
+        };
+        target.addEventListener("pointerup", finishTouch, { passive: false, capture: true });
+        target.addEventListener("pointercancel", (event) => {
+          touches.delete(event.pointerId);
+          if (!touches.size) twoFingerGesture = false;
+        });
+        target.addEventListener("contextmenu", (event) => {
+          if (event.isTrusted) event.preventDefault();
+        });
+      }
     </script>
   </body>
 </html>

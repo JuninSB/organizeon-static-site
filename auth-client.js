@@ -801,7 +801,8 @@ async function showGameCatalog() {
       }
       #organizeon-game-catalog .player {
         position: fixed; inset: 0; z-index: 2; display: none;
-        flex-direction: column; background: #050807;
+        width: 100vw; height: 100vh; height: 100dvh;
+        min-width: 0; min-height: 0; flex-direction: column; background: #050807;
       }
       #organizeon-game-catalog.playing .player { display: flex; }
       #organizeon-game-catalog .player-head {
@@ -813,8 +814,13 @@ async function showGameCatalog() {
         min-width: 0; overflow: hidden; text-overflow: ellipsis;
         white-space: nowrap;
       }
+      #organizeon-game-catalog .player-help {
+        min-width: 0; overflow: hidden; color: #7f9b93; font-size: 11px;
+        text-overflow: ellipsis; white-space: nowrap;
+      }
       #organizeon-game-catalog .player iframe {
-        display: block; width: 100%; flex: 1; border: 0; background: #050807;
+        display: block; width: 100%; height: 0; min-width: 0; min-height: 0;
+        flex: 1 1 0; border: 0; background: #050807;
       }
       #organizeon-game-catalog .controls-toggle {
         margin-left: auto; min-height: 40px; padding: 0 12px;
@@ -838,7 +844,15 @@ async function showGameCatalog() {
         border-color: rgba(255,204,97,.7); color: #ffe09a;
         background: rgba(255,193,59,.1);
       }
+      #organizeon-game-catalog .key.pressed {
+        color: #061d17; border-color: #65e7c7; background: #65e7c7;
+        transform: translateY(1px);
+      }
       #organizeon-game-catalog .key.space { min-width: 88px; }
+      #organizeon-game-catalog .control-help {
+        width: 100%; margin: 0 2px 2px; color: #71978c;
+        font: 650 10px/1.35 system-ui;
+      }
       #organizeon-game-catalog .trackpad {
         position: relative; min-width: 140px; height: 50px; margin-left: auto;
         overflow: hidden; border: 1px dashed rgba(99,228,196,.32);
@@ -889,6 +903,22 @@ async function showGameCatalog() {
           box-shadow: 0 0 0 1px rgba(255,198,73,.08),0 18px 50px rgba(0,0,0,.2);
         }
         #organizeon-game-catalog .player-head { min-height: 52px; }
+        #organizeon-game-catalog .player-head {
+          display: grid; grid-template-columns: 42px minmax(0,1fr) 42px;
+          gap: 8px; padding: 5px 8px;
+        }
+        #organizeon-game-catalog .player-head strong {
+          align-self: end; font-size: 13px;
+        }
+        #organizeon-game-catalog .player-help {
+          grid-column: 2; align-self: start; font-size: 9px;
+        }
+        #organizeon-game-catalog .player-head .controls-toggle {
+          grid-column: 3; grid-row: 1 / span 2;
+        }
+        #organizeon-game-catalog .player-head .player-back {
+          grid-column: 1; grid-row: 1 / span 2;
+        }
         #organizeon-game-catalog .controls-toggle { font-size: 0; width: 42px; }
         #organizeon-game-catalog .controls-toggle::after { content: "⌨"; font-size: 18px; }
         #organizeon-game-catalog .controls {
@@ -916,6 +946,7 @@ async function showGameCatalog() {
       <header class="player-head">
         <button class="back player-back" type="button" aria-label="Voltar ao catálogo">←</button>
         <strong></strong>
+        <span class="player-help"></span>
         <button class="controls-toggle" type="button" aria-expanded="false">Controles</button>
       </header>
       <iframe title="Jogo" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
@@ -1098,7 +1129,9 @@ async function showGameCatalog() {
     remove.textContent = "×";
     remove.addEventListener("click", async () => {
       const cache = await caches.open(gameCacheName);
-      await cache.delete(gameUrl(game));
+      await Promise.all(gameFiles(game).map((file) =>
+        cache.delete(gameFileUrl(file)),
+      ));
       setCardInstalled(card, false);
     });
     let creditsButton = null;
@@ -1173,8 +1206,11 @@ async function showGameCatalog() {
   async function isGameInstalled(game) {
     if (!("caches" in window)) return false;
     const cache = await caches.open(gameCacheName);
-    const cached = await cache.match(gameUrl(game));
-    return cached?.headers.get("X-OrganizeOn-Game-Hash") === game.sha256;
+    const checks = await Promise.all(gameFiles(game).map(async (file) => {
+      const cached = await cache.match(gameFileUrl(file));
+      return cached?.headers.get("X-OrganizeOn-Game-Hash") === file.sha256;
+    }));
+    return checks.every(Boolean);
   }
 
   async function installGame(game, card) {
@@ -1188,51 +1224,58 @@ async function showGameCatalog() {
     action.disabled = true;
     action.textContent = "Baixando 0%";
     try {
-      const response = await fetch(gameUrl(game), { cache: "no-cache" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const reader = response.body?.getReader();
-      const chunks = [];
-      let received = 0;
-      if (reader) {
-        while (true) {
-          const result = await reader.read();
-          if (result.done) break;
-          chunks.push(result.value);
-          received += result.value.byteLength;
-          const percent = Math.min(
-            100,
-            Math.round((received / Math.max(1, game.size)) * 100),
-          );
-          bar.style.width = `${percent}%`;
-          action.textContent = `Baixando ${percent}%`;
-        }
-      } else {
-        const fallback = new Uint8Array(await response.arrayBuffer());
-        chunks.push(fallback);
-        received = fallback.byteLength;
-      }
-      const contents = new Uint8Array(received);
-      let offset = 0;
-      chunks.forEach((chunk) => {
-        contents.set(chunk, offset);
-        offset += chunk.byteLength;
-      });
-      const actualHash = await sha256Hex(contents);
-      if (actualHash && actualHash !== game.sha256) {
-        throw new Error("O arquivo baixado falhou na verificação.");
-      }
-      const headers = new Headers(response.headers);
-      if (game.type === "flash") {
-        headers.set("Content-Type", "application/x-shockwave-flash");
-      } else {
-        headers.set("Content-Type", "text/html; charset=utf-8");
-      }
-      headers.set("X-OrganizeOn-Game-Hash", game.sha256);
       const cache = await caches.open(gameCacheName);
-      await cache.put(
-        gameUrl(game),
-        new Response(contents, { status: 200, headers }),
-      );
+      const files = gameFiles(game);
+      let completedBytes = 0;
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        const response = await fetch(gameFileUrl(file), { cache: "no-cache" });
+        if (!response.ok) throw new Error(`${file.path}: HTTP ${response.status}`);
+        const reader = response.body?.getReader();
+        const chunks = [];
+        let fileBytes = 0;
+        if (reader) {
+          while (true) {
+            const result = await reader.read();
+            if (result.done) break;
+            chunks.push(result.value);
+            fileBytes += result.value.byteLength;
+            updateGameDownloadProgress(
+              completedBytes + fileBytes,
+              game.size,
+              index + 1,
+              files.length,
+            );
+          }
+        } else {
+          const fallback = new Uint8Array(await response.arrayBuffer());
+          chunks.push(fallback);
+          fileBytes = fallback.byteLength;
+        }
+        const contents = new Uint8Array(fileBytes);
+        let offset = 0;
+        chunks.forEach((chunk) => {
+          contents.set(chunk, offset);
+          offset += chunk.byteLength;
+        });
+        const actualHash = await sha256Hex(contents);
+        if (actualHash && actualHash !== file.sha256) {
+          throw new Error(`${file.path}: verificação de integridade falhou.`);
+        }
+        const headers = new Headers(response.headers);
+        headers.set("X-OrganizeOn-Game-Hash", file.sha256);
+        await cache.put(
+          gameFileUrl(file),
+          new Response(contents, { status: 200, headers }),
+        );
+        completedBytes += fileBytes;
+        updateGameDownloadProgress(
+          completedBytes,
+          game.size,
+          index + 1,
+          files.length,
+        );
+      }
       setCardInstalled(card, true);
       bar.style.width = "100%";
     } catch (error) {
@@ -1249,6 +1292,17 @@ async function showGameCatalog() {
         bar.style.width = "0";
       }, 350);
     }
+
+    function updateGameDownloadProgress(received, total, file, fileCount) {
+      const percent = Math.min(
+        100,
+        Math.round((received / Math.max(1, total)) * 100),
+      );
+      bar.style.width = `${percent}%`;
+      action.textContent = fileCount > 1
+        ? `Baixando ${file}/${fileCount} · ${percent}%`
+        : `Baixando ${percent}%`;
+    }
   }
 
   async function playGame(game) {
@@ -1261,18 +1315,24 @@ async function showGameCatalog() {
     if (playerUrl) URL.revokeObjectURL(playerUrl);
     playerUrl = null;
     player.querySelector("strong").textContent = game.name;
+    player.querySelector(".player-help").textContent =
+      game.instructions || "Toque direto na tela para clicar.";
     frame.title = game.name;
     activeGame = game;
     buildVirtualControls(game);
-    if (game.type === "flash") {
+    if (game.type === "flash" || game.packageRoot) {
       try {
         await ensureGameServiceWorker();
       } catch (error) {
         console.warn("O cache offline do Ruffle não pôde ser ativado:", error);
       }
-      const flashPlayerUrl = assetUrl("games/flash-player.html");
-      flashPlayerUrl.searchParams.set("swf", game.entry);
-      frame.src = flashPlayerUrl.href;
+      if (game.type === "flash") {
+        const flashPlayerUrl = assetUrl("games/flash-player.html");
+        flashPlayerUrl.searchParams.set("swf", game.entry);
+        frame.src = flashPlayerUrl.href;
+      } else {
+        frame.src = gameUrl(game);
+      }
     } else {
       playerUrl = URL.createObjectURL(await response.blob());
       frame.src = playerUrl;
@@ -1308,13 +1368,23 @@ async function showGameCatalog() {
 
   function buildVirtualControls(game) {
     controls.innerHTML = "";
+    const help = document.createElement("p");
+    help.className = "control-help";
+    help.textContent =
+      "Segure várias teclas ao mesmo tempo para combinações. No jogo: 1 toque = clique esquerdo; toque duplo ou 2 dedos = botão direito.";
+    controls.appendChild(help);
     const required = new Set(game.keys || []);
     const keyDefinitions = [
       ["W", "KeyW", 87], ["A", "KeyA", 65], ["S", "KeyS", 83],
       ["D", "KeyD", 68], ["↑", "ArrowUp", 38, "ArrowUp"],
       ["←", "ArrowLeft", 37, "ArrowLeft"], ["↓", "ArrowDown", 40, "ArrowDown"],
       ["→", "ArrowRight", 39, "ArrowRight"], ["E", "KeyE", 69],
-      ["F", "KeyF", 70], ["X", "KeyX", 88], ["C", "KeyC", 67],
+      ["F", "KeyF", 70], ["Q", "KeyQ", 81], ["R", "KeyR", 82],
+      ["J", "KeyJ", 74], ["K", "KeyK", 75],
+      ["X", "KeyX", 88], ["C", "KeyC", 67],
+      ["Shift", "ShiftLeft", 16, "Shift"], ["Ctrl", "ControlLeft", 17, "Control"],
+      ["Alt", "AltLeft", 18, "Alt"], ["Enter", "Enter", 13, "Enter"],
+      ["Tab", "Tab", 9, "Tab"],
       ["Espaço", "Space", 32, " ", true],
     ];
     keyDefinitions.forEach(([label, code, keyCode, explicitKey, wide]) => {
@@ -1328,11 +1398,13 @@ async function showGameCatalog() {
       }
       const release = (event) => {
         event.preventDefault();
+        button.classList.remove("pressed");
         sendVirtualKey(key, code, keyCode, false);
       };
       button.addEventListener("pointerdown", (event) => {
         event.preventDefault();
         button.setPointerCapture?.(event.pointerId);
+        button.classList.add("pressed");
         sendVirtualKey(key, code, keyCode, true);
       });
       button.addEventListener("pointerup", release);
@@ -1340,42 +1412,6 @@ async function showGameCatalog() {
       button.addEventListener("contextmenu", (event) => event.preventDefault());
       controls.appendChild(button);
     });
-
-    const trackpad = document.createElement("button");
-    trackpad.className = "trackpad";
-    trackpad.type = "button";
-    trackpad.innerHTML = "<span>Mouse virtual · arraste e toque</span>";
-    let lastPoint = null;
-    let cursorX = 0.5;
-    let cursorY = 0.5;
-    trackpad.addEventListener("pointerdown", (event) => {
-      event.preventDefault();
-      trackpad.setPointerCapture(event.pointerId);
-      lastPoint = { x: event.clientX, y: event.clientY, moved: false };
-      dispatchVirtualMouse("mousedown", cursorX, cursorY);
-    });
-    trackpad.addEventListener("pointermove", (event) => {
-      if (!lastPoint) return;
-      event.preventDefault();
-      const dx = event.clientX - lastPoint.x;
-      const dy = event.clientY - lastPoint.y;
-      if (Math.abs(dx) + Math.abs(dy) > 2) lastPoint.moved = true;
-      lastPoint.x = event.clientX;
-      lastPoint.y = event.clientY;
-      cursorX = Math.max(0, Math.min(1, cursorX + dx / 220));
-      cursorY = Math.max(0, Math.min(1, cursorY + dy / 160));
-      dispatchVirtualMouse("mousemove", cursorX, cursorY);
-    });
-    const releaseMouse = (event) => {
-      if (!lastPoint) return;
-      event.preventDefault();
-      dispatchVirtualMouse("mouseup", cursorX, cursorY);
-      if (!lastPoint.moved) dispatchVirtualMouse("click", cursorX, cursorY);
-      lastPoint = null;
-    };
-    trackpad.addEventListener("pointerup", releaseMouse);
-    trackpad.addEventListener("pointercancel", releaseMouse);
-    controls.appendChild(trackpad);
   }
 
   function sendVirtualKey(key, code, keyCode, down) {
@@ -1399,25 +1435,18 @@ async function showGameCatalog() {
     }
   }
 
-  function dispatchVirtualMouse(type, xRatio, yRatio) {
-    try {
-      const gameWindow = frame.contentWindow;
-      const gameDocument = gameWindow?.document;
-      if (!gameWindow || !gameDocument) return;
-      const x = Math.round(gameWindow.innerWidth * xRatio);
-      const y = Math.round(gameWindow.innerHeight * yRatio);
-      const target = gameDocument.elementFromPoint(x, y) || gameDocument.body;
-      target?.dispatchEvent(new MouseEvent(type, {
-        clientX: x, clientY: y, bubbles: true, cancelable: true, button: 0,
-      }));
-      gameWindow.focus();
-    } catch {
-      // Some browser sandboxes do not expose the embedded document.
-    }
-  }
-
   function gameUrl(game) {
     return assetUrl(`games/${game.entry}`).href;
+  }
+
+  function gameFileUrl(file) {
+    return assetUrl(`games/${file.path}`).href;
+  }
+
+  function gameFiles(game) {
+    return Array.isArray(game.files) && game.files.length
+      ? game.files
+      : [{ path: game.entry, size: game.size, sha256: game.sha256 }];
   }
 
   async function sha256Hex(contents) {

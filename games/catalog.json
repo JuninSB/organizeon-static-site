@@ -25,10 +25,18 @@
         "S",
         "D"
       ],
+      "instructions": "Setas ou WASD para mover.",
       "entry": "library/neon-snake.html",
       "cover": "covers/neon-snake.svg",
       "size": 3172,
-      "sha256": "aefa8990acde205f54d6f0782a859d958b1cb7db721ff97a2ae18bfe778d745d"
+      "sha256": "aefa8990acde205f54d6f0782a859d958b1cb7db721ff97a2ae18bfe778d745d",
+      "files": [
+        {
+          "path": "library/neon-snake.html",
+          "size": 3172,
+          "sha256": "aefa8990acde205f54d6f0782a859d958b1cb7db721ff97a2ae18bfe778d745d"
+        }
+      ]
     },
     {
       "id": "brick-rush",
@@ -51,10 +59,18 @@
         "D",
         "Space"
       ],
+      "instructions": "←/→ ou A/D para mover · Espaço para iniciar.",
       "entry": "library/brick-rush.html",
       "cover": "covers/brick-rush.svg",
       "size": 2988,
-      "sha256": "83e6ea5c6ad26ad48adf7469b193625452c1c91182e95248807ac03d6db6bcfb"
+      "sha256": "83e6ea5c6ad26ad48adf7469b193625452c1c91182e95248807ac03d6db6bcfb",
+      "files": [
+        {
+          "path": "library/brick-rush.html",
+          "size": 2988,
+          "sha256": "83e6ea5c6ad26ad48adf7469b193625452c1c91182e95248807ac03d6db6bcfb"
+        }
+      ]
     },
     {
       "id": "memory-flip",
@@ -70,10 +86,18 @@
         "touch",
         "mouse"
       ],
+      "instructions": "Toque nas cartas · escolha a dificuldade no topo.",
       "entry": "library/memory-flip.html",
       "cover": "covers/memory-flip.svg",
       "size": 3696,
-      "sha256": "61f32037725dcdfbb11d7203c98d9bcbd79f18a652a867fc95f36a2a08eb3cc8"
+      "sha256": "61f32037725dcdfbb11d7203c98d9bcbd79f18a652a867fc95f36a2a08eb3cc8",
+      "files": [
+        {
+          "path": "library/memory-flip.html",
+          "size": 3696,
+          "sha256": "61f32037725dcdfbb11d7203c98d9bcbd79f18a652a867fc95f36a2a08eb3cc8"
+        }
+      ]
     },
     {
       "id": "space-dodge",
@@ -95,10 +119,18 @@
         "A",
         "D"
       ],
+      "instructions": "Arraste na tela ou use ←/→ e A/D.",
       "entry": "library/space-dodge.html",
       "cover": "covers/space-dodge.svg",
       "size": 3133,
-      "sha256": "1fb0a78f8771cb2c64a66fd187587afe6ee0191a8739e3df328bfa892ea54a4d"
+      "sha256": "1fb0a78f8771cb2c64a66fd187587afe6ee0191a8739e3df328bfa892ea54a4d",
+      "files": [
+        {
+          "path": "library/space-dodge.html",
+          "size": 3133,
+          "sha256": "1fb0a78f8771cb2c64a66fd187587afe6ee0191a8739e3df328bfa892ea54a4d"
+        }
+      ]
     },
     {
       "id": "classic-2048",
@@ -120,6 +152,7 @@
         "ArrowDown",
         "ArrowRight"
       ],
+      "instructions": "Use as quatro setas para combinar os blocos.",
       "entry": "library/classic-2048.html",
       "cover": "covers/classic-2048.svg",
       "attribution": "jpatel3/ArcadeGames",
@@ -127,7 +160,14 @@
       "license": "MIT",
       "source": "https://github.com/jpatel3/ArcadeGames",
       "size": 22570,
-      "sha256": "93e9dfd6359feadc92bf695af632bee5b3a9bc0d9f087600bd342dec12e284a1"
+      "sha256": "93e9dfd6359feadc92bf695af632bee5b3a9bc0d9f087600bd342dec12e284a1",
+      "files": [
+        {
+          "path": "library/classic-2048.html",
+          "size": 22570,
+          "sha256": "93e9dfd6359feadc92bf695af632bee5b3a9bc0d9f087600bd342dec12e284a1"
+        }
+      ]
     },
     {
       "id": "classic-tetris",
@@ -150,6 +190,7 @@
         "ArrowRight",
         "Space"
       ],
+      "instructions": "Setas movem/giram · Espaço derruba a peça.",
       "entry": "library/classic-tetris.html",
       "cover": "covers/classic-tetris.svg",
       "attribution": "iampavangandhi/JSGames",
@@ -157,7 +198,14 @@
       "license": "MIT",
       "source": "https://github.com/iampavangandhi/JSGames",
       "size": 8928,
-      "sha256": "452aa53dc08248359812bb781144280dbd4ee76a5c1db3ed7fa7fca5f8c64fee"
+      "sha256": "452aa53dc08248359812bb781144280dbd4ee76a5c1db3ed7fa7fca5f8c64fee",
+      "files": [
+        {
+          "path": "library/classic-tetris.html",
+          "size": 8928,
+          "sha256": "452aa53dc08248359812bb781144280dbd4ee76a5c1db3ed7fa7fca5f8c64fee"
+        }
+      ]
     },
     {
       "id": "tic-tac-toe",
@@ -173,6 +221,7 @@
         "touch",
         "mouse"
       ],
+      "instructions": "Toque diretamente em uma casa.",
       "entry": "library/tic-tac-toe.html",
       "cover": "covers/tic-tac-toe.svg",
       "attribution": "iampavangandhi/JSGames",
@@ -180,7 +229,14 @@
       "license": "MIT",
       "source": "https://github.com/iampavangandhi/JSGames",
       "size": 4560,
-      "sha256": "348698e96bf2b335a447ecf0da42aca7c4455a9b05eef6facb8b7b879df8633b"
+      "sha256": "348698e96bf2b335a447ecf0da42aca7c4455a9b05eef6facb8b7b879df8633b",
+      "files": [
+        {
+          "path": "library/tic-tac-toe.html",
+          "size": 4560,
+          "sha256": "348698e96bf2b335a447ecf0da42aca7c4455a9b05eef6facb8b7b879df8633b"
+        }
+      ]
     },
     {
       "id": "flx-invaders",
@@ -201,6 +257,7 @@
         "ArrowRight",
         "Space"
       ],
+      "instructions": "←/→ para mover · Espaço para atirar.",
       "entry": "library/flx-invaders.swf",
       "cover": "covers/flx-invaders.svg",
       "attribution": "Adam “Atomic” Saltsman · Flixel",
@@ -209,7 +266,14 @@
       "source": "https://github.com/AdamAtomic/Flx-Invaders",
       "runtime": "ruffle",
       "size": 68585,
-      "sha256": "752a6e74d69163c55223c98202bd7a91e32a1b21aa92172dadc25573e526ed13"
+      "sha256": "752a6e74d69163c55223c98202bd7a91e32a1b21aa92172dadc25573e526ed13",
+      "files": [
+        {
+          "path": "library/flx-invaders.swf",
+          "size": 68585,
+          "sha256": "752a6e74d69163c55223c98202bd7a91e32a1b21aa92172dadc25573e526ed13"
+        }
+      ]
     },
     {
       "id": "mode",
@@ -233,6 +297,7 @@
         "X",
         "C"
       ],
+      "instructions": "Setas movem · X pula · C atira.",
       "entry": "library/mode.swf",
       "cover": "covers/mode.svg",
       "attribution": "Adam “Atomic” Saltsman · Flixel",
@@ -241,7 +306,534 @@
       "source": "https://github.com/AdamAtomic/Mode",
       "runtime": "ruffle",
       "size": 314177,
-      "sha256": "fe9a59ca0ab10a4e9b0aa3d5518e9414daca5231e639722cda336d974eaf2dcc"
+      "sha256": "fe9a59ca0ab10a4e9b0aa3d5518e9414daca5231e639722cda336d974eaf2dcc",
+      "files": [
+        {
+          "path": "library/mode.swf",
+          "size": 314177,
+          "sha256": "fe9a59ca0ab10a4e9b0aa3d5518e9414daca5231e639722cda336d974eaf2dcc"
+        }
+      ]
+    },
+    {
+      "id": "stick-arena",
+      "name": "Stick Arena",
+      "description": "Luta de stick figures contra a CPU com socos, chutes, defesa e combinações.",
+      "category": "Luta",
+      "type": "html5",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "W",
+        "A",
+        "S",
+        "D",
+        "J",
+        "K",
+        "Space",
+        "Enter"
+      ],
+      "instructions": "A/D mover · W pular · S defender · J soco · K chute.",
+      "entry": "library/stick-arena.html",
+      "cover": "covers/stick-arena.svg",
+      "size": 6426,
+      "sha256": "89c6eb969280a8dbf01759e5dd3ee4bc286090a8141a6e6bcf918268e56d582a",
+      "files": [
+        {
+          "path": "library/stick-arena.html",
+          "size": 6426,
+          "sha256": "89c6eb969280a8dbf01759e5dd3ee4bc286090a8141a6e6bcf918268e56d582a"
+        }
+      ]
+    },
+    {
+      "id": "hextris",
+      "name": "Hextris",
+      "description": "O puzzle hexagonal rápido que ficou em destaque no GitHub e Hacker News.",
+      "category": "Puzzle",
+      "type": "html5",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowLeft",
+        "ArrowRight",
+        "A",
+        "D"
+      ],
+      "instructions": "Toque à esquerda/direita ou use ←/→ para girar.",
+      "entry": "library/hextris/index.html",
+      "packageRoot": "library/hextris",
+      "packageExclude": [
+        "library/hextris/images/icons",
+        "library/hextris/images/btn_facebook.svg",
+        "library/hextris/images/btn_share.svg",
+        "library/hextris/images/btn_twitter.svg",
+        "library/hextris/images/icon_arrows.svg"
+      ],
+      "cover": "covers/hextris.svg",
+      "attribution": "Hextris · Logan Engstrom e colaboradores",
+      "copyright": "Copyright (C) 2018 Logan Engstrom",
+      "license": "GPL-3.0-or-later",
+      "source": "https://github.com/Hextris/hextris",
+      "size": 1342818,
+      "sha256": "6dd5e7a387b7a023cd4bbda9a484b538c7ef8300d703e52782cef0e5652e8446",
+      "files": [
+        {
+          "path": "library/hextris/LICENSE.md",
+          "size": 35178,
+          "sha256": "ccb349b4132ed7737f25e5adebfe61f3d52dca33708df1e50352320438d1d4c2"
+        },
+        {
+          "path": "library/hextris/images/android.png",
+          "size": 9614,
+          "sha256": "e7c80b68ae186170def9ce02a33531dcb6b7104e1e5c402e0282441e513c8c55"
+        },
+        {
+          "path": "library/hextris/images/appstore.svg",
+          "size": 12353,
+          "sha256": "25178aeef6eb6b83b96f5f2d004eda3bffbb37122de64afbaef7107b384a4132"
+        },
+        {
+          "path": "library/hextris/images/btn_back.svg",
+          "size": 1210,
+          "sha256": "84b7c15aecae54ca3359b80d147d585f34beb86cd9f7fcf2686bb6df5650b976"
+        },
+        {
+          "path": "library/hextris/images/btn_help.svg",
+          "size": 3174,
+          "sha256": "b5b8db43c79f434c505c35dc33a5fdfd6195e417ebc9f2a226ec0cc108a04bce"
+        },
+        {
+          "path": "library/hextris/images/btn_pause.svg",
+          "size": 1179,
+          "sha256": "bd1212415523d410206033fe03e9748a189981d20def1f879b1fd004f469cf56"
+        },
+        {
+          "path": "library/hextris/images/btn_restart.svg",
+          "size": 1579,
+          "sha256": "40c88cd8d0b9488243df1be7b6319f0bccc5a07d157b03432a81ac28cbd5bd23"
+        },
+        {
+          "path": "library/hextris/images/btn_resume.svg",
+          "size": 1119,
+          "sha256": "6e27c24cbcd2d7ed0f8bbdfc717f8c85c86499d865964bbed487663d0fbe5593"
+        },
+        {
+          "path": "library/hextris/images/facebook-opengraph.png",
+          "size": 18133,
+          "sha256": "8372d04a94069666a15f6b61461b9a0641dc0d0989ec9fdd123ff08a80d318b9"
+        },
+        {
+          "path": "library/hextris/images/twitter-opengraph.png",
+          "size": 17258,
+          "sha256": "e799d31923ca034365e312f9cc5f19fb97e9eb74b15f1c573203dfc5064bfd38"
+        },
+        {
+          "path": "library/hextris/index.html",
+          "size": 10627,
+          "sha256": "8bcf377c6d0b208d3663bea9f0a7649584a2e2b80fa415702a4a8f6e0c7c3c34"
+        },
+        {
+          "path": "library/hextris/js/Block.js",
+          "size": 5951,
+          "sha256": "8dc16633cf4443126d66b2b4851d113067a8dfe52c85db30531c8920c039110c"
+        },
+        {
+          "path": "library/hextris/js/Hex.js",
+          "size": 5005,
+          "sha256": "021ac309917508afea58295ce8db7205768f39da38bbc6147adb2c5cc3240ff0"
+        },
+        {
+          "path": "library/hextris/js/Text.js",
+          "size": 600,
+          "sha256": "7eb73bf9f10b97f2fb00d5af182ba8f649723cc82fdcae66b131eafc2d754a75"
+        },
+        {
+          "path": "library/hextris/js/checking.js",
+          "size": 2894,
+          "sha256": "9f8761f25c184013fbbaf29d0e6141e3064c0b103132c6f97a1c93d8e0595821"
+        },
+        {
+          "path": "library/hextris/js/comboTimer.js",
+          "size": 2230,
+          "sha256": "90c9df8009abb46fd92d51a9631e4e67a9fd2095080a373a7c0e8ff1fc599a9b"
+        },
+        {
+          "path": "library/hextris/js/initialization.js",
+          "size": 6428,
+          "sha256": "934241add410045835a5c68d9ba82588561409c385828ec302ec5c050a5182b8"
+        },
+        {
+          "path": "library/hextris/js/input.js",
+          "size": 4952,
+          "sha256": "ec27fdd24caf206db1cc2cb0ea35115f72861ae5ff2a31df915bad452f18532c"
+        },
+        {
+          "path": "library/hextris/js/main.js",
+          "size": 9891,
+          "sha256": "1ad07186e9d76379f97f2c037caa8f06e39c0541c1bf1a26fbdae88ed2844c43"
+        },
+        {
+          "path": "library/hextris/js/math.js",
+          "size": 318,
+          "sha256": "032789a4e1b7f509dd0d1f70becc6dd8de1429b9d36c12bce64de5fe320afc9e"
+        },
+        {
+          "path": "library/hextris/js/render.js",
+          "size": 3525,
+          "sha256": "bcf83391093e3980abd1e12fdfcc6364735c2d79f0fe74006905e1d83e537c13"
+        },
+        {
+          "path": "library/hextris/js/save-state.js",
+          "size": 1343,
+          "sha256": "22ab1cb924fc3e7be06222e449c338385832cd7b6067ec1cbae3955b700675c6"
+        },
+        {
+          "path": "library/hextris/js/update.js",
+          "size": 1840,
+          "sha256": "f6983acf1cee3e09d1f71d6ddfe1badba4ee4394734d8a99cb231db249a87c1a"
+        },
+        {
+          "path": "library/hextris/js/view.js",
+          "size": 7422,
+          "sha256": "02ab0e8c634b21306a44977c25461f137019763e8bda6ddbdaca10b0b51af2cf"
+        },
+        {
+          "path": "library/hextris/js/wavegen.js",
+          "size": 5391,
+          "sha256": "05c9b4f996ea32f0aabf1e99ce4cb9ab8fe4cc4596dde9b2c06f63c8400e8150"
+        },
+        {
+          "path": "library/hextris/style/fa/css/font-awesome.css",
+          "size": 25167,
+          "sha256": "2bead76d9f6089e144b6dabc4959ff055f2295790a2dfba6b547266594765df6"
+        },
+        {
+          "path": "library/hextris/style/fa/css/font-awesome.min.css",
+          "size": 20734,
+          "sha256": "05540f351581e28f2423a6bd9c531f481cbd8f4006704af8c6d1b9732ac64e1c"
+        },
+        {
+          "path": "library/hextris/style/fa/fonts/FontAwesome.otf",
+          "size": 75188,
+          "sha256": "f7b60acb8a44554b59ef3c31bae942be65e0f1045b55400807a2ac6fde2949ba"
+        },
+        {
+          "path": "library/hextris/style/fa/fonts/fontawesome-webfont.eot",
+          "size": 72449,
+          "sha256": "9f8288933d2c87ab3cdbdbda5c9fa1e1e139b01c7c1d1983f91a13be85173975"
+        },
+        {
+          "path": "library/hextris/style/fa/fonts/fontawesome-webfont.svg",
+          "size": 253487,
+          "sha256": "4f1f9ffe01469bbd03b254ec563c304dd92276514110364148cb7ffdd75d3297"
+        },
+        {
+          "path": "library/hextris/style/fa/fonts/fontawesome-webfont.ttf",
+          "size": 141564,
+          "sha256": "c2a9333b008247abd42354df966498b4c2f1aa51a10b7e178a4f5df2edea4ce1"
+        },
+        {
+          "path": "library/hextris/style/fa/fonts/fontawesome-webfont.woff",
+          "size": 83760,
+          "sha256": "66db52b456efe7e29cec11fa09421d03cb09e37ed1b567307ec0444fd605ce31"
+        },
+        {
+          "path": "library/hextris/style/fonts/Exo2-ExtraLight.otf",
+          "size": 64996,
+          "sha256": "a5a6d21b8dbdded88e8c6b87fbe1a3ae92a5513633b55e50009676089c3955ef"
+        },
+        {
+          "path": "library/hextris/style/fonts/Exo2-Regular.otf",
+          "size": 65552,
+          "sha256": "ebfec5f5c1598340e24229201189409665e92b1251bbaf225d16959e272a443f"
+        },
+        {
+          "path": "library/hextris/style/fonts/Exo2-SemiBold.otf",
+          "size": 68732,
+          "sha256": "b40e64b126fd0c400c618e264c6cf3479477b69cc33e2ef363daef63c1d0c794"
+        },
+        {
+          "path": "library/hextris/style/fonts/Lovelo.otf",
+          "size": 33284,
+          "sha256": "c41486f154206865877f0123e9cec36b30e931efd9b42afb5150bc5cdbebab91"
+        },
+        {
+          "path": "library/hextris/style/fonts/QuattrocentoSans-Regular.ttf",
+          "size": 98340,
+          "sha256": "8ee55c4a998c079efce0db96a30520a121d2bb90fe568f6a9e5cef54cc82ad59"
+        },
+        {
+          "path": "library/hextris/style/fonts/roboto.woff",
+          "size": 15660,
+          "sha256": "1fd02b01f4d67ec3521f636b95709697114ced7601ad80f7bd37e42bcb95afe4"
+        },
+        {
+          "path": "library/hextris/style/rrssb.css",
+          "size": 10978,
+          "sha256": "0c5cd0d327b63e346fcc637d5bb31630d4767d2f22a40132850f1d3da1f233b1"
+        },
+        {
+          "path": "library/hextris/style/style.css",
+          "size": 7978,
+          "sha256": "766e0d988ec3b1343d9182dccee2190c742b4d17ee764826bdd488bad95dd4d6"
+        },
+        {
+          "path": "library/hextris/vendor/hammer.min.js",
+          "size": 13710,
+          "sha256": "f91094848368717989484b6fe060675e4f7ae194f3fe85650aca413b9e987271"
+        },
+        {
+          "path": "library/hextris/vendor/jquery.js",
+          "size": 92593,
+          "sha256": "ee120ee3cca09a6e21325332e3294444d16406a355b8b0c33dbd9cc3ea3fbe2c"
+        },
+        {
+          "path": "library/hextris/vendor/js.cookie.js",
+          "size": 3242,
+          "sha256": "dd972387609461c36da7be13326bc22f48a89c3df0aad539c80f16d65046ff72"
+        },
+        {
+          "path": "library/hextris/vendor/jsonfn.min.js",
+          "size": 809,
+          "sha256": "5f0502c3c48812393a14ebc4a51785085903b713a0df8eb8533fafea8bb529a9"
+        },
+        {
+          "path": "library/hextris/vendor/keypress.min.js",
+          "size": 9985,
+          "sha256": "e3a60e96762936ce21bdb27f95176ef0eeac75b962ccaade28861ab14af8d11d"
+        },
+        {
+          "path": "library/hextris/vendor/rrssb.min.js",
+          "size": 4972,
+          "sha256": "974e9bf2a21cc47e20182eb5a3daaf40d0e69a13989c8e10d4014f4aae5987ce"
+        },
+        {
+          "path": "library/hextris/vendor/sweet-alert.min.js",
+          "size": 10424,
+          "sha256": "ac46ed6a8364a5004cfc46372e42ccde232cee43e6594dd4233a486311c3d439"
+        }
+      ]
+    },
+    {
+      "id": "clumsy-bird",
+      "name": "Clumsy Bird",
+      "description": "Um conhecido clone HTML5 do estilo Flappy Bird feito com melonJS.",
+      "category": "Arcade",
+      "type": "html5",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "keyboard"
+      ],
+      "keys": [
+        "Space"
+      ],
+      "instructions": "Toque na tela ou use Espaço para bater as asas.",
+      "entry": "library/clumsy-bird/index.html",
+      "packageRoot": "library/clumsy-bird",
+      "packageExclude": [
+        "library/clumsy-bird/js/entities",
+        "library/clumsy-bird/js/screens",
+        "library/clumsy-bird/js/game.js",
+        "library/clumsy-bird/data/bgm/.placeholder",
+        "library/clumsy-bird/data/img/.placeholder",
+        "library/clumsy-bird/data/sfx/.placeholder"
+      ],
+      "cover": "covers/clumsy-bird.svg",
+      "attribution": "Clumsy Bird · Ellison Leão e colaboradores",
+      "copyright": "Copyright dos autores e colaboradores de Clumsy Bird",
+      "license": "GPL-3.0",
+      "source": "https://github.com/ellisonleao/clumsy-bird",
+      "size": 3959755,
+      "sha256": "2f9d06bc4994b77ced49d5a8afbfcc76957fe8917a555792232494119fe76319",
+      "files": [
+        {
+          "path": "library/clumsy-bird/LICENSE.md",
+          "size": 35141,
+          "sha256": "589ed823e9a84c56feb95ac58e7cf384626b9cbf4fda2a907bc36e103de1bad2"
+        },
+        {
+          "path": "library/clumsy-bird/build/clumsy-min.js",
+          "size": 12842,
+          "sha256": "e01c8715a1f3f9c3a8dc3ce683a63ba6a756d8f2aae96cb11cc0c99afd3ed4de"
+        },
+        {
+          "path": "library/clumsy-bird/data/bgm/theme.mp3",
+          "size": 1408418,
+          "sha256": "8bed9acfb0bce3b1f98f7296f838039a81d1582aa7b946e85c14d30361eac354"
+        },
+        {
+          "path": "library/clumsy-bird/data/bgm/theme.ogg",
+          "size": 2078186,
+          "sha256": "c6bbde7e3572121536eaa43f9885f585fb14469345455e3bb78f6b7d068d7536"
+        },
+        {
+          "path": "library/clumsy-bird/data/css/gamefont.eot",
+          "size": 3433,
+          "sha256": "9dda1869c7828574e7f1a8a30966fe21f4d4307a04db388009e5329d363ef74f"
+        },
+        {
+          "path": "library/clumsy-bird/data/css/gamefont.svg",
+          "size": 11072,
+          "sha256": "9eeb6e0232aaa6488410b24a620d7c103f9cf85b6ae9aa6766ab0e751bff183c"
+        },
+        {
+          "path": "library/clumsy-bird/data/css/gamefont.ttf",
+          "size": 8856,
+          "sha256": "5f54cb6c64dd73176b3fe0269daa953ffeb6b3446d777a58984c3da3a057afe2"
+        },
+        {
+          "path": "library/clumsy-bird/data/css/gamefont.woff",
+          "size": 4080,
+          "sha256": "ec9e8ce7eb397f64908f74d2e5f58c9c7c2e5d2aa277212aa36d230957c9bc6c"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/bg.png",
+          "size": 4576,
+          "sha256": "1ca3ef1c0433183445973aa87d7105c8a2ff266099490276592d8815de7c94d9"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/clumsy.png",
+          "size": 1557,
+          "sha256": "e42e12f2a957a481fb5ec9d1f209e9118e81750cd288ffef254aab75957735e6"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/favicon.ico",
+          "size": 32038,
+          "sha256": "ed305e8974d78d64d5700a56f0eede99b2d4b38f2ff23bfa47093e920d5431c3"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/gameover.png",
+          "size": 2749,
+          "sha256": "1808919fc97deb987959f72ae8467fd9dc16201ff323c4b0c55e7b13b34cc819"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/gameoverbg.png",
+          "size": 1983,
+          "sha256": "01c091e40279744cc80e409cc2906c93757bba752982ef0eab626e4f3761a4aa"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/getready.png",
+          "size": 2925,
+          "sha256": "6cb8cd0fcb830405bcb0924fa7e9093ce01ad554bd844f0e614c327a32a8fea1"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/ground.png",
+          "size": 1612,
+          "sha256": "ceac2ab3b0eeb26bf8b993a8a668a0dcba89a36bb23200045e0e74e6805d482b"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/hit.png",
+          "size": 1028,
+          "sha256": "38c19fca1d144129588d327e5851af24deb2d7d111a97d0820a933c0d63fdbee"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/logo.png",
+          "size": 20284,
+          "sha256": "bfe4dfe01a8fdc3dd391ce774d62cee551348e0f78cfb5dae245664a07064e75"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/new.png",
+          "size": 2196,
+          "sha256": "ebb48544f9f123260c0a5bfc2b07492b9b0cc829da55a9f4297ccb0e76620d15"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/pipe.png",
+          "size": 23851,
+          "sha256": "3caa3c7b83727a06320c2e3d29da46a6e54d0da9b38fc258323084783a7e791c"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/share.png",
+          "size": 8631,
+          "sha256": "801a8eb19f31dbd722144c5fb1decdbd02cf55bf1f1d75c6289e326c66650042"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/touch-icon-iphone-retina.png",
+          "size": 1265,
+          "sha256": "b3b4b9ea231efbfddfac19aa57bc005a07a738a822c0e25659b228502344a31c"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/touch-icon-iphone.png",
+          "size": 997,
+          "sha256": "dd718f9f414e6581cbae7f4756b653476366e913f9ceadf8d89372081db7e0ce"
+        },
+        {
+          "path": "library/clumsy-bird/data/img/tweet.png",
+          "size": 6704,
+          "sha256": "bf7a56eb1b7c655c5ba2c04446c2459ec6f8677726f568be36731be90935d12f"
+        },
+        {
+          "path": "library/clumsy-bird/data/sfx/hit.mp3",
+          "size": 2821,
+          "sha256": "e53e723202bba588d4b0b60077d3ba2bc8494760e6eab095abe785389c7cc44c"
+        },
+        {
+          "path": "library/clumsy-bird/data/sfx/hit.ogg",
+          "size": 6590,
+          "sha256": "52c99910ea73862a7f73be18d08b54aa417e6fa058de511a493afa272f19c81c"
+        },
+        {
+          "path": "library/clumsy-bird/data/sfx/lose.mp3",
+          "size": 5015,
+          "sha256": "4a39a555ad2e3ea1a6d54f549d31fa42714ff25751d74d5437cb4c1bff82fb82"
+        },
+        {
+          "path": "library/clumsy-bird/data/sfx/lose.ogg",
+          "size": 9030,
+          "sha256": "19e55bc294cd663a8bd2df6c1f04ba22b0fab7a11dfa608ad33f0a593d12733e"
+        },
+        {
+          "path": "library/clumsy-bird/data/sfx/wing.mp3",
+          "size": 3200,
+          "sha256": "5b97a31e54597b1165549106ecf0df48ca24767af43d2794099c5c0e4c7a5d04"
+        },
+        {
+          "path": "library/clumsy-bird/data/sfx/wing.ogg",
+          "size": 7332,
+          "sha256": "97c0b9ad647c96327d963f620d920499ad702c3f8674be90ba885426a499f307"
+        },
+        {
+          "path": "library/clumsy-bird/data/sfx/wing.wav",
+          "size": 23012,
+          "sha256": "205803e161bd9134a8137ed98779f8880ff84ebf3613b33e10262b4278bd22e0"
+        },
+        {
+          "path": "library/clumsy-bird/humans.txt",
+          "size": 268,
+          "sha256": "16a2745e56c9f5240dca3f25e2a9d0e9df69bdf14ac90b0555cc5651b17865b1"
+        },
+        {
+          "path": "library/clumsy-bird/index.css",
+          "size": 1260,
+          "sha256": "17dfa48c753351c729177d0838b9281a3b7b46956fec7b0e9266791800cab625"
+        },
+        {
+          "path": "library/clumsy-bird/index.html",
+          "size": 2429,
+          "sha256": "f829cfb1d7b49f503357293efeeb5f4b284194e1f4c9088cd70cff050b2d0eb9"
+        },
+        {
+          "path": "library/clumsy-bird/js/melonJS-min.js",
+          "size": 224374,
+          "sha256": "4b281a49b40f8f1914e0bc49c2c59f99a9bd8127981f17dbd3bc65d00685385c"
+        }
+      ]
     }
   ]
 }

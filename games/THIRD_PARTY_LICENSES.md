@@ -73,6 +73,33 @@ Apache License 2.0. The complete license texts are included beside the runtime:
 
 Source: https://github.com/ruffle-rs/ruffle
 
+## Hextris
+
+Source: https://github.com/Hextris/hextris
+
+Imported from commit: `3f4847dc8fd7dab3d1c87e6324b9159d92fbd396`
+
+Copyright (C) 2018 Logan Engstrom
+
+Hextris is distributed under the GNU General Public License, version 3 or any
+later version. The complete license is included at:
+
+- `games/library/hextris/LICENSE.md`
+
+Advertising and analytics loaders from the upstream page were not included in
+the OrganizeOn player.
+
+## Clumsy Bird
+
+Source: https://github.com/ellisonleao/clumsy-bird
+
+Imported from commit: `fae3d487d5102af29fb3f78431cbd45e9b83aed3`
+
+Clumsy Bird is distributed under the GNU General Public License, version 3.
+The complete license is included at:
+
+- `games/library/clumsy-bird/LICENSE.md`
+
 ## Tetris and Tic Tac Toe
 
 Source: https://github.com/iampavangandhi/JSGames

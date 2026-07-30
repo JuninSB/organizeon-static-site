@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400">
+  <rect width="640" height="400" rx="28" fill="#171923"/>
+  <g transform="translate(320 190)">
+    <path d="M0-112 97-56 97 56 0 112-97 56-97-56z" fill="#242838" stroke="#fff" stroke-width="8"/>
+    <path d="M0-98 85-49 0 0z" fill="#e74c3c"/>
+    <path d="M85-49 85 49 0 0z" fill="#f1c40f"/>
+    <path d="M85 49 0 98 0 0z" fill="#2ecc71"/>
+    <path d="M0 98-85 49 0 0z" fill="#3498db"/>
+    <path d="M-85 49-85-49 0 0z" fill="#9b59b6"/>
+    <path d="M-85-49 0-98 0 0z" fill="#e67e22"/>
+  </g>
+  <text x="35" y="365" fill="#fff" font-family="system-ui,sans-serif" font-size="40" font-weight="900">HEXTRIS</text>
+  <text x="510" y="365" fill="#72e7c9" font-family="system-ui,sans-serif" font-size="19" font-weight="800">MOBILE</text>
+</svg>
