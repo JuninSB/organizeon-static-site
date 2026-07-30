@@ -13,6 +13,10 @@ const state = {
   permissions: [],
   monitoring: null,
   monitorSocket: null,
+  requestDomain: "all",
+  logs: [],
+  logSocket: null,
+  logsPaused: false,
   terminal: null,
 };
 const terminalView = new Terminal({
@@ -70,6 +74,21 @@ document
 document
   .getElementById("monitor-activate")
   .addEventListener("click", toggleMonitoring);
+document
+  .getElementById("request-domain-select")
+  .addEventListener("change", (event) => {
+    state.requestDomain = event.currentTarget.value;
+    if (state.monitoring) renderMonitoring(state.monitoring);
+  });
+document
+  .getElementById("logs-pause")
+  .addEventListener("click", toggleLogsPause);
+document
+  .getElementById("logs-clear")
+  .addEventListener("click", () => {
+    state.logs = [];
+    renderLogs();
+  });
 document
   .getElementById("create-user")
   .addEventListener("click", openCreateUser);
@@ -136,6 +155,7 @@ function showView(name) {
   });
   if (name === "users") loadUsers();
   if (name === "terminal") ensureTerminalOpen();
+  if (name === "logs") connectLogs();
 }
 
 async function toggleMonitoring() {
@@ -169,10 +189,12 @@ function renderMonitoring(monitoring) {
     `${monitoring.ram.percent.toFixed(1)}%`;
   document.getElementById("ram-detail").textContent =
     `${formatBytes(monitoring.ram.usedBytes)} / ${formatBytes(monitoring.ram.totalBytes)}`;
+  updateRequestDomainOptions(monitoring.requests);
+  const requestStats = selectedRequestStats(monitoring.requests);
   document.getElementById("rpm-value").textContent =
-    monitoring.requests.perMinute;
+    requestStats.perMinute;
   document.getElementById("request-detail").textContent =
-    `${monitoring.requests.totalSinceStart || 0} total · ${monitoring.requests.trackedFiveMinutes} em 5 min · ${monitoring.requests.averageResponseMs.toFixed(1)} ms médio`;
+    `${requestStats.totalSinceStart || 0} total · ${requestStats.trackedFiveMinutes} em 5 min · ${requestStats.averageResponseMs.toFixed(1)} ms médio`;
   document.getElementById("uptime-value").textContent =
     formatDuration(monitoring.uptimeSeconds);
   document.getElementById("process-detail").textContent =
@@ -325,10 +347,169 @@ function renderCharts(history) {
   );
   drawChart(
     document.getElementById("request-chart"),
-    history,
-    [{ key: "requestsPerMinute", color: "#67e8d1" }],
-    Math.max(5, ...history.map((point) => point.requestsPerMinute)),
+    history.map((point) => ({
+      ...point,
+      selectedRequestsPerMinute:
+        state.requestDomain === "all"
+          ? point.requestsPerMinute
+          : point.requestsPerMinuteByDomain?.[state.requestDomain] || 0,
+    })),
+    [{ key: "selectedRequestsPerMinute", color: "#67e8d1" }],
+    Math.max(
+      5,
+      ...history.map((point) =>
+        state.requestDomain === "all"
+          ? point.requestsPerMinute
+          : point.requestsPerMinuteByDomain?.[state.requestDomain] || 0,
+      ),
+    ),
   );
+}
+
+function updateRequestDomainOptions(requests) {
+  const select = document.getElementById("request-domain-select");
+  const domains = (requests.byDomain || []).map((entry) => entry.domain);
+  if (
+    state.requestDomain !== "all" &&
+    !domains.includes(state.requestDomain)
+  ) {
+    state.requestDomain = "all";
+  }
+  const expected = ["all", ...domains];
+  const current = [...select.options].map((option) => option.value);
+  if (expected.join("\0") !== current.join("\0")) {
+    select.replaceChildren(
+      ...expected.map((domain) => {
+        const option = document.createElement("option");
+        option.value = domain;
+        option.textContent =
+          domain === "all" ? "Todos os domínios" : domain;
+        return option;
+      }),
+    );
+  }
+  select.value = state.requestDomain;
+}
+
+function selectedRequestStats(requests) {
+  if (state.requestDomain === "all") return requests;
+  return (
+    (requests.byDomain || []).find(
+      (entry) => entry.domain === state.requestDomain,
+    ) || {
+      perMinute: 0,
+      trackedFiveMinutes: 0,
+      totalSinceStart: 0,
+      averageResponseMs: 0,
+    }
+  );
+}
+
+function connectLogs() {
+  if (
+    state.logSocket &&
+    state.logSocket.readyState <= WebSocket.OPEN
+  ) {
+    return;
+  }
+  const token = localStorage.getItem(tokenKey);
+  const base =
+    `${config.apiOrigin.replace(/^http/, "ws")}` +
+    `${config.apiPrefix}/logs/`;
+  const url = token ? `${base}${encodeURIComponent(token)}/` : base;
+  const socket = new WebSocket(url);
+  state.logSocket = socket;
+  document.getElementById("logs-status").textContent = "Conectando…";
+  socket.addEventListener("open", () => {
+    document.getElementById("logs-status").textContent =
+      "Conectado · atualização em tempo real";
+  });
+  socket.addEventListener("message", (event) => {
+    if (state.logsPaused) return;
+    try {
+      const message = JSON.parse(event.data);
+      if (message.type === "snapshot") {
+        state.logs = message.entries || [];
+      } else if (message.type === "entry" && message.entry) {
+        state.logs.push(message.entry);
+        if (state.logs.length > 500) state.logs = state.logs.slice(-500);
+      }
+      renderLogs();
+    } catch {
+      showToast("Evento de log inválido.");
+    }
+  });
+  socket.addEventListener("close", () => {
+    if (state.logSocket === socket) state.logSocket = null;
+    document.getElementById("logs-status").textContent = "Desconectado";
+  });
+  socket.addEventListener("error", () => {
+    document.getElementById("logs-status").textContent =
+      "Falha ao conectar";
+  });
+}
+
+function toggleLogsPause() {
+  state.logsPaused = !state.logsPaused;
+  document.getElementById("logs-pause").textContent =
+    state.logsPaused ? "Continuar" : "Pausar";
+  document.getElementById("logs-status").textContent =
+    state.logsPaused
+      ? "Pausado localmente"
+      : state.logSocket?.readyState === WebSocket.OPEN
+        ? "Conectado · atualização em tempo real"
+        : "Desconectado";
+}
+
+function renderLogs() {
+  const list = document.getElementById("logs-list");
+  if (!state.logs.length) {
+    const empty = document.createElement("div");
+    empty.className = "log-empty";
+    empty.textContent = "Nenhum evento para mostrar.";
+    list.replaceChildren(empty);
+    return;
+  }
+  const nearBottom =
+    list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+  list.replaceChildren(
+    ...state.logs.map((entry) => {
+      const row = document.createElement("div");
+      row.className = "log-entry";
+      const time = document.createElement("span");
+      time.className = "log-time";
+      time.textContent = new Date(entry.at).toLocaleTimeString("pt-BR");
+      const direction = document.createElement("span");
+      direction.className =
+        `log-direction ${entry.direction === "sent" ? "sent" : ""}`;
+      direction.textContent =
+        entry.direction === "sent" ? "↑ ENVIO" : "↓ RECEB.";
+      const channel = document.createElement("span");
+      channel.className = "log-channel";
+      channel.textContent = entry.channel || "—";
+      const path = document.createElement("span");
+      path.className = "log-path";
+      path.textContent =
+        `${entry.method || ""} ${entry.path || entry.message || ""}`.trim();
+      path.title = entry.message || "";
+      const meta = document.createElement("span");
+      meta.className = "log-meta";
+      meta.textContent = logMeta(entry);
+      row.append(time, direction, channel, path, meta);
+      return row;
+    }),
+  );
+  if (nearBottom) list.scrollTop = list.scrollHeight;
+}
+
+function logMeta(entry) {
+  const parts = [];
+  if (entry.statusCode) parts.push(`HTTP ${entry.statusCode}`);
+  if (Number.isFinite(entry.durationMs)) {
+    parts.push(`${entry.durationMs.toFixed(0)} ms`);
+  }
+  if (entry.bytes) parts.push(formatBytes(entry.bytes));
+  return parts.join(" · ") || "—";
 }
 
 function drawChart(canvas, history, series, maximum) {

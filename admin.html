@@ -137,6 +137,28 @@
         border-radius: 5px; color: var(--cyan); background: rgba(57,201,239,.1);
         font-size: 9px; font-weight: 800; text-transform: uppercase;
       }
+      .logs-card { overflow: hidden; min-height: 560px; }
+      .logs-toolbar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; padding: 13px 15px; border-bottom: 1px solid var(--line);
+      }
+      .logs-toolbar div { display: flex; gap: 8px; }
+      .logs-toolbar small { color: var(--muted); }
+      .logs-list {
+        height: min(65vh, 620px); overflow: auto;
+        font: 11px/1.45 "JetBrains Mono", "Fira Code", monospace;
+      }
+      .log-entry {
+        display: grid; grid-template-columns: 78px 74px 82px minmax(160px, 1fr) 90px;
+        gap: 10px; padding: 9px 13px;
+        border-bottom: 1px solid rgba(134,255,224,.06);
+      }
+      .log-entry:hover { background: rgba(93,240,200,.035); }
+      .log-time, .log-meta { color: #6f9188; }
+      .log-direction { color: var(--cyan); font-weight: 800; }
+      .log-direction.sent { color: var(--green); }
+      .log-path { min-width: 0; overflow-wrap: anywhere; color: #cce5de; }
+      .log-empty { padding: 40px 18px; color: var(--muted); text-align: center; }
       .card {
         border: 1px solid var(--line); border-radius: 16px; background: var(--panel);
         box-shadow: 0 20px 55px rgba(0, 0, 0, .18); backdrop-filter: blur(16px);
@@ -145,6 +167,10 @@
       .metric span { color: var(--muted); font-size: 12px; }
       .metric strong { display: block; margin: 8px 0 3px; font-size: 26px; }
       .metric small { color: #6f9188; }
+      .metric select {
+        min-height: 30px; margin-top: 9px; padding: 0 8px;
+        color: #bce6da; font-size: 11px;
+      }
       .charts {
         display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;
       }
@@ -242,6 +268,13 @@
         header { align-items: flex-start; flex-direction: column; }
         .metrics { grid-template-columns: 1fr; }
         .server-facts { grid-template-columns: 1fr; }
+        .log-entry {
+          grid-template-columns: 65px 58px minmax(120px, 1fr);
+          gap: 6px; font-size: 9px;
+        }
+        .log-entry .log-channel, .log-entry .log-meta { display: none; }
+        .logs-toolbar { align-items: stretch; flex-direction: column; }
+        .logs-toolbar div { display: grid; grid-template-columns: 1fr 1fr; }
       }
       @media (max-width: 700px) {
         .shell { display: block; }
@@ -356,6 +389,7 @@
         </div>
         <nav class="nav">
           <button class="active" data-view="overview">◫ <span>Overview</span></button>
+          <button data-view="logs" data-permission="admin.dashboard">≡ <span>Logs</span></button>
           <button data-view="users" data-permission="admin.users">♙ <span>Users</span></button>
           <button data-view="terminal" data-permission="admin.terminal">⌘ <span>Terminal</span></button>
         </nav>
@@ -417,12 +451,36 @@
             <div class="metrics">
               <article class="card metric"><span>CPU</span><strong id="cpu-value">0%</strong><small id="cpu-detail">—</small></article>
               <article class="card metric"><span>RAM</span><strong id="ram-value">0%</strong><small id="ram-detail">—</small></article>
-              <article class="card metric"><span>REQUESTS / MIN</span><strong id="rpm-value">0</strong><small id="request-detail">—</small></article>
+              <article class="card metric">
+                <span>REQUESTS / MIN</span>
+                <strong id="rpm-value">0</strong>
+                <small id="request-detail">—</small>
+                <select id="request-domain-select" aria-label="Filtrar requests por domínio">
+                  <option value="all">Todos os domínios</option>
+                </select>
+              </article>
               <article class="card metric"><span>UPTIME</span><strong id="uptime-value">0m</strong><small id="process-detail">—</small></article>
             </div>
             <div class="charts">
               <article class="card chart"><h3>CPU & RAM</h3><canvas id="resource-chart"></canvas></article>
               <article class="card chart"><h3>Requests por minuto</h3><canvas id="request-chart"></canvas></article>
+            </div>
+          </div>
+        </section>
+        <section class="view" id="view-logs" hidden>
+          <div class="section-title">
+            <div><h2>Logs do servidor</h2><p>Fluxo de entrada e saída, sem conteúdo sensível.</p></div>
+          </div>
+          <div class="card logs-card">
+            <div class="logs-toolbar">
+              <small id="logs-status">Desconectado</small>
+              <div>
+                <button class="button" id="logs-pause" type="button">Pausar</button>
+                <button class="button danger" id="logs-clear" type="button">Limpar tela</button>
+              </div>
+            </div>
+            <div class="logs-list" id="logs-list">
+              <div class="log-empty">Abra esta aba para conectar aos logs.</div>
             </div>
           </div>
         </section>
