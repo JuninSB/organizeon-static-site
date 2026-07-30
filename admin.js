@@ -288,10 +288,32 @@ function renderRoutes(routes) {
       status.textContent = routeStatusLabel(route);
       statusCell.append(status);
       const responseCell = document.createElement("td");
-      responseCell.textContent =
-        route.statusCode === null || route.statusCode === undefined
-          ? route.error || "—"
-          : `HTTP ${route.statusCode} · ${route.latencyMs.toFixed(0)} ms`;
+      if (route.statusCode === null || route.statusCode === undefined) {
+        responseCell.textContent = route.error || "—";
+      } else if (route.timings) {
+        const phases = document.createElement("div");
+        phases.className = "route-timings";
+        const values = [
+          ["DNS", route.timings.dnsMs],
+          ["TCP", route.timings.tcpMs],
+          ["TLS", route.timings.tlsMs],
+          ["TTFB", route.timings.ttfbMs],
+        ];
+        for (const [label, value] of values) {
+          const phase = document.createElement("span");
+          phase.textContent = `${label} ${Number(value || 0).toFixed(0)} ms`;
+          phases.appendChild(phase);
+        }
+        const total = document.createElement("span");
+        total.className = "total";
+        total.textContent =
+          `HTTP ${route.statusCode} · total ${route.timings.totalMs.toFixed(0)} ms`;
+        phases.appendChild(total);
+        responseCell.appendChild(phases);
+      } else {
+        responseCell.textContent =
+          `HTTP ${route.statusCode} · ${route.latencyMs.toFixed(0)} ms`;
+      }
       row.append(serviceCell, routeCell, statusCell, responseCell);
       return row;
     }),

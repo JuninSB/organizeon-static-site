@@ -124,6 +124,14 @@
         color: #9fc8bd; text-overflow: ellipsis; white-space: nowrap;
       }
       .route-purpose { color: var(--muted); }
+      .route-timings {
+        display: flex; min-width: 245px; flex-wrap: wrap; gap: 4px 8px;
+        color: #91aaa3; font-size: 10px; line-height: 1.45;
+      }
+      .route-timings span { white-space: nowrap; }
+      .route-timings .total {
+        width: 100%; color: #d7e7e2; font-weight: 750;
+      }
       .route-status {
         display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px;
         border-radius: 99px; color: #8ff5c4; background: rgba(93,240,168,.1);
@@ -456,7 +464,7 @@
             <div class="routes-heading">
               <h2>Domínios e rotas</h2>
               <div class="routes-heading-actions">
-                <small>HTTP completo (DNS + TCP + TLS + resposta), não ICMP</small>
+                <small>Fases até os cabeçalhos HTTP; não é ping ICMP</small>
                 <button class="button" id="monitor-refresh" type="button" disabled>↻ Atualizar</button>
               </div>
             </div>
