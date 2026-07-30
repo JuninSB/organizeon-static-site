@@ -30,6 +30,8 @@ let controlReady = false;
 let controlReconnectTimer = null;
 let controlReconnectAttempts = 0;
 let maintainControlConnection = false;
+window.organizeonOpenProxyServerDialog = showProxyServerDialog;
+setupMobileMode();
 
 if (!config?.authenticationRequired) {
   startApplication();
@@ -634,6 +636,148 @@ function showProxyServerDialog() {
     if (event.target === wrapper) wrapper.remove();
   });
   document.body.appendChild(wrapper);
+}
+
+function setupMobileMode() {
+  const mobileMedia = window.matchMedia(
+    "(max-width: 760px), (max-width: 1024px) and (pointer: coarse)",
+  );
+  const mobileDevice =
+    navigator.userAgentData?.mobile === true ||
+    /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    );
+  const style = document.createElement("style");
+  style.id = "organizeon-mobile-styles";
+  style.textContent = `
+    html.organizeon-mobile,
+    html.organizeon-mobile body,
+    html.organizeon-mobile #root {
+      width: 100%; max-width: 100%; overflow-x: hidden;
+    }
+    html.organizeon-mobile [class~="container"] {
+      width: 100% !important; max-width: 100% !important;
+      padding-left: 14px !important; padding-right: 14px !important;
+    }
+    html.organizeon-mobile [class~="w-screen"] {
+      width: 100% !important; max-width: 100% !important;
+    }
+    html.organizeon-mobile [class~="h-screen"] {
+      height: 100dvh !important;
+    }
+    html.organizeon-mobile [class~="min-h-screen"] {
+      min-height: 100dvh !important;
+    }
+    html.organizeon-mobile [class~="w-96"] {
+      width: min(24rem, calc(100dvw - 28px)) !important;
+    }
+    html.organizeon-mobile [class~="w-80"] {
+      width: min(20rem, calc(100dvw - 24px)) !important;
+    }
+    html.organizeon-mobile [class~="p-8"] { padding: 16px !important; }
+    html.organizeon-mobile [class~="px-8"] {
+      padding-left: 16px !important; padding-right: 16px !important;
+    }
+    html.organizeon-mobile [class~="text-5xl"] {
+      font-size: 2.1rem !important; line-height: 1.08 !important;
+    }
+    html.organizeon-mobile [class~="text-6xl"] {
+      font-size: 2.45rem !important; line-height: 1.05 !important;
+    }
+    html.organizeon-mobile [class~="w-48"] {
+      width: 100% !important; max-width: 100% !important;
+    }
+    html.organizeon-mobile [class~="flex"][class~="gap-8"] {
+      flex-direction: column !important; gap: 18px !important;
+    }
+    html.organizeon-mobile [class~="grid-cols-3"],
+    html.organizeon-mobile [class~="grid-cols-4"],
+    html.organizeon-mobile [class~="grid-cols-5"],
+    html.organizeon-mobile [class~="grid-cols-6"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    html.organizeon-mobile nav {
+      max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
+    }
+    html.organizeon-mobile img,
+    html.organizeon-mobile video,
+    html.organizeon-mobile iframe {
+      max-inline-size: 100% !important;
+    }
+    html.organizeon-mobile iframe[title="content-viewer"] {
+      width: 100dvw !important; max-width: 100dvw !important;
+      height: 100dvh !important; max-height: 100dvh !important;
+    }
+    html.organizeon-mobile [class~="flex"][class~="justify-between"] {
+      flex-wrap: wrap;
+    }
+    html.organizeon-mobile button,
+    html.organizeon-mobile input,
+    html.organizeon-mobile select,
+    html.organizeon-mobile textarea {
+      max-width: 100%; min-height: 44px;
+    }
+    html.organizeon-mobile [role="dialog"] {
+      max-width: calc(100vw - 24px) !important;
+      max-height: calc(100dvh - 24px) !important;
+      overflow-y: auto !important;
+    }
+    html.organizeon-mobile #organizeon-account-navigation .trigger {
+      top: 12px; left: 12px;
+    }
+    #organizeon-mobile-notice {
+      position: fixed; top: 14px; left: 50%; z-index: 2147483647;
+      width: max-content; max-width: calc(100vw - 28px);
+      padding: 10px 14px; transform: translateX(-50%);
+      border: 1px solid rgba(93,240,200,.3); border-radius: 999px;
+      color: #dffff6; background: rgba(5,22,18,.94);
+      box-shadow: 0 12px 38px rgba(0,0,0,.35);
+      font: 650 12px/1.3 Inter, ui-sans-serif, system-ui, sans-serif;
+      transition: opacity .25s ease, transform .25s ease;
+      backdrop-filter: blur(12px);
+    }
+    #organizeon-mobile-notice.leaving {
+      opacity: 0; transform: translate(-50%, -8px);
+    }
+    @media (max-width: 390px) {
+      html.organizeon-mobile [class~="grid-cols-3"],
+      html.organizeon-mobile [class~="grid-cols-4"],
+      html.organizeon-mobile [class~="grid-cols-5"],
+      html.organizeon-mobile [class~="grid-cols-6"] {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+    }
+    @media (pointer: coarse) {
+      html.organizeon-mobile button,
+      html.organizeon-mobile a,
+      html.organizeon-mobile input,
+      html.organizeon-mobile select {
+        touch-action: manipulation;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+  let noticeShown = false;
+
+  const applyMode = () => {
+    const enabled = mobileDevice || mobileMedia.matches;
+    document.documentElement.classList.toggle(
+      "organizeon-mobile",
+      enabled,
+    );
+    if (!enabled || noticeShown) return;
+    noticeShown = true;
+    const notice = document.createElement("div");
+    notice.id = "organizeon-mobile-notice";
+    notice.setAttribute("role", "status");
+    notice.textContent = "Modo mobile ativado";
+    document.body.appendChild(notice);
+    window.setTimeout(() => notice.classList.add("leaving"), 3200);
+    window.setTimeout(() => notice.remove(), 3600);
+  };
+
+  applyMode();
+  mobileMedia.addEventListener?.("change", applyMode);
 }
 
 function showLogin(message = "") {

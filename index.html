@@ -290,7 +290,7 @@
         var versionStorageKey = "organizeon-update-version-v2";
         var manifestStorageKey = "organizeon-update-manifest-v2";
         var fileHashesStorageKey = "organizeon-update-files-v2";
-        var loaderVersion = "2.2.0";
+        var loaderVersion = "2.3.0";
         window.__ORGANIZEON_LOADER_VERSION__ = loaderVersion;
         var latestLoaderVersion = "";
         var indexUpdateRequired = false;
@@ -883,6 +883,7 @@
           frame.allow = "clipboard-read; clipboard-write; fullscreen";
           frame.style.cssText =
             "position:fixed;inset:0;width:100%;height:100%;" +
+            "height:100dvh;max-width:100dvw;" +
             "border:0;background:#090d0b;z-index:1";
           document.body.appendChild(frame);
         }
@@ -895,6 +896,7 @@
           frame.allow = "clipboard-read; clipboard-write";
           frame.style.cssText =
             "position:fixed;inset:0;width:100%;height:100%;" +
+            "height:100dvh;max-width:100dvw;" +
             "border:0;background:#07100e;z-index:1";
           document.body.appendChild(frame);
         }

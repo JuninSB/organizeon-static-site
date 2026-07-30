@@ -1,3 +1,5 @@
+import { Terminal } from "./vendor/xterm.mjs";
+
 const config = window.__ORGANIZEON_CONFIG__;
 const tokenKey = "organizeon-access-token";
 const state = {
@@ -7,11 +9,46 @@ const state = {
   monitorSocket: null,
   terminal: null,
 };
+const terminalView = new Terminal({
+  allowProposedApi: false,
+  convertEol: true,
+  cursorBlink: false,
+  disableStdin: true,
+  fontFamily:
+    '"JetBrains Mono", "Fira Code", "Cascadia Mono", monospace',
+  fontSize: 13,
+  lineHeight: 1.25,
+  scrollback: 5000,
+  theme: {
+    background: "#030807",
+    foreground: "#d7e7e2",
+    cursor: "#5df0c8",
+    selectionBackground: "#285f53",
+    black: "#1b2522",
+    red: "#ff6b75",
+    green: "#5df0a8",
+    yellow: "#f2cf66",
+    blue: "#68a7ff",
+    magenta: "#d58cff",
+    cyan: "#48d8e8",
+    white: "#d7e7e2",
+    brightBlack: "#65756f",
+    brightRed: "#ff9298",
+    brightGreen: "#8ff5c4",
+    brightYellow: "#ffe08a",
+    brightBlue: "#91bdff",
+    brightMagenta: "#e4adff",
+    brightCyan: "#82edf5",
+    brightWhite: "#ffffff",
+  },
+});
+let terminalOpened = false;
+setupDashboardMobileMode();
 
 document.querySelectorAll("[data-view]").forEach((button) => {
   button.addEventListener("click", () => showView(button.dataset.view));
 });
-document.getElementById("main-link").addEventListener("click", () => {
+document.getElementById("back-link").addEventListener("click", () => {
   if (window.parent !== window) {
     window.parent.postMessage({ type: "organizeon:open-main" }, "*");
     return;
@@ -89,6 +126,7 @@ function showView(name) {
     button.classList.toggle("active", button.dataset.view === name);
   });
   if (name === "users") loadUsers();
+  if (name === "terminal") ensureTerminalOpen();
 }
 
 async function toggleMonitoring() {
@@ -388,29 +426,45 @@ function connectTerminal() {
   const url = token ? `${base}${encodeURIComponent(token)}/` : base;
   const socket = new WebSocket(url);
   state.terminal = socket;
+  setTerminalConnectionState("connecting");
   setTerminalStatus("Conectando…");
-  appendTerminal("Conectando ao terminal seguro…\n");
+  appendTerminal("\r\n\x1b[36mConectando ao terminal seguro…\x1b[0m\r\n");
   socket.addEventListener("message", (event) => {
-    const message = JSON.parse(event.data);
+    let message;
+    try {
+      message = JSON.parse(event.data);
+    } catch {
+      appendTerminal("\x1b[31mResposta inválida do servidor.\x1b[0m\r\n");
+      return;
+    }
     if (message.type === "terminal-ready") {
+      setTerminalConnectionState("connected");
       setTerminalStatus(`Conectado · ${message.shell}`);
       document.getElementById("terminal-input").disabled = false;
-      appendTerminal(`Sessão iniciada como ${message.username}.\n`);
+      document.getElementById("terminal-input").focus();
+      appendTerminal(
+        `\x1b[32mSessão iniciada como ${message.username}.\x1b[0m\r\n`,
+      );
     } else if (message.type === "output") {
-      appendTerminal(stripAnsi(message.data));
+      appendTerminal(message.data);
     } else if (message.type === "error") {
-      appendTerminal(`Erro: ${message.message}\n`);
+      appendTerminal(`\x1b[31mErro: ${message.message}\x1b[0m\r\n`);
     } else if (message.type === "exit") {
-      appendTerminal(`\nShell encerrado (${message.code ?? message.signal}).\n`);
+      appendTerminal(
+        `\r\n\x1b[33mShell encerrado (${message.code ?? message.signal}).\x1b[0m\r\n`,
+      );
     }
   });
   socket.addEventListener("close", () => {
+    setTerminalConnectionState("disconnected");
     setTerminalStatus("Desconectado");
     document.getElementById("terminal-input").disabled = true;
     if (state.terminal === socket) state.terminal = null;
   });
   socket.addEventListener("error", () => {
-    appendTerminal("Falha ao conectar ao terminal.\n");
+    appendTerminal(
+      "\x1b[31mFalha ao conectar ao terminal.\x1b[0m\r\n",
+    );
   });
 }
 
@@ -420,6 +474,7 @@ function disconnectTerminal() {
   }
   state.terminal = null;
   document.getElementById("terminal-input").disabled = true;
+  setTerminalConnectionState("disconnected");
   setTerminalStatus("Desconectado");
 }
 
@@ -427,7 +482,7 @@ function sendTerminalCommand(event) {
   event.preventDefault();
   const input = document.getElementById("terminal-input");
   if (state.terminal?.readyState !== WebSocket.OPEN || !input.value) return;
-  appendTerminal(`$ ${input.value}\n`);
+  appendTerminal(`\x1b[38;5;244m$ ${input.value}\x1b[0m\r\n`);
   state.terminal.send(
     JSON.stringify({ type: "input", data: `${input.value}\n` }),
   );
@@ -435,16 +490,55 @@ function sendTerminalCommand(event) {
 }
 
 function appendTerminal(text) {
-  const output = document.getElementById("terminal-output");
-  output.textContent += text;
-  if (output.textContent.length > 250000) {
-    output.textContent = output.textContent.slice(-180000);
-  }
-  output.scrollTop = output.scrollHeight;
+  ensureTerminalOpen();
+  terminalView.write(text);
 }
 
 function setTerminalStatus(text) {
   document.getElementById("terminal-status").textContent = text;
+}
+
+function setTerminalConnectionState(connectionState) {
+  const connect = document.getElementById("terminal-connect");
+  const disconnect = document.getElementById("terminal-disconnect");
+  if (connectionState === "connecting") {
+    connect.textContent = "Conectando…";
+    connect.disabled = true;
+    disconnect.hidden = false;
+    return;
+  }
+  if (connectionState === "connected") {
+    connect.textContent = "Terminal conectado ✓";
+    connect.disabled = true;
+    disconnect.hidden = false;
+    return;
+  }
+  connect.textContent = "Conectar terminal";
+  connect.disabled = false;
+  disconnect.hidden = true;
+}
+
+function ensureTerminalOpen() {
+  if (!terminalOpened) {
+    terminalView.open(document.getElementById("terminal-output"));
+    terminalOpened = true;
+    terminalView.writeln(
+      '\x1b[38;5;244mClique em “Conectar terminal” para iniciar.\x1b[0m',
+    );
+  }
+  window.requestAnimationFrame(() => terminalView.refresh(0, 23));
+}
+
+function setupDashboardMobileMode() {
+  const mobile =
+    window.matchMedia("(max-width: 700px)").matches ||
+    navigator.userAgentData?.mobile === true ||
+    /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    );
+  if (!mobile) return;
+  document.documentElement.classList.add("organizeon-mobile");
+  window.setTimeout(() => showToast("Modo mobile ativado", 3200), 50);
 }
 
 function api(path, options = {}) {
@@ -510,12 +604,4 @@ function formatDuration(seconds) {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
   if (seconds < 86400) return `${(seconds / 3600).toFixed(1)}h`;
   return `${(seconds / 86400).toFixed(1)}d`;
-}
-
-function stripAnsi(value) {
-  return value.replace(
-    // eslint-disable-next-line no-control-regex
-    /[\u001B\u009B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[-a-zA-Z\d/#&.:=?%@~_]+)*)?\u0007)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]))/g,
-    "",
-  );
 }

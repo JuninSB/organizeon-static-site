@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#07100e" />
     <title>OrganizeOn — Dashboard</title>
+    <link rel="stylesheet" href="./vendor/xterm.css" />
     <style>
       :root {
         color-scheme: dark;
@@ -20,25 +21,30 @@
       }
       * { box-sizing: border-box; }
       body {
-        margin: 0; min-height: 100vh; color: var(--text); background:
+        margin: 0; min-height: 100vh; min-height: 100dvh; color: var(--text); background:
           radial-gradient(circle at 80% -10%, rgba(37, 207, 167, .16), transparent 34%),
           radial-gradient(circle at 5% 80%, rgba(35, 158, 202, .1), transparent 32%),
           var(--bg);
         font-family: Inter, ui-sans-serif, system-ui, sans-serif;
       }
       button, input, select { font: inherit; }
-      button { cursor: pointer; }
-      .shell { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+      button { cursor: pointer; user-select: none; }
+      .shell {
+        display: grid; grid-template-columns: 250px 1fr;
+        min-height: 100vh; min-height: 100dvh;
+      }
       .sidebar {
-        position: sticky; top: 0; height: 100vh; padding: 24px 16px;
+        position: sticky; top: 0; height: 100vh; height: 100dvh; padding: 24px 16px;
         border-right: 1px solid var(--line); background: rgba(5, 14, 12, .78);
         backdrop-filter: blur(20px);
       }
       .brand { display: flex; align-items: center; gap: 11px; padding: 8px 10px 28px; }
       .brand-mark {
-        width: 36px; height: 36px; border-radius: 11px; background:
-          linear-gradient(135deg, var(--green), var(--cyan));
-        box-shadow: 0 0 30px rgba(76, 232, 199, .22);
+        width: 36px; height: 36px; display: grid; place-items: center;
+        border: 1px solid rgba(93, 240, 200, .3); border-radius: 11px;
+        color: #82f2d4; background: rgba(41, 142, 116, .16);
+        box-shadow: 0 0 24px rgba(76, 232, 199, .1);
+        font-weight: 850; letter-spacing: -.05em; user-select: none;
       }
       .brand strong { display: block; font-size: 15px; }
       .brand small { color: var(--muted); }
@@ -57,6 +63,10 @@
       .account strong { display: block; }
       .account small { color: var(--muted); }
       main { min-width: 0; padding: 34px clamp(18px, 4vw, 54px) 54px; }
+      .dashboard-actions {
+        display: flex; justify-content: flex-end; margin-bottom: 18px;
+      }
+      .back-button { color: #bce6da; }
       header {
         display: flex; align-items: center; justify-content: space-between;
         gap: 18px; margin-bottom: 30px;
@@ -119,8 +129,11 @@
         padding: 13px 15px; border-bottom: 1px solid var(--line); background: #091411;
       }
       .terminal-output {
-        height: 500px; margin: 0; padding: 17px; overflow: auto; white-space: pre-wrap;
-        color: #8ff5d7; font: 13px/1.55 "JetBrains Mono", "Fira Code", monospace;
+        height: 500px; padding: 12px; overflow: hidden;
+      }
+      .terminal-output .xterm { height: 100%; padding: 5px; }
+      .terminal-output .xterm-viewport {
+        scrollbar-color: rgba(93, 240, 200, .28) #030807;
       }
       .terminal-form { display: flex; border-top: 1px solid var(--line); }
       .terminal-form span { padding: 13px 0 13px 15px; color: var(--green); font-family: monospace; }
@@ -145,6 +158,7 @@
       .checks input { width: auto; min-height: 0; }
       .modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 22px; }
       .view[hidden], #monitoring-content[hidden], #monitoring-off[hidden] { display: none; }
+      [hidden] { display: none !important; }
       .toast {
         position: fixed; right: 16px; bottom: 16px; z-index: 20; max-width: 390px;
         padding: 13px 16px; border: 1px solid var(--line); border-radius: 11px;
@@ -164,24 +178,59 @@
         header { align-items: flex-start; flex-direction: column; }
         .metrics { grid-template-columns: 1fr; }
       }
+      @media (max-width: 700px) {
+        .shell { display: block; }
+        .sidebar {
+          position: sticky; top: 0; z-index: 10; width: 100%; height: auto;
+          padding: 8px 10px; display: flex; align-items: center; gap: 8px;
+          border-right: 0; border-bottom: 1px solid var(--line);
+        }
+        .brand { flex: 0 0 auto; padding: 0; }
+        .brand-mark { width: 34px; height: 34px; }
+        .brand strong, .brand small, .account { display: none; }
+        .nav {
+          min-width: 0; display: flex; flex: 1; gap: 3px;
+          overflow-x: auto; scrollbar-width: none;
+        }
+        .nav::-webkit-scrollbar { display: none; }
+        .nav button {
+          width: auto; min-width: 44px; min-height: 42px; margin: 0;
+          padding: 0 11px; flex: 0 0 auto; justify-content: center;
+        }
+        .nav button span { display: none; }
+        main { padding: 18px 12px 34px; }
+        .dashboard-actions { margin-bottom: 14px; }
+        .back-button { width: 100%; }
+        .section-title { align-items: stretch; flex-direction: column; }
+        .section-title > button { width: 100%; }
+        .terminal { min-height: 0; }
+        .terminal-output { height: min(54dvh, 480px); padding: 6px; }
+        .terminal-toolbar { gap: 9px; }
+        .terminal-toolbar .button { min-height: 38px; padding-inline: 10px; }
+        .terminal-form input { font-size: 16px; }
+        .table-wrap { max-width: calc(100vw - 24px); }
+        th, td { padding: 11px 12px; white-space: nowrap; }
+      }
     </style>
   </head>
   <body>
     <div class="shell">
       <aside class="sidebar">
         <div class="brand">
-          <div class="brand-mark"></div>
+          <div class="brand-mark" aria-hidden="true">O</div>
           <div><strong>OrganizeOn</strong><small>Control center</small></div>
         </div>
         <nav class="nav">
           <button class="active" data-view="overview">◫ <span>Overview</span></button>
           <button data-view="users" data-permission="admin.users">♙ <span>Users</span></button>
           <button data-view="terminal" data-permission="admin.terminal">⌘ <span>Terminal</span></button>
-          <button id="main-link">⌂ <span>Main</span></button>
         </nav>
         <div class="account"><strong id="account-name">—</strong><small id="account-role">—</small></div>
       </aside>
       <main>
+        <div class="dashboard-actions">
+          <button class="button back-button" id="back-link" type="button">← Voltar ao cliente</button>
+        </div>
         <section class="view" id="view-overview">
           <header>
             <div><h1>Server overview</h1><p>Recursos e tráfego do backend em tempo real.</p></div>
@@ -219,11 +268,11 @@
         <section class="view" id="view-terminal" hidden>
           <div class="section-title">
             <div><h2>Terminal do servidor</h2><p>Shell remoto protegido por token e permissão administrativa.</p></div>
-            <button class="button primary" id="terminal-connect">Conectar terminal</button>
+            <button class="button primary" id="terminal-connect" type="button">Conectar terminal</button>
           </div>
           <div class="card terminal">
-            <div class="terminal-toolbar"><span id="terminal-status">Desconectado</span><button class="button danger" id="terminal-disconnect">Desconectar</button></div>
-            <pre class="terminal-output" id="terminal-output">Clique em “Conectar terminal” para iniciar.\n</pre>
+            <div class="terminal-toolbar"><span id="terminal-status">Desconectado</span><button class="button danger" id="terminal-disconnect" type="button" hidden>Desconectar</button></div>
+            <div class="terminal-output" id="terminal-output" aria-label="Saída do terminal"></div>
             <form class="terminal-form" id="terminal-form"><span>$</span><input id="terminal-input" autocomplete="off" spellcheck="false" disabled /></form>
           </div>
         </section>
