@@ -128,6 +128,36 @@
       #organizeon-download .error {
         color: #ffaaaa;
       }
+      #organizeon-download.background {
+        inset: auto 14px 14px auto;
+        display: block;
+        width: min(420px, calc(100% - 28px));
+        padding: 0;
+        background: transparent;
+        pointer-events: none;
+      }
+      #organizeon-download.background .card {
+        width: 100%;
+        padding: 16px 18px;
+        border-color: rgba(80, 255, 210, 0.28);
+        border-radius: 14px;
+        background: rgba(8, 18, 17, 0.94);
+        box-shadow: 0 14px 46px rgba(0, 0, 0, 0.44);
+        pointer-events: auto;
+      }
+      #organizeon-download.background h1 {
+        margin-bottom: 7px;
+        color: #75f4d1;
+        font-size: 15px;
+      }
+      #organizeon-download.background .status {
+        min-height: 0;
+        margin: 8px 0 3px;
+      }
+      #organizeon-download.background progress {
+        height: 8px;
+        accent-color: #52f2ce;
+      }
     </style>
     <meta
       name="keywords"
@@ -257,10 +287,13 @@
           : canonicalBase;
         var versionStorageKey = "organizeon-update-version-v2";
         var manifestStorageKey = "organizeon-update-manifest-v2";
+        var fileHashesStorageKey = "organizeon-update-files-v2";
         var pendingManifest = null;
         var pendingFiles = [];
         var pendingBytes = 0;
         var latestVersion = "";
+        var installedHashes = new Map();
+        var clientStarted = false;
         var running = false;
 
         cancelButton.addEventListener("click", function () {
@@ -360,20 +393,24 @@
             }
 
             var previousManifest = readManifest();
-            var previousFiles = new Map(
+            installedHashes = new Map(
               previousManifest && Array.isArray(previousManifest.files)
                 ? previousManifest.files.map(function (file) {
                     return [file.path, file.sha256];
                   })
                 : [],
             );
+            var partialHashes = readPartialHashes();
+            Object.keys(partialHashes).forEach(function (path) {
+              installedHashes.set(path, partialHashes[path]);
+            });
 
             pendingFiles = pendingManifest.files.filter(function (file) {
               return (
                 typeof file.path === "string" &&
                 typeof file.size === "number" &&
                 /^[0-9a-f]{64}$/.test(file.sha256) &&
-                previousFiles.get(file.path) !== file.sha256
+                installedHashes.get(file.path) !== file.sha256
               );
             });
             pendingBytes = pendingFiles.reduce(function (total, file) {
@@ -440,23 +477,54 @@
             var totalBytes = pendingBytes || 1;
             var loadedBytes = 0;
             var completedFiles = 0;
-            var nextFile = 0;
+            var criticalPaths = new Set([
+              "config.js",
+              "auth-client.js",
+              "assets/jdht-e-DdM4s9z4.js",
+              "assets/jdht-c-ChjuTX8m.js",
+            ]);
+            var criticalFiles = files.filter(function (file) {
+              return criticalPaths.has(file.path);
+            });
+            var backgroundFiles = files.filter(function (file) {
+              return !criticalPaths.has(file.path);
+            });
 
-            updateProgress("Iniciando downloads…");
+            if (criticalFiles.length > 0) {
+              progressArea.querySelector("h1").textContent =
+                "Baixando ativos essenciais";
+              status.textContent =
+                "Preparando os arquivos necessários para abrir…";
+              await downloadBatch(criticalFiles, 4);
+            }
 
-            var workers = Array.from(
-              { length: Math.min(6, files.length) },
-              async function () {
-                while (nextFile < files.length) {
-                  var file = files[nextFile++];
-                  await downloadFile(file);
-                  completedFiles += 1;
-                  updateProgress(file.path);
-                }
-              },
-            );
+            status.textContent = "Abrindo o cliente…";
+            await launchClient();
+            overlay.classList.add("background");
 
-            await Promise.all(workers);
+            if (backgroundFiles.length > 0) {
+              progressArea.querySelector("h1").textContent =
+                "Atualizando em segundo plano";
+              await downloadBatch(backgroundFiles, 3);
+            }
+
+            async function downloadBatch(batch, concurrency) {
+              var nextFile = 0;
+              var workers = Array.from(
+                { length: Math.min(concurrency, batch.length) },
+                async function () {
+                  while (nextFile < batch.length) {
+                    var file = batch[nextFile++];
+                    await downloadFile(file);
+                    installedHashes.set(file.path, file.sha256);
+                    completedFiles += 1;
+                    if (completedFiles % 8 === 0) savePartialHashes();
+                    updateProgress(file.path);
+                  }
+                },
+              );
+              await Promise.all(workers);
+            }
             progress.value = 100;
             numbers.textContent =
               files.length +
@@ -464,11 +532,17 @@
               formatBytes(pendingBytes) +
               " · 100%";
             saveUpdateState();
-            await openClient("Arquivos atualizados. Abrindo o login…");
+            progressArea.querySelector("h1").textContent =
+              "Atualização concluída";
+            status.textContent =
+              "Ativos verificados. O cliente está pronto.";
+            window.setTimeout(function () {
+              overlay.remove();
+            }, 2500);
 
             async function downloadFile(file) {
               var response = await fetch(new URL(file.path, baseUrl), {
-                cache: "reload",
+                cache: "no-cache",
               });
               if (!response.ok) {
                 throw new Error(
@@ -546,6 +620,7 @@
             }
           } catch (error) {
             running = false;
+            savePartialHashes();
             progressArea.querySelector("h1").textContent =
               "Não foi possível concluir";
             status.textContent =
@@ -576,11 +651,27 @@
           numbers.textContent = latestVersion;
 
           if (onCanonicalHost) {
-            await startClient();
+            await launchClient();
           } else {
-            startEmbeddedClient();
+            await launchClient();
           }
           overlay.remove();
+        }
+
+        async function launchClient() {
+          if (clientStarted) return;
+          clientStarted = true;
+          window.__ORGANIZEON_CLIENT_VERSION__ = latestVersion;
+          try {
+            if (onCanonicalHost) {
+              await startClient();
+            } else {
+              startEmbeddedClient();
+            }
+          } catch (error) {
+            clientStarted = false;
+            throw error;
+          }
         }
 
         function readManifest() {
@@ -600,6 +691,25 @@
           }
         }
 
+        function readPartialHashes() {
+          try {
+            return JSON.parse(readStorage(fileHashesStorageKey) || "{}");
+          } catch (error) {
+            return {};
+          }
+        }
+
+        function savePartialHashes() {
+          try {
+            localStorage.setItem(
+              fileHashesStorageKey,
+              JSON.stringify(Object.fromEntries(installedHashes)),
+            );
+          } catch (error) {
+            console.warn("Não foi possível salvar o progresso parcial.");
+          }
+        }
+
         function saveUpdateState() {
           try {
             localStorage.setItem(versionStorageKey, latestVersion);
@@ -607,18 +717,23 @@
               manifestStorageKey,
               JSON.stringify(pendingManifest),
             );
+            localStorage.removeItem(fileHashesStorageKey);
           } catch (error) {
             console.warn("Não foi possível salvar o estado da atualização.");
           }
         }
 
         async function startClient() {
+          var bootstrapVersion = encodeURIComponent(
+            window.__ORGANIZEON_CLIENT_VERSION__ ||
+              Date.now().toString(),
+          );
           addLink("stylesheet", "./assets/jdht-s-SOkYHzV0.css");
           addLink("icon", "./fernleaf-192.png", "image/png");
           addLink("manifest", "./manifest.webmanifest");
           addLink("apple-touch-icon", "./fernleaf-192.png");
 
-          await loadScript("./config.js");
+          await loadScript("./config.js?v=" + bootstrapVersion);
           loadScript("./vendor/lumin.min.js", false, true);
           loadScript(
             "https://www.googletagmanager.com/gtag/js?id=G-KNFSWJTJ9C",
@@ -639,7 +754,10 @@
             console.warn("Anúncio externo indisponível:", error);
           }
 
-          await loadScript("./auth-client.js", true);
+          await loadScript(
+            "./auth-client.js?v=" + bootstrapVersion,
+            true,
+          );
         }
 
         function startEmbeddedClient() {
