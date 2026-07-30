@@ -315,10 +315,11 @@
             "Consultando a versão mais recente do cliente.";
 
           try {
-            var versionResponse = await fetch(
-              new URL("version.txt", baseUrl),
-              { cache: "no-store" },
-            );
+            var versionUrl = new URL("version.txt", baseUrl);
+            versionUrl.searchParams.set("_", Date.now().toString());
+            var versionResponse = await fetch(versionUrl, {
+              cache: "no-store",
+            });
             if (!versionResponse.ok) {
               throw new Error(
                 "Versão indisponível (HTTP " +
@@ -337,10 +338,11 @@
               return;
             }
 
-            var manifestResponse = await fetch(
-              new URL("download-manifest.json", baseUrl),
-              { cache: "no-store" },
-            );
+            var manifestUrl = new URL("download-manifest.json", baseUrl);
+            manifestUrl.searchParams.set("version", latestVersion);
+            var manifestResponse = await fetch(manifestUrl, {
+              cache: "no-store",
+            });
             if (!manifestResponse.ok) {
               throw new Error(
                 "Manifesto indisponível (HTTP " +
