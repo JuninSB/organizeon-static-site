@@ -1,6 +1,7 @@
 const config = window.__ORGANIZEON_CONFIG__;
 const tokenStorageKey = "organizeon-access-token";
 const proxyServerStorageKey = "organizeon-proxy-server";
+const wispBandwidthStorageKey = "organizeon-wisp-bandwidth-limit";
 const proxyServerOptions = Object.freeze([
   Object.freeze({
     id: "organizeon",
@@ -36,6 +37,7 @@ window.organizeonResetAndLogout = resetAuthenticationForDataWipe;
 window.organizeonOpenQuickApp = openQuickApp;
 setupMobileMode();
 hideDefaultHomepageShortcuts();
+setupWispBandwidthSetting();
 window.addEventListener("storage", (event) => {
   if (
     event.key === tokenStorageKey &&
@@ -85,11 +87,14 @@ async function startApplication(
   const proxyServer = getSelectedProxyServer();
   const wispBase =
     `${config.apiOrigin.replace(/^http/, "ws")}${config.apiPrefix}/wisp/`;
+  const bandwidthMode = isWispBandwidthLimitEnabled()
+    ? "limited"
+    : "unlimited";
   window.__FERN_WISP_URL__ =
     proxyServer.id === "organizeon"
       ? token
-        ? `${wispBase}${encodeURIComponent(token)}/`
-        : wispBase
+        ? `${wispBase}${encodeURIComponent(token)}/?bandwidth=${bandwidthMode}`
+        : `${wispBase}?bandwidth=${bandwidthMode}`
       : proxyServer.url;
   window.organizeonProxyServer = Object.freeze({
     id: proxyServer.id,
@@ -633,6 +638,148 @@ function getSelectedProxyServer() {
     proxyServerOptions.find((option) => option.id === selectedId) ||
     proxyServerOptions[0]
   );
+}
+
+function isWispBandwidthLimitEnabled() {
+  return localStorage.getItem(wispBandwidthStorageKey) !== "off";
+}
+
+function setupWispBandwidthSetting() {
+  const style = document.createElement("style");
+  style.id = "organizeon-bandwidth-setting-styles";
+  style.textContent = `
+    #organizeon-bandwidth-setting {
+      padding: 20px; border: 1px solid hsl(var(--border));
+      border-radius: 12px; background: hsl(var(--card) / .8);
+    }
+    #organizeon-bandwidth-setting .row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px;
+    }
+    #organizeon-bandwidth-setting h2 {
+      margin: 0; color: hsl(var(--foreground)); font-size: 18px;
+      font-weight: 600;
+    }
+    #organizeon-bandwidth-setting p {
+      margin: 5px 0 0; max-width: 650px;
+      color: hsl(var(--muted-foreground)); font-size: 13px;
+      line-height: 1.5;
+    }
+    #organizeon-bandwidth-setting .controls {
+      display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
+    }
+    #organizeon-bandwidth-setting select,
+    #organizeon-bandwidth-setting button {
+      min-height: 40px; padding: 0 12px; border-radius: 8px;
+      border: 1px solid hsl(var(--border)); font: inherit;
+    }
+    #organizeon-bandwidth-setting select {
+      color: hsl(var(--foreground)); background: hsl(var(--background));
+    }
+    #organizeon-bandwidth-setting button {
+      border-color: hsl(var(--primary) / .35);
+      color: hsl(var(--primary-foreground));
+      background: hsl(var(--primary)); font-weight: 600; cursor: pointer;
+    }
+    #organizeon-bandwidth-setting button:disabled {
+      opacity: .5; cursor: default;
+    }
+    @media (max-width: 760px) {
+      #organizeon-bandwidth-setting { padding: 16px; }
+      #organizeon-bandwidth-setting .row {
+        align-items: stretch; flex-direction: column;
+      }
+      #organizeon-bandwidth-setting .controls {
+        width: 100%; flex-direction: column; align-items: stretch;
+      }
+      #organizeon-bandwidth-setting select,
+      #organizeon-bandwidth-setting button { width: 100%; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const apply = () => {
+    const settingsHeading = [...document.querySelectorAll("h1")].find(
+      (heading) => heading.textContent?.trim().toLowerCase() === "settings",
+    );
+    const existing = document.getElementById(
+      "organizeon-bandwidth-setting",
+    );
+    if (!settingsHeading) {
+      existing?.remove();
+      return;
+    }
+    if (existing) return;
+
+    const settingsContainer = settingsHeading.closest(
+      '[class~="max-w-5xl"]',
+    );
+    if (!settingsContainer) return;
+
+    const card = document.createElement("section");
+    card.id = "organizeon-bandwidth-setting";
+    card.setAttribute("aria-labelledby", "organizeon-bandwidth-title");
+
+    const row = document.createElement("div");
+    row.className = "row";
+    const copy = document.createElement("div");
+    const title = document.createElement("h2");
+    title.id = "organizeon-bandwidth-title";
+    title.textContent = "Limite de banda do WISP";
+    const description = document.createElement("p");
+    description.textContent =
+      "O OrganizeOn usa 6 Mbps por conta por padrão, suficiente para " +
+      "streaming HD com uso moderado do servidor. “Sem limite” restaura " +
+      "o comportamento antigo. Não afeta servidores WISP externos.";
+    copy.append(title, description);
+
+    const controls = document.createElement("div");
+    controls.className = "controls";
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", "Limite de banda do WISP");
+    const limited = document.createElement("option");
+    limited.value = "limited";
+    limited.textContent = "6 Mbps (padrão)";
+    const unlimited = document.createElement("option");
+    unlimited.value = "off";
+    unlimited.textContent = "Sem limite";
+    select.append(limited, unlimited);
+    select.value = isWispBandwidthLimitEnabled() ? "limited" : "off";
+
+    const applyButton = document.createElement("button");
+    applyButton.type = "button";
+    applyButton.textContent = "Aplicar";
+    applyButton.disabled = true;
+    select.addEventListener("change", () => {
+      const currentValue = isWispBandwidthLimitEnabled()
+        ? "limited"
+        : "off";
+      applyButton.disabled = select.value === currentValue;
+    });
+    applyButton.addEventListener("click", () => {
+      if (select.value === "off") {
+        localStorage.setItem(wispBandwidthStorageKey, "off");
+      } else {
+        localStorage.removeItem(wispBandwidthStorageKey);
+      }
+      window.location.reload();
+    });
+    controls.append(select, applyButton);
+    row.append(copy, controls);
+    card.appendChild(row);
+
+    const headerBlock = settingsHeading.parentElement;
+    if (headerBlock?.parentElement === settingsContainer) {
+      headerBlock.insertAdjacentElement("afterend", card);
+    } else {
+      settingsContainer.prepend(card);
+    }
+  };
+
+  const observer = new MutationObserver(apply);
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.addEventListener("popstate", apply);
+  apply();
 }
 
 function hideDefaultHomepageShortcuts() {
