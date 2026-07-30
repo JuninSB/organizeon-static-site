@@ -56,9 +56,6 @@
       .nav button:hover, .nav button.active {
         color: var(--green); background: rgba(74, 234, 198, .1);
       }
-      .nav button.logout:hover {
-        color: #ffadb2; background: rgba(255, 99, 109, .09);
-      }
       .account {
         position: absolute; right: 16px; bottom: 18px; left: 16px; padding: 13px;
         border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
@@ -169,9 +166,15 @@
       [hidden] { display: none !important; }
       .toast {
         position: fixed; right: 16px; bottom: 16px; z-index: 20; max-width: 390px;
-        padding: 13px 16px; border: 1px solid var(--line); border-radius: 11px;
+        padding: 13px 42px 13px 16px; border: 1px solid var(--line); border-radius: 11px;
         color: var(--green); background: #0a1916; box-shadow: 0 18px 55px rgba(0,0,0,.4);
       }
+      .toast-close {
+        position: absolute; top: 50%; right: 7px; width: 28px; height: 28px;
+        padding: 0; transform: translateY(-50%); border: 0; border-radius: 7px;
+        color: var(--muted); background: transparent; font-size: 18px;
+      }
+      .toast-close:hover { color: #fff; background: rgba(255,255,255,.08); }
       @media (max-width: 900px) {
         .shell { grid-template-columns: 74px 1fr; }
         .sidebar { padding: 20px 10px; }
@@ -301,13 +304,12 @@
           <button class="active" data-view="overview">◫ <span>Overview</span></button>
           <button data-view="users" data-permission="admin.users">♙ <span>Users</span></button>
           <button data-view="terminal" data-permission="admin.terminal">⌘ <span>Terminal</span></button>
-          <button class="logout" id="logout-button" type="button">⇥ <span>Sair</span></button>
         </nav>
         <div class="account"><strong id="account-name">—</strong><small id="account-role">—</small></div>
       </aside>
       <main>
         <div class="dashboard-actions">
-          <button class="button back-button" id="back-link" type="button">← Voltar ao cliente</button>
+          <button class="button back-button" id="back-link" type="button">← Voltar e abrir menu</button>
         </div>
         <section class="view" id="view-overview">
           <header>

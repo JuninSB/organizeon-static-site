@@ -35,6 +35,7 @@ window.organizeonOpenProxyServerDialog = showProxyServerDialog;
 window.organizeonResetAndLogout = resetAuthenticationForDataWipe;
 window.organizeonOpenQuickApp = openQuickApp;
 setupMobileMode();
+hideDefaultHomepageShortcuts();
 window.addEventListener("storage", (event) => {
   if (
     event.key === tokenStorageKey &&
@@ -126,7 +127,7 @@ async function startApplication(
         ? `${proxyServer.name} selecionado e ativos essenciais carregados.`
         : "Ativos carregados; reconectando o proxy em segundo plano.",
       100,
-      1800,
+      8000,
     );
   } catch (error) {
     appStarted = false;
@@ -249,7 +250,7 @@ function scheduleControlReconnect(wasReady) {
         "Servidor proxy reconectado",
         "Handshake autenticado concluído.",
         100,
-        1400,
+        8000,
       );
     } catch {
       scheduleControlReconnect(false);
@@ -269,7 +270,7 @@ function showConnectionStatus(
   title,
   detail = "",
   percent = null,
-  autoHideMs = 0,
+  autoHideMs = 8000,
 ) {
   const element = ensureConnectionStatus();
   element.querySelector(".title").textContent = title;
@@ -317,7 +318,16 @@ function ensureConnectionStatus() {
       }
       #organizeon-network-status[hidden] { display: none; }
       #organizeon-network-status .title {
-        color: #70f2d0; font-size: 14px; font-weight: 750;
+        padding-right: 28px; color: #70f2d0; font-size: 14px; font-weight: 750;
+      }
+      #organizeon-network-status .close {
+        position: absolute; top: 7px; right: 8px; width: 30px; height: 30px;
+        display: grid; place-items: center; padding: 0; border: 0;
+        border-radius: 8px; cursor: pointer; color: #9db8b1;
+        background: transparent; font: 700 19px/1 system-ui, sans-serif;
+      }
+      #organizeon-network-status .close:hover {
+        color: #fff; background: rgba(255,255,255,.08);
       }
       #organizeon-network-status .detail {
         margin-top: 4px; color: #9db8b1; font-size: 12px; line-height: 1.4;
@@ -339,10 +349,15 @@ function ensureConnectionStatus() {
         to { transform: translateX(200%); }
       }
     </style>
+    <button class="close" type="button" aria-label="Fechar notificação">×</button>
     <div class="title"></div>
     <div class="detail"></div>
     <div class="bar"><span class="indeterminate"></span></div>
   `;
+  element.querySelector(".close").addEventListener(
+    "click",
+    hideConnectionStatus,
+  );
   document.body.appendChild(element);
   return element;
 }
@@ -418,6 +433,12 @@ function configureAccountNavigation(account) {
       #organizeon-account-navigation .item:hover {
         color: #75f2d2; background: rgba(79,235,199,.1);
       }
+      #organizeon-account-navigation .item.logout {
+        color: #ff9ca4; background: rgba(255, 83, 96, .06);
+      }
+      #organizeon-account-navigation .item.logout:hover {
+        color: #ffd6d9; background: rgba(255, 83, 96, .16);
+      }
       #organizeon-account-navigation .badge {
         margin-left: auto; padding: 3px 8px; border-radius: 99px;
         color: #73ecca; background: rgba(79,235,199,.12); font-size: 10px;
@@ -476,7 +497,10 @@ function configureAccountNavigation(account) {
       navigation.classList.remove("open");
     });
   navigation.querySelector(".logout").addEventListener("click", () => {
-    navigation.classList.remove("open");
+    const confirmed = window.confirm(
+      "Deseja realmente sair desta conta?",
+    );
+    if (!confirmed) return;
     window.organizeonAuth.logout();
   });
   document.body.appendChild(navigation);
@@ -543,6 +567,11 @@ function openDashboardWindow() {
       return;
     }
     removeDashboard();
+    if (event.data.openSidebar) {
+      document
+        .getElementById("organizeon-account-navigation")
+        ?.classList.add("open");
+    }
   };
   dashboardPanelCleanup = removeDashboard;
   window.addEventListener("message", closeDashboard);
@@ -581,7 +610,7 @@ async function openQuickApp(app, navigate) {
       "Aplicativo inválido",
       "Edite o app e informe uma URL válida.",
       undefined,
-      3200,
+      8000,
     );
     return true;
   }
@@ -604,6 +633,28 @@ function getSelectedProxyServer() {
     proxyServerOptions.find((option) => option.id === selectedId) ||
     proxyServerOptions[0]
   );
+}
+
+function hideDefaultHomepageShortcuts() {
+  const hiddenLabels = new Set(["Games", "Chat", "Movies"]);
+  const apply = () => {
+    document
+      .querySelectorAll('nav[class~="fixed"][class~="top-0"]')
+      .forEach((navigation) => {
+        const shortcuts = navigation.firstElementChild;
+        if (!shortcuts) return;
+        shortcuts.querySelectorAll("button, a").forEach((item) => {
+          const label = item.querySelector("span")?.textContent?.trim();
+          if (!hiddenLabels.has(label)) return;
+          item.hidden = true;
+          item.style.setProperty("display", "none", "important");
+          item.setAttribute("aria-hidden", "true");
+        });
+      });
+  };
+  const observer = new MutationObserver(apply);
+  observer.observe(document.body, { childList: true, subtree: true });
+  apply();
 }
 
 function showProxyServerDialog() {
@@ -858,6 +909,12 @@ function setupMobileMode() {
       transition: opacity .25s ease, transform .25s ease;
       backdrop-filter: blur(12px);
     }
+    #organizeon-mobile-notice button {
+      width: 25px; min-height: 25px; margin: -5px -7px -5px 7px;
+      padding: 0; border: 0; border-radius: 999px; cursor: pointer;
+      color: #a9c9c0; background: rgba(255,255,255,.06);
+      font: 700 16px/1 system-ui, sans-serif;
+    }
     #organizeon-mobile-notice.leaving {
       opacity: 0; transform: translate(-50%, -8px);
     }
@@ -892,10 +949,19 @@ function setupMobileMode() {
     const notice = document.createElement("div");
     notice.id = "organizeon-mobile-notice";
     notice.setAttribute("role", "status");
-    notice.textContent = "Modo mobile ativado";
+    notice.append(document.createTextNode("Modo mobile ativado"));
+    const close = document.createElement("button");
+    close.type = "button";
+    close.setAttribute("aria-label", "Fechar notificação");
+    close.textContent = "×";
+    notice.appendChild(close);
     document.body.appendChild(notice);
-    window.setTimeout(() => notice.classList.add("leaving"), 3200);
-    window.setTimeout(() => notice.remove(), 3600);
+    const dismiss = () => {
+      notice.classList.add("leaving");
+      window.setTimeout(() => notice.remove(), 300);
+    };
+    close.addEventListener("click", dismiss);
+    window.setTimeout(dismiss, 8000);
   };
 
   applyMode();

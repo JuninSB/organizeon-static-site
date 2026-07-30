@@ -56,14 +56,14 @@ document.querySelectorAll("[data-view]").forEach((button) => {
 });
 document.getElementById("back-link").addEventListener("click", () => {
   if (window.parent !== window) {
-    window.parent.postMessage({ type: "organizeon:open-main" }, "*");
+    window.parent.postMessage(
+      { type: "organizeon:open-main", openSidebar: true },
+      "*",
+    );
     return;
   }
   window.location.href = new URL("./", document.baseURI).href;
 });
-document
-  .getElementById("logout-button")
-  .addEventListener("click", logout);
 document
   .getElementById("monitor-toggle")
   .addEventListener("click", toggleMonitoring);
@@ -125,23 +125,6 @@ async function initialize() {
   document.getElementById("monitor-activate").hidden =
     !result.account.permissions.includes("admin.monitoring");
   renderMonitoring(result.monitoring);
-}
-
-async function logout() {
-  const button = document.getElementById("logout-button");
-  button.disabled = true;
-  try {
-    await api("/auth/logout", { method: "POST" });
-  } finally {
-    disconnectMonitoring();
-    disconnectTerminal();
-    localStorage.removeItem(tokenKey);
-    if (window.parent !== window) {
-      window.parent.postMessage({ type: "organizeon:open-main" }, "*");
-    } else {
-      window.location.replace(new URL("./", document.baseURI).href);
-    }
-  }
 }
 
 function showView(name) {
@@ -558,7 +541,7 @@ function ensureTerminalOpen() {
 function setupDashboardMobileMode() {
   if (!dashboardMobile) return;
   document.documentElement.classList.add("organizeon-mobile");
-  window.setTimeout(() => showToast("Modo mobile ativado", 3200), 50);
+  window.setTimeout(() => showToast("Modo mobile ativado"), 50);
 }
 
 function api(path, options = {}) {
@@ -589,9 +572,21 @@ async function apiError(response) {
   return messages[result.error] || `Erro HTTP ${response.status}.`;
 }
 
-function showToast(message, autoHide = 2600) {
+function showToast(message, autoHide = 8000) {
   const toast = document.getElementById("toast");
-  toast.textContent = message;
+  toast.replaceChildren();
+  const text = document.createElement("span");
+  text.textContent = message;
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "toast-close";
+  close.setAttribute("aria-label", "Fechar notificação");
+  close.textContent = "×";
+  close.addEventListener("click", () => {
+    window.clearTimeout(toast.timer);
+    toast.hidden = true;
+  });
+  toast.append(text, close);
   toast.hidden = false;
   window.clearTimeout(toast.timer);
   if (autoHide > 0) {
