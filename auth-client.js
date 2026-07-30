@@ -382,6 +382,7 @@ function configureAccountNavigation(account) {
         <span></span>
       </div>
       <button class="item main" type="button">⌂ <span>Main</span></button>
+      <button class="item settings" type="button">⚙ <span>Settings</span></button>
       ${
         canOpenDashboard
           ? '<button class="item dashboard" type="button">◫ <span>Dashboard</span><small class="badge">ADMIN</small></button>'
@@ -398,13 +399,31 @@ function configureAccountNavigation(account) {
   });
   navigation.querySelector(".main").addEventListener("click", () => {
     navigation.classList.remove("open");
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: "organizeon:open-main" }, "*");
+      return;
+    }
     window.location.href = new URL("./", document.baseURI).href;
+  });
+  navigation.querySelector(".settings").addEventListener("click", () => {
+    navigation.classList.remove("open");
+    const settingsUrl = new URL("./", document.baseURI);
+    settingsUrl.searchParams.set("route", "/settings");
+    window.location.href = settingsUrl.href;
   });
   navigation
     .querySelector(".dashboard")
     ?.addEventListener("click", () => {
-      const dashboardUrl = new URL("./admin.html", document.baseURI);
-      window.open(dashboardUrl.href, "_blank", "noopener");
+      if (window.parent !== window) {
+        window.parent.postMessage(
+          { type: "organizeon:open-dashboard" },
+          "*",
+        );
+      } else {
+        const dashboardUrl = new URL("./", document.baseURI);
+        dashboardUrl.searchParams.set("dashboard", "1");
+        window.open(dashboardUrl.href, "_blank", "noopener");
+      }
       navigation.classList.remove("open");
     });
   document.body.appendChild(navigation);

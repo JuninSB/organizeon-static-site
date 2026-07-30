@@ -12,6 +12,10 @@ document.querySelectorAll("[data-view]").forEach((button) => {
   button.addEventListener("click", () => showView(button.dataset.view));
 });
 document.getElementById("main-link").addEventListener("click", () => {
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: "organizeon:open-main" }, "*");
+    return;
+  }
   window.location.href = new URL("./", document.baseURI).href;
 });
 document
