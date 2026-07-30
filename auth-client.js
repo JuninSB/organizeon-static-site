@@ -732,12 +732,12 @@ function setupWispBandwidthSetting() {
     const copy = document.createElement("div");
     const title = document.createElement("h2");
     title.id = "organizeon-bandwidth-title";
-    title.textContent = "Limite de banda do WISP";
+    title.textContent = "Limite de streaming do YouTube";
     const description = document.createElement("p");
     description.textContent =
-      "O OrganizeOn usa 6 Mbps por conta por padrão, suficiente para " +
-      "streaming HD com uso moderado do servidor. “Sem limite” restaura " +
-      "o comportamento antigo. Não afeta servidores WISP externos.";
+      "O OrganizeOn limita somente a mídia do YouTube a 6 Mbps por conta. " +
+      "Pesquisa, páginas, CSS, scripts e outros sites ficam sem limite. " +
+      "“Sem limite” também libera o vídeo. Não afeta WISPs externos.";
     copy.append(title, description);
 
     const controls = document.createElement("div");
