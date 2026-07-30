@@ -87,14 +87,13 @@ async function startApplication(
   const proxyServer = getSelectedProxyServer();
   const wispBase =
     `${config.apiOrigin.replace(/^http/, "ws")}${config.apiPrefix}/wisp/`;
-  const bandwidthMode = isWispBandwidthLimitEnabled()
-    ? "limited"
-    : "unlimited";
   window.__FERN_WISP_URL__ =
     proxyServer.id === "organizeon"
       ? token
-        ? `${wispBase}${encodeURIComponent(token)}/?bandwidth=${bandwidthMode}`
-        : `${wispBase}?bandwidth=${bandwidthMode}`
+        ? isWispBandwidthLimitEnabled()
+          ? `${wispBase}limited/${encodeURIComponent(token)}/`
+          : `${wispBase}${encodeURIComponent(token)}/`
+        : wispBase
       : proxyServer.url;
   window.organizeonProxyServer = Object.freeze({
     id: proxyServer.id,
