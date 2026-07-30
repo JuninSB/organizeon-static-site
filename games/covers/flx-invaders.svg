@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#102822"/><stop offset="1" stop-color="#07100e"/></linearGradient></defs>
+  <rect width="640" height="400" rx="28" fill="url(#g)"/>
+  <g fill="#70f2cf">
+    <path d="M116 95h28v28h28V95h28v28h28v56h-28v28h-28v-28h-28v28h-28v-28H88v-56h28z"/>
+    <path d="M272 71h24v24h24V71h24v24h24v48h-24v24h-24v-24h-24v24h-24v-24h-24V95h24z" opacity=".75"/>
+    <path d="M432 105h30v30h30v-30h30v30h30v60h-30v30h-30v-30h-30v30h-30v-30h-30v-60h30z" opacity=".9"/>
+  </g>
+  <path d="M270 318h100l-16-37h-68z" fill="#e9fff9"/><rect x="314" y="244" width="12" height="48" rx="6" fill="#5fe3c1"/>
+  <text x="36" y="365" fill="#eafff8" font-family="system-ui,sans-serif" font-size="35" font-weight="800">FLX INVADERS</text>
+  <text x="520" y="365" fill="#ffcc61" font-family="system-ui,sans-serif" font-size="22" font-weight="800">FLASH</text>
+</svg>

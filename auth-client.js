@@ -710,6 +710,20 @@ async function showGameCatalog() {
       #organizeon-game-catalog .search:focus {
         border-color: rgba(94,239,205,.6);
       }
+      #organizeon-game-catalog .filters {
+        display: flex; gap: 8px; margin: -12px 0 20px; overflow-x: auto;
+        scrollbar-width: none;
+      }
+      #organizeon-game-catalog .filters::-webkit-scrollbar { display: none; }
+      #organizeon-game-catalog .filter {
+        min-height: 38px; padding: 0 15px; flex: 0 0 auto;
+        border: 1px solid rgba(255,255,255,.12); border-radius: 999px;
+        color: #9cb7af; background: rgba(255,255,255,.035);
+        font: 750 12px inherit; cursor: pointer;
+      }
+      #organizeon-game-catalog .filter.active {
+        color: #062019; border-color: #63e4c4; background: #63e4c4;
+      }
       #organizeon-game-catalog .grid {
         display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
         gap: 18px;
@@ -718,6 +732,17 @@ async function showGameCatalog() {
         overflow: hidden; border: 1px solid rgba(255,255,255,.1);
         border-radius: 18px; background: rgba(15,27,24,.9);
         box-shadow: 0 18px 50px rgba(0,0,0,.2);
+      }
+      #organizeon-game-catalog .badges {
+        display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 9px;
+      }
+      #organizeon-game-catalog .badge {
+        padding: 3px 7px; border-radius: 999px; color: #81d8c1;
+        background: rgba(105,220,190,.09); font-size: 9px; font-weight: 850;
+        letter-spacing: .04em; text-transform: uppercase;
+      }
+      #organizeon-game-catalog .badge.flash {
+        color: #ffd574; background: rgba(255,193,59,.11);
       }
       #organizeon-game-catalog .cover {
         display: block; width: 100%; aspect-ratio: 16/10;
@@ -754,6 +779,11 @@ async function showGameCatalog() {
         border: 1px solid rgba(255,116,130,.24); cursor: pointer;
         color: #ffabb4; background: rgba(255,92,108,.08);
       }
+      #organizeon-game-catalog .credits {
+        min-height: 42px; padding: 0 10px; border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.12); cursor: pointer;
+        color: #9fc2b9; background: rgba(255,255,255,.035); font-weight: 750;
+      }
       #organizeon-game-catalog .card.installed .remove { display: block; }
       #organizeon-game-catalog .progress {
         display: none; height: 5px; margin-top: 11px; overflow: hidden;
@@ -786,6 +816,58 @@ async function showGameCatalog() {
       #organizeon-game-catalog .player iframe {
         display: block; width: 100%; flex: 1; border: 0; background: #050807;
       }
+      #organizeon-game-catalog .controls-toggle {
+        margin-left: auto; min-height: 40px; padding: 0 12px;
+        border: 1px solid rgba(99,228,196,.25); border-radius: 10px;
+        color: #78e8cd; background: rgba(99,228,196,.08);
+        font-weight: 800; cursor: pointer;
+      }
+      #organizeon-game-catalog .controls {
+        display: none; flex-wrap: wrap; align-items: center; gap: 7px;
+        padding: 9px; border-top: 1px solid rgba(255,255,255,.1);
+        background: #091310; touch-action: none; user-select: none;
+      }
+      #organizeon-game-catalog .player.controls-open .controls { display: flex; }
+      #organizeon-game-catalog .key {
+        min-width: 39px; height: 39px; padding: 0 9px; border-radius: 9px;
+        border: 1px solid rgba(255,255,255,.16); color: #dffbf3;
+        background: #17241f; font: 800 12px system-ui; cursor: pointer;
+        touch-action: none; user-select: none; -webkit-user-select: none;
+      }
+      #organizeon-game-catalog .key.needed {
+        border-color: rgba(255,204,97,.7); color: #ffe09a;
+        background: rgba(255,193,59,.1);
+      }
+      #organizeon-game-catalog .key.space { min-width: 88px; }
+      #organizeon-game-catalog .trackpad {
+        position: relative; min-width: 140px; height: 50px; margin-left: auto;
+        overflow: hidden; border: 1px dashed rgba(99,228,196,.32);
+        border-radius: 10px; color: #6fa397; background: rgba(0,0,0,.2);
+        font: 700 10px system-ui; touch-action: none; cursor: crosshair;
+      }
+      #organizeon-game-catalog .trackpad span {
+        position: absolute; inset: 0; display: grid; place-items: center;
+        pointer-events: none;
+      }
+      #organizeon-game-catalog .dialog-backdrop {
+        position: fixed; inset: 0; z-index: 5; display: grid; place-items: center;
+        padding: 18px; background: rgba(0,0,0,.72);
+      }
+      #organizeon-game-catalog .dialog {
+        width: min(470px,100%); padding: 22px; border-radius: 17px;
+        border: 1px solid rgba(255,255,255,.13); background: #111d19;
+        box-shadow: 0 24px 80px rgba(0,0,0,.55);
+      }
+      #organizeon-game-catalog .dialog h2 { margin: 0 0 14px; font-size: 22px; }
+      #organizeon-game-catalog .dialog p {
+        margin: 8px 0; color: #9bb5ad; font-size: 13px; line-height: 1.5;
+      }
+      #organizeon-game-catalog .dialog a { color: #6be5c7; }
+      #organizeon-game-catalog .dialog-close {
+        width: 100%; min-height: 42px; margin-top: 15px; border: 0;
+        border-radius: 10px; color: #062019; background: #63e4c4;
+        font-weight: 850; cursor: pointer;
+      }
       @media (max-width: 820px) {
         #organizeon-game-catalog .grid {
           grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px;
@@ -801,6 +883,19 @@ async function showGameCatalog() {
           grid-template-columns: minmax(0,1fr);
         }
         #organizeon-game-catalog .description { min-height: 0; }
+        #organizeon-game-catalog .card.mobile-warning {
+          border-color: rgba(255,198,73,.72);
+          background: linear-gradient(180deg,rgba(64,48,18,.92),rgba(15,27,24,.95));
+          box-shadow: 0 0 0 1px rgba(255,198,73,.08),0 18px 50px rgba(0,0,0,.2);
+        }
+        #organizeon-game-catalog .player-head { min-height: 52px; }
+        #organizeon-game-catalog .controls-toggle { font-size: 0; width: 42px; }
+        #organizeon-game-catalog .controls-toggle::after { content: "⌨"; font-size: 18px; }
+        #organizeon-game-catalog .controls {
+          max-height: 150px; overflow: auto; gap: 5px; padding: 7px;
+        }
+        #organizeon-game-catalog .key { min-width: 36px; height: 36px; }
+        #organizeon-game-catalog .trackpad { min-width: 100%; margin-left: 0; }
       }
     </style>
     <div class="shell">
@@ -809,14 +904,22 @@ async function showGameCatalog() {
         <div><h1>Jogos</h1><p class="subtitle">Baixe uma vez e jogue direto do cache.</p></div>
         <input class="search" type="search" placeholder="Pesquisar jogos…" aria-label="Pesquisar jogos">
       </header>
+      <nav class="filters" aria-label="Filtrar jogos">
+        <button class="filter active" type="button" data-filter="all">Todos</button>
+        <button class="filter" type="button" data-filter="mobile">Mobile</button>
+        <button class="filter" type="button" data-filter="pc">PC</button>
+        <button class="filter" type="button" data-filter="flash">Flash</button>
+      </nav>
       <div class="grid"><div class="empty">Carregando catálogo…</div></div>
     </div>
     <div class="player">
       <header class="player-head">
         <button class="back player-back" type="button" aria-label="Voltar ao catálogo">←</button>
         <strong></strong>
+        <button class="controls-toggle" type="button" aria-expanded="false">Controles</button>
       </header>
-      <iframe title="Jogo" sandbox="allow-scripts allow-modals"></iframe>
+      <iframe title="Jogo" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+      <div class="controls" aria-label="Controles virtuais"></div>
     </div>
   `;
   document.body.style.overflow = "hidden";
@@ -824,10 +927,16 @@ async function showGameCatalog() {
 
   const grid = wrapper.querySelector(".grid");
   const search = wrapper.querySelector(".search");
+  const filters = wrapper.querySelector(".filters");
   const player = wrapper.querySelector(".player");
   const frame = player.querySelector("iframe");
+  const controls = player.querySelector(".controls");
+  const controlsToggle = player.querySelector(".controls-toggle");
   let catalog = [];
   let playerUrl = null;
+  let activeFilter = "all";
+  let activeGame = null;
+  const isMobileViewport = matchMedia("(max-width: 700px), (pointer: coarse)").matches;
   const assetUrl = (path) => {
     const basePath = window.__groveBase || new URL("./", location.href).pathname;
     const base = new URL(basePath, location.origin);
@@ -841,11 +950,26 @@ async function showGameCatalog() {
   wrapper.querySelector(".topbar .back").addEventListener("click", close);
   wrapper.querySelector(".player-back").addEventListener("click", () => {
     wrapper.classList.remove("playing");
+    player.classList.remove("controls-open");
     frame.removeAttribute("src");
     if (playerUrl) URL.revokeObjectURL(playerUrl);
     playerUrl = null;
   });
   search.addEventListener("input", () => renderCatalog(search.value));
+  filters.addEventListener("click", (event) => {
+    const button = event.target.closest(".filter");
+    if (!button) return;
+    activeFilter = button.dataset.filter || "all";
+    filters.querySelectorAll(".filter").forEach((item) => {
+      item.classList.toggle("active", item === button);
+    });
+    renderCatalog(search.value);
+  });
+  controlsToggle.addEventListener("click", () => {
+    const open = !player.classList.contains("controls-open");
+    player.classList.toggle("controls-open", open);
+    controlsToggle.setAttribute("aria-expanded", String(open));
+  });
 
   try {
     const response = await fetch(
@@ -868,11 +992,17 @@ async function showGameCatalog() {
 
   async function renderCatalog(query = "") {
     const normalized = query.trim().toLocaleLowerCase("pt-BR");
-    const games = catalog.filter((game) =>
-      `${game.name} ${game.description} ${game.category}`
+    const games = catalog.filter((game) => {
+      const matchesQuery = `${game.name} ${game.description} ${game.category} ${game.type}`
         .toLocaleLowerCase("pt-BR")
-        .includes(normalized),
-    );
+        .includes(normalized);
+      if (!matchesQuery) return false;
+      if (activeFilter === "flash") return game.type === "flash";
+      if (activeFilter === "pc" || activeFilter === "mobile") {
+        return (game.platforms || ["pc"]).includes(activeFilter);
+      }
+      return true;
+    });
     grid.innerHTML = "";
     if (!games.length) {
       const empty = document.createElement("div");
@@ -896,6 +1026,9 @@ async function showGameCatalog() {
   function createGameCard(game) {
     const card = document.createElement("article");
     card.className = "card";
+    if (isMobileViewport && game.mobileWarning) {
+      card.classList.add("mobile-warning");
+    }
     card.dataset.gameId = game.id;
     const cover = document.createElement("img");
     cover.className = "cover";
@@ -904,20 +1037,45 @@ async function showGameCatalog() {
     cover.loading = "lazy";
     const copy = document.createElement("div");
     copy.className = "copy";
+    const badges = document.createElement("div");
+    badges.className = "badges";
+    const typeBadge = document.createElement("span");
+    typeBadge.className = `badge${game.type === "flash" ? " flash" : ""}`;
+    typeBadge.textContent = game.type === "flash" ? "Flash · Ruffle" : "HTML5";
+    badges.appendChild(typeBadge);
+    (game.platforms || ["pc"]).forEach((platform) => {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = platform;
+      badges.appendChild(badge);
+    });
+    if (isMobileViewport && game.mobileWarning) {
+      const warning = document.createElement("span");
+      warning.className = "badge flash";
+      warning.textContent = "melhor com teclado/mouse";
+      badges.appendChild(warning);
+    }
     const nameRow = document.createElement("div");
     nameRow.className = "name-row";
     const title = document.createElement("h2");
     title.textContent = game.name;
     const size = document.createElement("span");
     size.className = "size";
-    size.textContent = formatGameBytes(game.size);
+    size.textContent = game.type === "flash"
+      ? `${formatGameBytes(game.size)} + Ruffle`
+      : formatGameBytes(game.size);
+    if (game.type === "flash") {
+      size.title = "O Ruffle baixa cerca de 15 MB apenas no primeiro uso e fica em cache.";
+    }
     nameRow.append(title, size);
     const description = document.createElement("p");
     description.className = "description";
     description.textContent = game.description;
     const attribution = document.createElement("p");
     attribution.className = "attribution";
-    attribution.textContent = game.attribution || "OrganizeOn";
+    attribution.textContent = game.type === "flash"
+      ? `${game.attribution || "OrganizeOn"} · Ruffle ~15 MB no 1º uso`
+      : game.attribution || "OrganizeOn";
     const actions = document.createElement("div");
     actions.className = "actions";
     const action = document.createElement("button");
@@ -943,11 +1101,21 @@ async function showGameCatalog() {
       await cache.delete(gameUrl(game));
       setCardInstalled(card, false);
     });
+    let creditsButton = null;
+    if (game.license || game.attribution || game.source) {
+      creditsButton = document.createElement("button");
+      creditsButton.className = "credits";
+      creditsButton.type = "button";
+      creditsButton.textContent = "Créditos";
+      creditsButton.addEventListener("click", () => showGameCredits(game));
+    }
     const progress = document.createElement("div");
     progress.className = "progress";
     progress.innerHTML = "<span></span>";
-    actions.append(action, remove);
-    copy.append(nameRow, description, attribution, actions, progress);
+    actions.append(action);
+    if (creditsButton) actions.append(creditsButton);
+    actions.append(remove);
+    copy.append(badges, nameRow, description, attribution, actions, progress);
     card.append(cover, copy);
     return card;
   }
@@ -957,6 +1125,49 @@ async function showGameCatalog() {
     const action = card.querySelector(".action");
     action.disabled = false;
     action.textContent = installed ? "Jogar" : "Baixar";
+  }
+
+  function showGameCredits(game) {
+    const backdrop = document.createElement("div");
+    backdrop.className = "dialog-backdrop";
+    backdrop.setAttribute("role", "dialog");
+    backdrop.setAttribute("aria-modal", "true");
+    const dialog = document.createElement("div");
+    dialog.className = "dialog";
+    const title = document.createElement("h2");
+    title.textContent = `Créditos · ${game.name}`;
+    dialog.appendChild(title);
+    [
+      game.attribution,
+      game.copyright,
+      game.license ? `Licença: ${game.license}` : "",
+    ].filter(Boolean).forEach((value) => {
+      const line = document.createElement("p");
+      line.textContent = value;
+      dialog.appendChild(line);
+    });
+    if (game.source) {
+      const sourceLine = document.createElement("p");
+      const link = document.createElement("a");
+      link.href = game.source;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "Abrir código-fonte e licença";
+      sourceLine.appendChild(link);
+      dialog.appendChild(sourceLine);
+    }
+    const closeButton = document.createElement("button");
+    closeButton.className = "dialog-close";
+    closeButton.type = "button";
+    closeButton.textContent = "Fechar";
+    closeButton.addEventListener("click", () => backdrop.remove());
+    dialog.appendChild(closeButton);
+    backdrop.appendChild(dialog);
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) backdrop.remove();
+    });
+    wrapper.appendChild(backdrop);
+    closeButton.focus();
   }
 
   async function isGameInstalled(game) {
@@ -1011,7 +1222,11 @@ async function showGameCatalog() {
         throw new Error("O arquivo baixado falhou na verificação.");
       }
       const headers = new Headers(response.headers);
-      headers.set("Content-Type", "text/html; charset=utf-8");
+      if (game.type === "flash") {
+        headers.set("Content-Type", "application/x-shockwave-flash");
+      } else {
+        headers.set("Content-Type", "text/html; charset=utf-8");
+      }
       headers.set("X-OrganizeOn-Game-Hash", game.sha256);
       const cache = await caches.open(gameCacheName);
       await cache.put(
@@ -1044,11 +1259,161 @@ async function showGameCatalog() {
       return;
     }
     if (playerUrl) URL.revokeObjectURL(playerUrl);
-    playerUrl = URL.createObjectURL(await response.blob());
+    playerUrl = null;
     player.querySelector("strong").textContent = game.name;
     frame.title = game.name;
-    frame.src = playerUrl;
+    activeGame = game;
+    buildVirtualControls(game);
+    if (game.type === "flash") {
+      try {
+        await ensureGameServiceWorker();
+      } catch (error) {
+        console.warn("O cache offline do Ruffle não pôde ser ativado:", error);
+      }
+      const flashPlayerUrl = assetUrl("games/flash-player.html");
+      flashPlayerUrl.searchParams.set("swf", game.entry);
+      frame.src = flashPlayerUrl.href;
+    } else {
+      playerUrl = URL.createObjectURL(await response.blob());
+      frame.src = playerUrl;
+    }
     wrapper.classList.add("playing");
+  }
+
+  async function ensureGameServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+    const registration = await navigator.serviceWorker.register(
+      assetUrl("games/game-sw.js").href,
+      { scope: assetUrl("games/").pathname },
+    );
+    if (registration.active) return;
+    const worker = registration.installing || registration.waiting;
+    if (!worker) return;
+    await new Promise((resolve, reject) => {
+      const timeout = window.setTimeout(
+        () => reject(new Error("Tempo esgotado ao iniciar o cache de jogos.")),
+        8000,
+      );
+      worker.addEventListener("statechange", () => {
+        if (worker.state === "activated") {
+          clearTimeout(timeout);
+          resolve();
+        } else if (worker.state === "redundant") {
+          clearTimeout(timeout);
+          reject(new Error("Service worker rejeitado."));
+        }
+      });
+    });
+  }
+
+  function buildVirtualControls(game) {
+    controls.innerHTML = "";
+    const required = new Set(game.keys || []);
+    const keyDefinitions = [
+      ["W", "KeyW", 87], ["A", "KeyA", 65], ["S", "KeyS", 83],
+      ["D", "KeyD", 68], ["↑", "ArrowUp", 38, "ArrowUp"],
+      ["←", "ArrowLeft", 37, "ArrowLeft"], ["↓", "ArrowDown", 40, "ArrowDown"],
+      ["→", "ArrowRight", 39, "ArrowRight"], ["E", "KeyE", 69],
+      ["F", "KeyF", 70], ["X", "KeyX", 88], ["C", "KeyC", 67],
+      ["Espaço", "Space", 32, " ", true],
+    ];
+    keyDefinitions.forEach(([label, code, keyCode, explicitKey, wide]) => {
+      const button = document.createElement("button");
+      button.className = `key${wide ? " space" : ""}`;
+      button.type = "button";
+      button.textContent = label;
+      const key = explicitKey || label;
+      if (required.has(key) || required.has(code) || required.has(label)) {
+        button.classList.add("needed");
+      }
+      const release = (event) => {
+        event.preventDefault();
+        sendVirtualKey(key, code, keyCode, false);
+      };
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        button.setPointerCapture?.(event.pointerId);
+        sendVirtualKey(key, code, keyCode, true);
+      });
+      button.addEventListener("pointerup", release);
+      button.addEventListener("pointercancel", release);
+      button.addEventListener("contextmenu", (event) => event.preventDefault());
+      controls.appendChild(button);
+    });
+
+    const trackpad = document.createElement("button");
+    trackpad.className = "trackpad";
+    trackpad.type = "button";
+    trackpad.innerHTML = "<span>Mouse virtual · arraste e toque</span>";
+    let lastPoint = null;
+    let cursorX = 0.5;
+    let cursorY = 0.5;
+    trackpad.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      trackpad.setPointerCapture(event.pointerId);
+      lastPoint = { x: event.clientX, y: event.clientY, moved: false };
+      dispatchVirtualMouse("mousedown", cursorX, cursorY);
+    });
+    trackpad.addEventListener("pointermove", (event) => {
+      if (!lastPoint) return;
+      event.preventDefault();
+      const dx = event.clientX - lastPoint.x;
+      const dy = event.clientY - lastPoint.y;
+      if (Math.abs(dx) + Math.abs(dy) > 2) lastPoint.moved = true;
+      lastPoint.x = event.clientX;
+      lastPoint.y = event.clientY;
+      cursorX = Math.max(0, Math.min(1, cursorX + dx / 220));
+      cursorY = Math.max(0, Math.min(1, cursorY + dy / 160));
+      dispatchVirtualMouse("mousemove", cursorX, cursorY);
+    });
+    const releaseMouse = (event) => {
+      if (!lastPoint) return;
+      event.preventDefault();
+      dispatchVirtualMouse("mouseup", cursorX, cursorY);
+      if (!lastPoint.moved) dispatchVirtualMouse("click", cursorX, cursorY);
+      lastPoint = null;
+    };
+    trackpad.addEventListener("pointerup", releaseMouse);
+    trackpad.addEventListener("pointercancel", releaseMouse);
+    controls.appendChild(trackpad);
+  }
+
+  function sendVirtualKey(key, code, keyCode, down) {
+    const data = {
+      type: "organizeon-game-key", key, code, keyCode, down,
+    };
+    frame.contentWindow?.postMessage(data, "*");
+    try {
+      const options = {
+        key, code, keyCode, which: keyCode, bubbles: true, cancelable: true,
+      };
+      frame.contentWindow?.dispatchEvent(
+        new KeyboardEvent(down ? "keydown" : "keyup", options),
+      );
+      frame.contentWindow?.document.dispatchEvent(
+        new KeyboardEvent(down ? "keydown" : "keyup", options),
+      );
+      frame.contentWindow?.focus();
+    } catch {
+      // The message bridge above handles isolated player frames.
+    }
+  }
+
+  function dispatchVirtualMouse(type, xRatio, yRatio) {
+    try {
+      const gameWindow = frame.contentWindow;
+      const gameDocument = gameWindow?.document;
+      if (!gameWindow || !gameDocument) return;
+      const x = Math.round(gameWindow.innerWidth * xRatio);
+      const y = Math.round(gameWindow.innerHeight * yRatio);
+      const target = gameDocument.elementFromPoint(x, y) || gameDocument.body;
+      target?.dispatchEvent(new MouseEvent(type, {
+        clientX: x, clientY: y, bubbles: true, cancelable: true, button: 0,
+      }));
+      gameWindow.focus();
+    } catch {
+      // Some browser sandboxes do not expose the embedded document.
+    }
   }
 
   function gameUrl(game) {

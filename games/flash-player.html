@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>OrganizeOn Flash Player</title>
+    <style>
+      html,body,#stage { width:100%; height:100%; margin:0; overflow:hidden; background:#050807 }
+      #stage { display:grid; place-items:center }
+      ruffle-player { width:100%; height:100% }
+      #status { color:#8edfc9; font:600 14px system-ui,sans-serif }
+      #status.error { color:#ff9ca8; padding:24px; text-align:center }
+    </style>
+    <script>
+      window.RufflePlayer = window.RufflePlayer || {};
+      window.RufflePlayer.config = {
+        publicPath: new URL("./runtime/ruffle/", document.baseURI).href,
+        autoplay: "on",
+        unmuteOverlay: "hidden",
+        warnOnUnsupportedContent: true
+      };
+    </script>
+    <script src="./runtime/ruffle/ruffle.js"></script>
+  </head>
+  <body>
+    <main id="stage"><div id="status">Iniciando Ruffle…</div></main>
+    <script>
+      const stage = document.getElementById("stage");
+      let player;
+
+      window.addEventListener("load", async () => {
+        try {
+          const entry = new URLSearchParams(location.search).get("swf");
+          if (!entry || entry.includes("..")) throw new Error("Jogo Flash inválido.");
+          const ruffle = window.RufflePlayer?.newest?.();
+          if (!ruffle) throw new Error("O Ruffle não pôde ser iniciado.");
+          player = ruffle.createPlayer();
+          player.id = "ruffle-game";
+          stage.replaceChildren(player);
+          await player.ruffle().load({
+            url: new URL(entry, document.baseURI).href,
+            autoplay: "on",
+            unmuteOverlay: "hidden"
+          });
+          player.focus();
+        } catch (error) {
+          const message = document.createElement("div");
+          message.id = "status";
+          message.className = "error";
+          message.textContent = error instanceof Error ? error.message : "Falha ao abrir o jogo.";
+          stage.replaceChildren(message);
+        }
+      });
+
+      addEventListener("message", (event) => {
+        if (event.source !== parent || event.data?.type !== "organizeon-game-key" || !player) return;
+        const data = event.data;
+        const keyboardEvent = new KeyboardEvent(data.down ? "keydown" : "keyup", {
+          key: data.key,
+          code: data.code,
+          keyCode: data.keyCode,
+          which: data.keyCode,
+          bubbles: true,
+          cancelable: true
+        });
+        player.dispatchEvent(keyboardEvent);
+        window.dispatchEvent(new KeyboardEvent(keyboardEvent.type, {
+          key: data.key, code: data.code, keyCode: data.keyCode,
+          which: data.keyCode, bubbles: true, cancelable: true
+        }));
+        player.focus();
+      });
+    </script>
+  </body>
+</html>
