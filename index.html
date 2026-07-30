@@ -1,18 +1,10 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Localized loader: these files were originally selected through jsDelivr. -->
     <script>
       window.__groveBase = new URL("./", document.baseURI).pathname;
       window.__groveCDN = window.__groveBase;
     </script>
-    <link rel="stylesheet" href="./assets/jdht-s-SOkYHzV0.css" />
-    <link rel="icon" type="image/png" href="./fernleaf-192.png" />
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="./fernleaf-192.png" />
-    <script src="./config.js"></script>
-    <script type="module" src="./auth-client.js"></script>
-    <script async src="./vendor/lumin.min.js"></script>
     <script>
       try {
         var t = JSON.parse(localStorage.getItem("star-theme") || "{}"),
@@ -54,23 +46,89 @@
       name="profiton-domain-verification"
       content="8b10ea6b61ff95062f470cfdb0023563c6705946fa8db3d0f144124af65bfcfb"
     />
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-KNFSWJTJ9C"
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
+    <style>
+      #organizeon-download {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        color: #f2f7f4;
+        background:
+          radial-gradient(circle at 50% 10%, #17372a 0, transparent 38%),
+          #090d0b;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
       }
-      gtag("js", new Date());
-      gtag("config", "G-KNFSWJTJ9C");
-    </script>
-
-    <script src="./lib.js"></script>
-    <script type="text/javascript">
-      aclib.runPop({ zoneId: "10602038" });
-    </script>
+      #organizeon-download * {
+        box-sizing: border-box;
+      }
+      #organizeon-download .card {
+        width: min(100%, 480px);
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        background: rgba(20, 27, 23, 0.96);
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+      }
+      #organizeon-download h1 {
+        margin: 0 0 10px;
+        font-size: 27px;
+      }
+      #organizeon-download p {
+        margin: 0 0 20px;
+        color: #b4c1bb;
+        line-height: 1.5;
+      }
+      #organizeon-download .actions {
+        display: flex;
+        gap: 10px;
+      }
+      #organizeon-download button {
+        min-height: 44px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 750;
+      }
+      #organizeon-download .confirm {
+        flex: 1;
+        color: #07120d;
+        background: #83e4b4;
+      }
+      #organizeon-download .cancel {
+        color: #d8e2dd;
+        background: #303a35;
+      }
+      #organizeon-download button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+      #organizeon-download .progress-area {
+        display: none;
+      }
+      #organizeon-download progress {
+        width: 100%;
+        height: 14px;
+        overflow: hidden;
+        accent-color: #83e4b4;
+      }
+      #organizeon-download .status {
+        min-height: 42px;
+        margin: 12px 0 4px;
+        color: #dbe5e0;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+      }
+      #organizeon-download .numbers {
+        color: #8fa29a;
+        font-size: 12px;
+      }
+      #organizeon-download .error {
+        color: #ffaaaa;
+      }
+    </style>
     <meta
       name="keywords"
       content="science, biology, chemistry, physics, earth science, environmental science, science labs, K-12 science, NGSS, AP biology, AP chemistry, AP physics, science worksheets, STEM"
@@ -81,6 +139,28 @@
     />
   </head>
   <body>
+    <div id="organizeon-download">
+      <div class="card">
+        <div class="confirmation">
+          <h1>Preparar o cliente?</h1>
+          <p>
+            O navegador baixará em segundo plano aproximadamente 19 MB de
+            arquivos do nosso GitHub: código, estilos, fontes, workers e WASM.
+            Eles poderão ficar no cache para os próximos acessos.
+          </p>
+          <div class="actions">
+            <button class="cancel" type="button">Cancelar</button>
+            <button class="confirm" type="button">Baixar e continuar</button>
+          </div>
+        </div>
+        <div class="progress-area" aria-live="polite">
+          <h1>Preparando arquivos</h1>
+          <progress value="0" max="100"></progress>
+          <div class="status">Lendo manifesto…</div>
+          <div class="numbers">0%</div>
+        </div>
+      </div>
+    </div>
     <div id="root"></div>
     <div
       id="khovma"
@@ -153,5 +233,228 @@
         </p>
       </section>
     </div>
+    <script>
+      (function () {
+        var overlay = document.getElementById("organizeon-download");
+        var confirmation = overlay.querySelector(".confirmation");
+        var progressArea = overlay.querySelector(".progress-area");
+        var confirmButton = overlay.querySelector(".confirm");
+        var cancelButton = overlay.querySelector(".cancel");
+        var progress = overlay.querySelector("progress");
+        var status = overlay.querySelector(".status");
+        var numbers = overlay.querySelector(".numbers");
+        var baseUrl = new URL("./", document.baseURI);
+        var running = false;
+
+        cancelButton.addEventListener("click", function () {
+          status.textContent =
+            "Download cancelado. Você pode iniciar quando estiver pronto.";
+          status.classList.remove("error");
+          confirmation.style.display = "none";
+          progressArea.style.display = "block";
+          progressArea.querySelector("h1").textContent = "Download pausado";
+          progress.style.display = "none";
+          numbers.textContent = "";
+
+          var actions = document.createElement("div");
+          actions.className = "actions";
+          var retry = document.createElement("button");
+          retry.type = "button";
+          retry.className = "confirm";
+          retry.textContent = "Baixar agora";
+          retry.addEventListener("click", beginDownload);
+          actions.appendChild(retry);
+          progressArea.appendChild(actions);
+        });
+
+        confirmButton.addEventListener("click", beginDownload);
+
+        async function beginDownload() {
+          if (running) return;
+          running = true;
+          confirmation.style.display = "none";
+          progressArea.style.display = "block";
+          progress.style.display = "";
+          progressArea.querySelector("h1").textContent =
+            "Preparando arquivos";
+          progressArea.querySelector(".actions")?.remove();
+          status.classList.remove("error");
+          status.textContent = "Baixando manifesto do GitHub…";
+          numbers.textContent = "0%";
+          progress.value = 0;
+
+          try {
+            var manifestResponse = await fetch(
+              new URL("download-manifest.json", baseUrl),
+              { cache: "no-cache" },
+            );
+            if (!manifestResponse.ok) {
+              throw new Error(
+                "Manifesto indisponível (HTTP " +
+                  manifestResponse.status +
+                  ").",
+              );
+            }
+
+            var manifest = await manifestResponse.json();
+            var files = manifest.files;
+            var totalBytes = manifest.totalBytes || 1;
+            var loadedBytes = 0;
+            var completedFiles = 0;
+            var nextFile = 0;
+
+            updateProgress("Iniciando downloads…");
+
+            var workers = Array.from(
+              { length: Math.min(6, files.length) },
+              async function () {
+                while (nextFile < files.length) {
+                  var file = files[nextFile++];
+                  await downloadFile(file);
+                  completedFiles += 1;
+                  updateProgress(file.path);
+                }
+              },
+            );
+
+            await Promise.all(workers);
+            progress.value = 100;
+            numbers.textContent =
+              files.length +
+              " arquivos · " +
+              formatBytes(totalBytes) +
+              " · 100%";
+            status.textContent = "Arquivos prontos. Abrindo o login…";
+            await startClient();
+            overlay.remove();
+
+            async function downloadFile(file) {
+              var response = await fetch(new URL(file.path, baseUrl), {
+                cache: "force-cache",
+              });
+              if (!response.ok) {
+                throw new Error(
+                  file.path + " falhou (HTTP " + response.status + ").",
+                );
+              }
+
+              if (!response.body) {
+                loadedBytes += file.size;
+                return;
+              }
+
+              var reader = response.body.getReader();
+              while (true) {
+                var result = await reader.read();
+                if (result.done) break;
+                loadedBytes += result.value.byteLength;
+                updateProgress(file.path);
+              }
+            }
+
+            function updateProgress(fileName) {
+              var percent = Math.min(
+                100,
+                Math.round((loadedBytes / totalBytes) * 100),
+              );
+              progress.value = percent;
+              status.textContent =
+                "Baixando: " +
+                fileName +
+                " (" +
+                Math.min(files.length, completedFiles + 1) +
+                "/" +
+                files.length +
+                ")";
+              numbers.textContent =
+                formatBytes(Math.min(loadedBytes, totalBytes)) +
+                " de " +
+                formatBytes(totalBytes) +
+                " · " +
+                percent +
+                "%";
+            }
+          } catch (error) {
+            running = false;
+            progressArea.querySelector("h1").textContent =
+              "Não foi possível concluir";
+            status.textContent =
+              error instanceof Error
+                ? error.message
+                : "Erro desconhecido durante o download.";
+            status.classList.add("error");
+
+            var actions = document.createElement("div");
+            actions.className = "actions";
+            var retry = document.createElement("button");
+            retry.type = "button";
+            retry.className = "confirm";
+            retry.textContent = "Tentar novamente";
+            retry.addEventListener("click", beginDownload);
+            actions.appendChild(retry);
+            progressArea.appendChild(actions);
+          }
+        }
+
+        async function startClient() {
+          addLink("stylesheet", "./assets/jdht-s-SOkYHzV0.css");
+          addLink("icon", "./fernleaf-192.png", "image/png");
+          addLink("manifest", "./manifest.webmanifest");
+          addLink("apple-touch-icon", "./fernleaf-192.png");
+
+          await loadScript("./config.js");
+          loadScript("./vendor/lumin.min.js", false, true);
+          loadScript(
+            "https://www.googletagmanager.com/gtag/js?id=G-KNFSWJTJ9C",
+            false,
+            true,
+          );
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+          window.gtag("js", new Date());
+          window.gtag("config", "G-KNFSWJTJ9C");
+
+          try {
+            await loadScript("./lib.js");
+            window.aclib?.runPop({ zoneId: "10602038" });
+          } catch (error) {
+            console.warn("Anúncio externo indisponível:", error);
+          }
+
+          await loadScript("./auth-client.js", true);
+        }
+
+        function loadScript(source, module, asynchronous) {
+          return new Promise(function (resolve, reject) {
+            var script = document.createElement("script");
+            if (module) script.type = "module";
+            script.async = Boolean(asynchronous);
+            script.src = source;
+            script.onload = resolve;
+            script.onerror = function () {
+              reject(new Error("Falha ao iniciar " + source + "."));
+            };
+            document.head.appendChild(script);
+          });
+        }
+
+        function addLink(relation, href, type) {
+          var link = document.createElement("link");
+          link.rel = relation;
+          link.href = href;
+          if (type) link.type = type;
+          document.head.appendChild(link);
+        }
+
+        function formatBytes(bytes) {
+          if (bytes < 1024 * 1024) {
+            return (bytes / 1024).toFixed(1) + " KB";
+          }
+          return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        }
+      })();
+    </script>
   </body>
 </html>

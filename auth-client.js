@@ -10,10 +10,6 @@ if (!config?.authenticationRequired) {
 
 async function validateExistingSession() {
   const token = localStorage.getItem(tokenStorageKey);
-  if (!token) {
-    showLogin();
-    return;
-  }
 
   try {
     const response = await apiRequest("/auth/session", { method: "GET" });
@@ -23,7 +19,7 @@ async function validateExistingSession() {
     await startApplication(token);
   } catch {
     localStorage.removeItem(tokenStorageKey);
-    showLogin("Sua sessão expirou. Entre novamente.");
+    showLogin(token ? "Sua sessão expirou. Entre novamente." : "");
   }
 }
 
@@ -31,11 +27,11 @@ async function startApplication(token = localStorage.getItem(tokenStorageKey)) {
   if (appStarted) return;
   appStarted = true;
 
-  if (token) {
-    window.__FERN_WISP_URL__ =
-      `${config.apiOrigin.replace(/^http/, "ws")}${config.apiPrefix}` +
-      `/wisp/${encodeURIComponent(token)}/`;
-  }
+  const wispBase =
+    `${config.apiOrigin.replace(/^http/, "ws")}${config.apiPrefix}/wisp/`;
+  window.__FERN_WISP_URL__ = token
+    ? `${wispBase}${encodeURIComponent(token)}/`
+    : wispBase;
 
   removeLogin();
   try {
