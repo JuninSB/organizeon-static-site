@@ -283,14 +283,15 @@
           onCanonicalHost &&
           new URLSearchParams(location.search).get("embedded") === "1";
         var dashboardMode =
-          new URLSearchParams(location.search).get("dashboard") === "1";
+          new URLSearchParams(location.search).get("dashboard") === "1" ||
+          location.hash === "#dashboard";
         var baseUrl = onCanonicalHost
           ? new URL("./", document.baseURI)
           : canonicalBase;
         var versionStorageKey = "organizeon-update-version-v2";
         var manifestStorageKey = "organizeon-update-manifest-v2";
         var fileHashesStorageKey = "organizeon-update-files-v2";
-        var loaderVersion = "2.3.0";
+        var loaderVersion = "2.4.0";
         window.__ORGANIZEON_LOADER_VERSION__ = loaderVersion;
         var latestLoaderVersion = "";
         var indexUpdateRequired = false;
@@ -905,7 +906,13 @@
           var dashboardUrl = new URL(location.href);
           dashboardUrl.searchParams.delete("embedded");
           dashboardUrl.searchParams.delete("route");
-          dashboardUrl.searchParams.set("dashboard", "1");
+          if (dashboardUrl.protocol === "file:") {
+            dashboardUrl.searchParams.delete("dashboard");
+            dashboardUrl.hash = "dashboard";
+          } else {
+            dashboardUrl.hash = "";
+            dashboardUrl.searchParams.set("dashboard", "1");
+          }
           window.open(dashboardUrl.href, "_blank", "noopener");
         }
 
@@ -914,6 +921,7 @@
           mainUrl.searchParams.delete("dashboard");
           mainUrl.searchParams.delete("embedded");
           mainUrl.searchParams.delete("route");
+          if (mainUrl.hash === "#dashboard") mainUrl.hash = "";
           window.history.replaceState({}, "", mainUrl.href);
           dashboardMode = false;
           if (dashboardFrame) {
