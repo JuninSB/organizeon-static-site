@@ -85,6 +85,58 @@
       .metrics {
         display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;
       }
+      .server-facts {
+        display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px; margin-bottom: 14px;
+      }
+      .server-fact { min-width: 0; padding: 17px 19px; }
+      .server-fact > span {
+        display: block; color: var(--muted); font-size: 11px;
+        letter-spacing: .06em; text-transform: uppercase;
+      }
+      .server-fact strong {
+        display: block; margin: 8px 0 4px; overflow: hidden;
+        font-size: 17px; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .server-fact small {
+        display: block; overflow-wrap: anywhere; color: #6f9188;
+      }
+      .status-dot {
+        display: inline-block; width: 8px; height: 8px; margin-right: 6px;
+        border-radius: 50%; background: var(--green);
+        box-shadow: 0 0 12px rgba(93, 240, 200, .75);
+      }
+      .status-dot.unverified {
+        background: #f2cf66; box-shadow: 0 0 12px rgba(242, 207, 102, .55);
+      }
+      .routes-card { margin-bottom: 14px; overflow: hidden; }
+      .routes-heading {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; padding: 16px 19px; border-bottom: 1px solid var(--line);
+      }
+      .routes-heading h2 { margin: 0; font-size: 15px; }
+      .routes-heading small { color: var(--muted); }
+      .route-url {
+        display: block; max-width: 430px; overflow: hidden;
+        color: #9fc8bd; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .route-purpose { color: var(--muted); }
+      .route-status {
+        display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px;
+        border-radius: 99px; color: #8ff5c4; background: rgba(93,240,168,.1);
+        font-size: 11px; font-weight: 750;
+      }
+      .route-status.pending, .route-status.unexpected {
+        color: #ffe08a; background: rgba(242,207,102,.1);
+      }
+      .route-status.offline {
+        color: #ffadb2; background: rgba(255,99,109,.1);
+      }
+      .used-badge {
+        display: inline-flex; margin-left: 6px; padding: 2px 6px;
+        border-radius: 5px; color: var(--cyan); background: rgba(57,201,239,.1);
+        font-size: 9px; font-weight: 800; text-transform: uppercase;
+      }
       .card {
         border: 1px solid var(--line); border-radius: 16px; background: var(--panel);
         box-shadow: 0 20px 55px rgba(0, 0, 0, .18); backdrop-filter: blur(16px);
@@ -182,12 +234,14 @@
         .brand { padding-inline: 8px; }
         .nav button { justify-content: center; font-size: 18px; }
         .metrics { grid-template-columns: 1fr 1fr; }
+        .server-facts { grid-template-columns: 1fr 1fr; }
         .charts { grid-template-columns: 1fr; }
       }
       @media (max-width: 560px) {
         main { padding-inline: 14px; }
         header { align-items: flex-start; flex-direction: column; }
         .metrics { grid-template-columns: 1fr; }
+        .server-facts { grid-template-columns: 1fr; }
       }
       @media (max-width: 700px) {
         .shell { display: block; }
@@ -316,10 +370,46 @@
             <div><h1>Server overview</h1><p>Recursos e tráfego do backend em tempo real.</p></div>
             <button class="button primary" id="monitor-toggle">Activate monitoring</button>
           </header>
+          <div class="server-facts">
+            <article class="card server-fact">
+              <span>Domínio</span>
+              <strong id="domain-value">—</strong>
+              <small id="domain-detail">Aguardando o backend</small>
+            </article>
+            <article class="card server-fact">
+              <span>API / WISP</span>
+              <strong id="service-status">—</strong>
+              <small id="service-detail">—</small>
+            </article>
+            <article class="card server-fact">
+              <span>Portas</span>
+              <strong id="ports-value">—</strong>
+              <small id="ports-detail">—</small>
+            </article>
+            <article class="card server-fact">
+              <span>Uptime do processo</span>
+              <strong id="server-uptime-value">—</strong>
+              <small id="server-uptime-detail">—</small>
+            </article>
+          </div>
+          <section class="card routes-card">
+            <div class="routes-heading">
+              <h2>Domínios e rotas</h2>
+              <small>Checagem real a cada 30 segundos durante o monitoramento</small>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Serviço</th><th>Rota</th><th>Status</th><th>Resposta</th></tr></thead>
+                <tbody id="routes-status-body">
+                  <tr><td colspan="4">Ative o monitoramento para verificar as rotas.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
           <div class="card monitor-off" id="monitoring-off">
             <div>
               <h2>Monitoramento desativado</h2>
-              <p>Nenhuma amostragem de CPU, RAM ou requisições é feita até um administrador ativar esta sessão de monitoramento.</p>
+              <p>Uptime e requisições continuam sendo contados. CPU, RAM e gráficos só são amostrados quando um administrador ativa esta sessão.</p>
               <button class="button primary" id="monitor-activate">Activate monitoring</button>
             </div>
           </div>

@@ -148,6 +148,7 @@ async function toggleMonitoring() {
 
 function renderMonitoring(monitoring) {
   state.monitoring = monitoring;
+  renderServerFacts(monitoring);
   document.getElementById("monitoring-off").hidden = monitoring.active;
   document.getElementById("monitoring-content").hidden = !monitoring.active;
   const toggle = document.getElementById("monitor-toggle");
@@ -171,12 +172,94 @@ function renderMonitoring(monitoring) {
   document.getElementById("rpm-value").textContent =
     monitoring.requests.perMinute;
   document.getElementById("request-detail").textContent =
-    `${monitoring.requests.averageResponseMs.toFixed(1)} ms médio · ${monitoring.requests.errorsFiveMinutes} erros`;
+    `${monitoring.requests.totalSinceStart || 0} total · ${monitoring.requests.trackedFiveMinutes} em 5 min · ${monitoring.requests.averageResponseMs.toFixed(1)} ms médio`;
   document.getElementById("uptime-value").textContent =
     formatDuration(monitoring.uptimeSeconds);
   document.getElementById("process-detail").textContent =
     `Node RSS ${formatBytes(monitoring.ram.processRssBytes)} · ${monitoring.viewers || 1} viewer(s)`;
   renderCharts(monitoring.history);
+}
+
+function renderServerFacts(monitoring) {
+  const service = monitoring.service || {};
+  const requests = monitoring.requests || {};
+  const domain = service.publicDomain || "Não configurado";
+  const domainOnline = service.domainStatus === "online";
+  document.getElementById("domain-value").textContent = domain;
+  document.getElementById("domain-detail").innerHTML =
+    `<span class="status-dot${domainOnline ? "" : " unverified"}"></span>` +
+    (domainOnline
+      ? `Online · visto ${formatRelativeTime(service.domainLastSeenAt)}`
+      : "Ainda não recebeu tráfego por esse domínio");
+  document.getElementById("service-status").textContent =
+    service.status === "online" ? "Online" : "Indisponível";
+  document.getElementById("service-detail").textContent =
+    `${service.apiPrefix || config.apiPrefix} · ${(service.transports || ["HTTP", "WebSocket", "WISP"]).join(" / ")}`;
+  const publicPort = service.publicPort || 443;
+  const internalPort = service.internalPort || 5000;
+  document.getElementById("ports-value").textContent =
+    `${publicPort} / ${internalPort}`;
+  document.getElementById("ports-detail").textContent =
+    `HTTPS público ${publicPort} · origem TCP ${internalPort}`;
+  document.getElementById("server-uptime-value").textContent =
+    formatDuration(monitoring.uptimeSeconds || 0);
+  document.getElementById("server-uptime-detail").textContent =
+    `${requests.totalSinceStart || 0} requests · ${requests.webSocketUpgradesSinceStart || 0} WebSockets`;
+  renderRoutes(service.routes || []);
+}
+
+function renderRoutes(routes) {
+  const body = document.getElementById("routes-status-body");
+  if (!routes.length) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 4;
+    cell.textContent = "O backend ainda não informou as rotas.";
+    row.append(cell);
+    body.replaceChildren(row);
+    return;
+  }
+  body.replaceChildren(
+    ...routes.map((route) => {
+      const row = document.createElement("tr");
+      const serviceCell = document.createElement("td");
+      serviceCell.textContent = route.label;
+      if (route.used) {
+        const badge = document.createElement("span");
+        badge.className = "used-badge";
+        badge.textContent = "em uso";
+        serviceCell.append(badge);
+      }
+      const routeCell = document.createElement("td");
+      const url = document.createElement("span");
+      url.className = "route-url";
+      url.textContent = route.url;
+      url.title = route.url;
+      const purpose = document.createElement("small");
+      purpose.className = "route-purpose";
+      purpose.textContent = route.purpose;
+      routeCell.append(url, purpose);
+      const statusCell = document.createElement("td");
+      const status = document.createElement("span");
+      status.className = `route-status ${route.status || "pending"}`;
+      status.textContent = routeStatusLabel(route);
+      statusCell.append(status);
+      const responseCell = document.createElement("td");
+      responseCell.textContent =
+        route.statusCode === null || route.statusCode === undefined
+          ? route.error || "—"
+          : `HTTP ${route.statusCode} · ${route.latencyMs.toFixed(0)} ms`;
+      row.append(serviceCell, routeCell, statusCell, responseCell);
+      return row;
+    }),
+  );
+}
+
+function routeStatusLabel(route) {
+  if (route.status === "online") return "Online";
+  if (route.status === "offline") return "Offline";
+  if (route.status === "unexpected") return "Resposta inesperada";
+  return "Aguardando";
 }
 
 function connectMonitoring() {
@@ -619,4 +702,15 @@ function formatDuration(seconds) {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
   if (seconds < 86400) return `${(seconds / 3600).toFixed(1)}h`;
   return `${(seconds / 86400).toFixed(1)}d`;
+}
+
+function formatRelativeTime(value) {
+  if (!value) return "agora";
+  const seconds = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(value).getTime()) / 1000),
+  );
+  if (seconds < 10) return "agora";
+  if (seconds < 60) return `há ${seconds}s`;
+  return `há ${Math.floor(seconds / 60)}min`;
 }
