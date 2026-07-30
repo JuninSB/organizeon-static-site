@@ -1,0 +1,436 @@
+<!doctype html>
+<!-- Adapted from iampavangandhi/JSGames (https://github.com/iampavangandhi/JSGames), MIT License. See games/THIRD_PARTY_LICENSES.md. -->
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Tetris</title><style>
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;
+place-items:center;overflow:hidden;color:#f8efff;background:
+radial-gradient(circle at 50% 10%,#734ba1,#160d22 70%);
+font-family:system-ui,sans-serif;touch-action:none}.game{text-align:center}
+h1{margin:0 0 4px;font-size:clamp(28px,8vw,44px)}p{margin:4px;color:#d7bcea}
+canvas{display:block;width:min(48vw,200px,28dvh);height:auto;margin:10px auto;
+border:2px solid #d99cff66;box-shadow:0 22px 60px #0009;image-rendering:pixelated}
+.pad{display:grid;grid-template-columns:repeat(3,62px);gap:6px;justify-content:center}
+.pad button{height:48px;border:1px solid #e0b0ff55;border-radius:10px;
+color:#fff;background:#543675;font-size:20px}.rotate{grid-column:2}.left{grid-column:1}
+.down{grid-column:2}.right{grid-column:3}
+</style></head><body><main class="game"><h1>Tetris</h1>
+<p>Pontos: <b id="score">0</b></p><canvas id="tetris" width="200" height="400"></canvas>
+<div class="pad"><button class="rotate">↻</button><button class="left">◀</button>
+<button class="down">▼</button><button class="right">▶</button></div></main>
+<script>const I = [
+  [
+    [0, 0, 0, 0],
+    [1, 1, 1, 1],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ],
+  [
+    [0, 0, 1, 0],
+    [0, 0, 1, 0],
+    [0, 0, 1, 0],
+    [0, 0, 1, 0],
+  ],
+  [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [1, 1, 1, 1],
+    [0, 0, 0, 0],
+  ],
+  [
+    [0, 1, 0, 0],
+    [0, 1, 0, 0],
+    [0, 1, 0, 0],
+    [0, 1, 0, 0],
+  ],
+];
+
+const J = [
+  [
+    [1, 0, 0],
+    [1, 1, 1],
+    [0, 0, 0],
+  ],
+  [
+    [0, 1, 1],
+    [0, 1, 0],
+    [0, 1, 0],
+  ],
+  [
+    [0, 0, 0],
+    [1, 1, 1],
+    [0, 0, 1],
+  ],
+  [
+    [0, 1, 0],
+    [0, 1, 0],
+    [1, 1, 0],
+  ],
+];
+
+const L = [
+  [
+    [0, 0, 1],
+    [1, 1, 1],
+    [0, 0, 0],
+  ],
+  [
+    [0, 1, 0],
+    [0, 1, 0],
+    [0, 1, 1],
+  ],
+  [
+    [0, 0, 0],
+    [1, 1, 1],
+    [1, 0, 0],
+  ],
+  [
+    [1, 1, 0],
+    [0, 1, 0],
+    [0, 1, 0],
+  ],
+];
+
+const O = [
+  [
+    [0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0],
+  ],
+];
+
+const S = [
+  [
+    [0, 1, 1],
+    [1, 1, 0],
+    [0, 0, 0],
+  ],
+  [
+    [0, 1, 0],
+    [0, 1, 1],
+    [0, 0, 1],
+  ],
+  [
+    [0, 0, 0],
+    [0, 1, 1],
+    [1, 1, 0],
+  ],
+  [
+    [1, 0, 0],
+    [1, 1, 0],
+    [0, 1, 0],
+  ],
+];
+
+const T = [
+  [
+    [0, 1, 0],
+    [1, 1, 1],
+    [0, 0, 0],
+  ],
+  [
+    [0, 1, 0],
+    [0, 1, 1],
+    [0, 1, 0],
+  ],
+  [
+    [0, 0, 0],
+    [1, 1, 1],
+    [0, 1, 0],
+  ],
+  [
+    [0, 1, 0],
+    [1, 1, 0],
+    [0, 1, 0],
+  ],
+];
+
+const Z = [
+  [
+    [1, 1, 0],
+    [0, 1, 1],
+    [0, 0, 0],
+  ],
+  [
+    [0, 0, 1],
+    [0, 1, 1],
+    [0, 1, 0],
+  ],
+  [
+    [0, 0, 0],
+    [1, 1, 0],
+    [0, 1, 1],
+  ],
+  [
+    [0, 1, 0],
+    [1, 1, 0],
+    [1, 0, 0],
+  ],
+];
+
+// select canvas element
+const cvs = document.getElementById("tetris");
+const ctx = cvs.getContext("2d");
+const scoreElement = document.getElementById("score");
+
+const ROW = 20;
+const COL = (COLUMN = 10);
+const SQ = (squareSize = 20);
+const VACANT = "BLACK"; // color of an empty square
+
+// draw a square
+function drawSquare(x, y, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x * SQ, y * SQ, SQ, SQ);
+
+  ctx.strokeStyle = "BLACK";
+  ctx.strokeRect(x * SQ, y * SQ, SQ, SQ);
+}
+
+// create board
+let board = [];
+for (r = 0; r < ROW; r++) {
+  board[r] = [];
+  for (c = 0; c < COL; c++) {
+    board[r][c] = VACANT;
+  }
+}
+
+// draw board
+function drawBoard() {
+  for (r = 0; r < ROW; r++) {
+    for (c = 0; c < COL; c++) {
+      drawSquare(c, r, board[r][c]);
+    }
+  }
+}
+
+drawBoard();
+
+// the pieces and their colors
+const PIECES = [
+  [Z, "#ff0000"], //red
+  [S, "#39ff14"], //green
+  [T, "#f5ff0d"], //yellow
+  [O, "#0400ff"], //blue
+  [L, "#ff2281"], //pink
+  [I, "#00a9fe"], //aqua
+  [J, "#ff6200"], //orange
+];
+
+// generate random pieces
+function randomPiece() {
+  let r = (randomN = Math.floor(Math.random() * PIECES.length)); // 0 -> 6
+  return new Piece(PIECES[r][0], PIECES[r][1]);
+}
+
+let p = randomPiece();
+
+// The Object Piece
+function Piece(tetromino, color) {
+  this.tetromino = tetromino;
+  this.color = color;
+
+  this.tetrominoN = 0; // we start from the first pattern
+  this.activeTetromino = this.tetromino[this.tetrominoN];
+
+  // control the pieces
+  this.x = 3;
+  this.y = -2;
+}
+
+// fill function
+Piece.prototype.fill = function (color) {
+  for (r = 0; r < this.activeTetromino.length; r++) {
+    for (c = 0; c < this.activeTetromino.length; c++) {
+      if (this.activeTetromino[r][c]) {
+        drawSquare(this.x + c, this.y + r, color);
+      }
+    }
+  }
+};
+
+// draw a piece to the board
+Piece.prototype.draw = function () {
+  this.fill(this.color);
+};
+
+// undraw a piece
+Piece.prototype.unDraw = function () {
+  this.fill(VACANT);
+};
+
+// move Down the piece
+Piece.prototype.moveDown = function () {
+  if (!this.collision(0, 1, this.activeTetromino)) {
+    this.unDraw();
+    this.y++;
+    this.draw();
+  } else {
+    // lock the piece and generate a new one
+    this.lock();
+    p = randomPiece();
+  }
+};
+
+// move Right
+Piece.prototype.moveRight = function () {
+  if (!this.collision(1, 0, this.activeTetromino)) {
+    this.unDraw();
+    this.x++;
+    this.draw();
+  }
+};
+
+// move Left
+Piece.prototype.moveLeft = function () {
+  if (!this.collision(-1, 0, this.activeTetromino)) {
+    this.unDraw();
+    this.x--;
+    this.draw();
+  }
+};
+
+// rotate piece
+Piece.prototype.rotate = function () {
+  let nextPattern = this.tetromino[
+    (this.tetrominoN + 1) % this.tetromino.length
+  ];
+  let kick = 0;
+  // wall collision
+  if (this.collision(0, 0, nextPattern)) {
+    if (this.x > COL / 2) {
+      // right wall
+      kick = -1; // move piece to the left
+    } else {
+      // left wall
+      kick = 1; // move piece to the right
+    }
+  }
+
+  if (!this.collision(kick, 0, nextPattern)) {
+    this.unDraw();
+    this.x += kick;
+    this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length; // (0+1)%4 => 1
+    this.activeTetromino = this.tetromino[this.tetrominoN];
+    this.draw();
+  }
+};
+
+let score = 0;
+
+Piece.prototype.lock = function () {
+  for (r = 0; r < this.activeTetromino.length; r++) {
+    for (c = 0; c < this.activeTetromino.length; c++) {
+      if (!this.activeTetromino[r][c]) {
+        continue;
+      }
+      // game over
+      if (this.y + r < 0) {
+        alert("Game Over");
+        gameOver = true;
+        break;
+      }
+      // lock the piece
+      board[this.y + r][this.x + c] = this.color;
+    }
+  }
+  // remove full rows
+  for (r = 0; r < ROW; r++) {
+    let isRowFull = true;
+    for (c = 0; c < COL; c++) {
+      isRowFull = isRowFull && board[r][c] != VACANT;
+    }
+    if (isRowFull) {
+      // if row is full
+      // move down all the rows above it
+      for (y = r; y > 1; y--) {
+        for (c = 0; c < COL; c++) {
+          board[y][c] = board[y - 1][c];
+        }
+      }
+      for (c = 0; c < COL; c++) {
+        board[0][c] = VACANT;
+      }
+      score += 10; // increment the score
+    }
+  }
+  // update board
+  drawBoard();
+
+  // update score
+  scoreElement.innerHTML = score;
+};
+
+// collision fucntion
+
+Piece.prototype.collision = function (x, y, piece) {
+  for (r = 0; r < piece.length; r++) {
+    for (c = 0; c < piece.length; c++) {
+      // if the square is empty, skip it
+      if (!piece[r][c]) {
+        continue;
+      }
+      // coordinates of the piece after movement
+      let newX = this.x + c + x;
+      let newY = this.y + r + y;
+
+      // conditions
+      if (newX < 0 || newX >= COL || newY >= ROW) {
+        return true;
+      }
+      if (newY < 0) {
+        continue;
+      }
+      // check if there is a locked piece alrady in place
+      if (board[newY][newX] != VACANT) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+// control the piece
+
+document.addEventListener("keydown", CONTROL);
+
+function CONTROL(event) {
+  if (event.keyCode == 37) {
+    p.moveLeft();
+    dropStart = Date.now();
+  } else if (event.keyCode == 38) {
+    p.rotate();
+    dropStart = Date.now();
+  } else if (event.keyCode == 39) {
+    p.moveRight();
+    dropStart = Date.now();
+  } else if (event.keyCode == 40) {
+    p.moveDown();
+  }
+}
+
+// drop the piece every 1sec
+
+let dropStart = Date.now();
+let gameOver = false;
+function drop() {
+  let now = Date.now();
+  let delta = now - dropStart;
+  if (delta > 1000) {
+    p.moveDown();
+    dropStart = Date.now();
+  }
+  if (!gameOver) {
+    requestAnimationFrame(drop);
+  }
+}
+
+drop();
+
+document.querySelector(".rotate").onclick=()=>CONTROL({keyCode:38});
+document.querySelector(".left").onclick=()=>CONTROL({keyCode:37});
+document.querySelector(".down").onclick=()=>CONTROL({keyCode:40});
+document.querySelector(".right").onclick=()=>CONTROL({keyCode:39});
+</script></body></html>

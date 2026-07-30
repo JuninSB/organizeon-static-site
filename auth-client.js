@@ -736,8 +736,12 @@ async function showGameCatalog() {
         font-size: 10px; font-weight: 750; white-space: nowrap;
       }
       #organizeon-game-catalog .description {
-        min-height: 39px; margin: 8px 0 13px; color: #91aaa3;
+        min-height: 39px; margin: 8px 0 5px; color: #91aaa3;
         font-size: 12px; line-height: 1.5;
+      }
+      #organizeon-game-catalog .attribution {
+        min-height: 17px; margin: 0 0 11px; color: #5f8d81;
+        font-size: 10px; line-height: 1.4;
       }
       #organizeon-game-catalog .actions { display: flex; gap: 8px; }
       #organizeon-game-catalog .action {
@@ -911,6 +915,9 @@ async function showGameCatalog() {
     const description = document.createElement("p");
     description.className = "description";
     description.textContent = game.description;
+    const attribution = document.createElement("p");
+    attribution.className = "attribution";
+    attribution.textContent = game.attribution || "OrganizeOn";
     const actions = document.createElement("div");
     actions.className = "actions";
     const action = document.createElement("button");
@@ -940,7 +947,7 @@ async function showGameCatalog() {
     progress.className = "progress";
     progress.innerHTML = "<span></span>";
     actions.append(action, remove);
-    copy.append(nameRow, description, actions, progress);
+    copy.append(nameRow, description, attribution, actions, progress);
     card.append(cover, copy);
     return card;
   }

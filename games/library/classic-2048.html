@@ -1,0 +1,891 @@
+<!doctype html>
+<!-- Adapted from jpatel3/ArcadeGames (https://github.com/jpatel3/ArcadeGames), MIT License. See games/THIRD_PARTY_LICENSES.md. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 - Number Swiping Game</title>
+    <style>/* Base styles */
+:root {
+    --background-color: #faf8ef;
+    --text-color: #776e65;
+    --grid-background: #bbada0;
+    --cell-background: #cdc1b4;
+    --cell-text: #776e65;
+    --primary-color: #f65e3b;
+    --secondary-color: #8f7a66;
+    --button-hover: #f65e3b;
+    --button-active: #f65e3b;
+    --border-radius: 6px;
+    --transition-speed: 0.15s;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #faf8ef;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    overflow-x: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+.game-container {
+    width: fit-content;
+    margin: 20px auto;
+    max-width: 100%;
+}
+
+/* Screen styles */
+.screen {
+    text-align: center;
+    padding: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Typography */
+h1 {
+    font-size: 48px;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+.subtitle {
+    font-size: 18px;
+    color: var(--secondary-color);
+    margin-bottom: 30px;
+}
+
+/* Player Setup */
+.player-setup {
+    margin: 30px 0;
+}
+
+input[type="text"] {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid var(--cell-background);
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    width: 200px;
+    text-align: center;
+}
+
+/* Buttons */
+.primary-button, .secondary-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+    margin: 5px;
+}
+
+.primary-button {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.secondary-button {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.primary-button:hover, .secondary-button:hover {
+    background-color: var(--button-hover);
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 5px;
+    margin: 0 5px;
+}
+
+/* Game Header */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.score-container {
+    display: flex;
+    gap: 10px;
+}
+
+.score-box, .best-score-box {
+    background: #bbada0;
+    padding: 8px 15px;
+    border-radius: 3px;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+}
+
+.controls {
+    display: flex;
+    gap: 5px;
+}
+
+.secondary-button {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+/* Game Board */
+.grid-container {
+    background-color: #bbada0;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.grid-cell {
+    width: 80px;
+    height: 80px;
+    background-color: #cdc1b4;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 35px;
+    font-weight: bold;
+    color: #776e65;
+}
+
+@media (max-width: 400px) {
+    .grid-cell {
+        width: 65px;
+        height: 65px;
+        font-size: 28px;
+    }
+
+    .score-box, .best-score-box {
+        padding: 6px 12px;
+        font-size: 16px;
+    }
+
+    .secondary-button {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Tile colors */
+.tile-2 { background-color: #eee4da; }
+.tile-4 { background-color: #ede0c8; }
+.tile-8 { background-color: #f2b179; color: white; }
+.tile-16 { background-color: #f59563; color: white; }
+.tile-32 { background-color: #f67c5f; color: white; }
+.tile-64 { background-color: #f65e3b; color: white; }
+.tile-128 { background-color: #edcf72; color: white; font-size: 20px; }
+.tile-256 { background-color: #edcc61; color: white; font-size: 20px; }
+.tile-512 { background-color: #edc850; color: white; font-size: 20px; }
+.tile-1024 { background-color: #edc53f; color: white; font-size: 18px; }
+.tile-2048 { background-color: #edc22e; color: white; font-size: 18px; }
+
+/* Game Screen Layout */
+#gameScreen {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.game-main {
+    flex: 1;
+    min-width: 0; /* Prevents flex item from overflowing */
+}
+
+/* Leaderboard */
+.leaderboard {
+    background-color: white;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    width: 200px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.leaderboard-list {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 5px;
+}
+
+.leaderboard-entry {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--cell-background);
+}
+
+/* Audio Controls */
+.audio-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+/* Responsive Design */
+@media (max-width: 800px) {
+    #gameScreen {
+        flex-direction: column;
+    }
+
+    .leaderboard {
+        width: 100%;
+        margin-top: 20px;
+    }
+}
+
+/* Animations */
+@keyframes appear {
+    0% { opacity: 0; transform: scale(0); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.tile-new {
+    animation: appear 0.2s ease-in-out;
+}
+
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.tile-merged {
+    animation: pop 0.2s ease-in-out;
+}
+
+/* Game Content Layout */
+.game-content {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 800px) {
+    .game-content {
+        flex-direction: column;
+    }
+
+    .leaderboard {
+        width: 100%;
+        margin-top: 20px;
+    }
+}
+
+body{overscroll-behavior:none}.audio-controls{display:none!important}@media(max-width:600px){.game-container{padding:12px!important}.game-content{display:block!important}.leaderboard{margin-top:14px}.grid-container{touch-action:none}.screen{min-height:auto!important}}</style>
+    <meta name="theme-color" content="#faf8ef">
+    <meta name="description" content="2048 - A fun number swiping game where you combine numbers to reach 2048!">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Audio Elements -->
+        <audio id="backgroundMusic" loop></audio>
+        <audio id="moveSound"></audio>
+        <audio id="mergeSound"></audio>
+        <audio id="gameOverSound"></audio>
+        <audio id="winSound"></audio>
+
+        <!-- Audio Controls -->
+        <div class="audio-controls">
+            <button id="toggleMusic" class="icon-button">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            <button id="toggleSound" class="icon-button">
+                <i class="fas fa-volume-mute"></i>
+            </button>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen">
+            <h1>2048</h1>
+            <p class="subtitle">Number Swiping Game</p>
+            <div class="player-setup">
+                <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+                <button id="startGame" class="primary-button">Start Game</button>
+            </div>
+            <div class="instructions">
+                <h2>How to Play</h2>
+                <p>Use arrow keys or swipe to move numbers</p>
+                <p>Combine same numbers to create bigger ones</p>
+                <p>Try to reach 2048!</p>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen hidden">
+            <div class="game-header">
+                <div class="score-container">
+                    <div class="score-box">
+                        <span class="label">Score</span>
+                        <span id="score">0</span>
+                    </div>
+                    <div class="best-score-box">
+                        <span class="label">Best</span>
+                        <span id="bestScore">0</span>
+                    </div>
+                </div>
+                <div class="controls">
+                    <button id="newGame" class="secondary-button">New Game</button>
+                    <button id="undoMove" class="secondary-button" disabled>
+                        <i class="fas fa-undo"></i> Undo
+                    </button>
+                </div>
+            </div>
+
+            <div class="game-content">
+                <div class="game-main">
+                    <div class="game-board">
+                        <div class="grid-container">
+                            <!-- Grid cells will be generated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="leaderboard">
+                    <h2>Leaderboard</h2>
+                    <div id="leaderboardList" class="leaderboard-list">
+                        <!-- Leaderboard entries will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="screen hidden">
+            <h2>Game Over!</h2>
+            <div class="final-score">
+                <span>Final Score:</span>
+                <span id="finalScore">0</span>
+            </div>
+            <div class="player-name">
+                <span>Player:</span>
+                <span id="playerNameDisplay"></span>
+            </div>
+            <button id="playAgain" class="primary-button">Play Again</button>
+            <button id="mainMenu" class="secondary-button">Main Menu</button>
+        </div>
+
+        <!-- Win Screen -->
+        <div id="winScreen" class="screen hidden">
+            <h2>Congratulations!</h2>
+            <p>You've reached 2048!</p>
+            <div class="final-score">
+                <span>Final Score:</span>
+                <span id="winFinalScore">0</span>
+            </div>
+            <div class="player-name">
+                <span>Player:</span>
+                <span id="winPlayerNameDisplay"></span>
+            </div>
+            <button id="continuePlaying" class="primary-button">Continue Playing</button>
+            <button id="winMainMenu" class="secondary-button">Main Menu</button>
+        </div>
+    </div>
+<script>const gameStorage=(()=>{const memory=new Map();try{localStorage.setItem("__2048_test","1");localStorage.removeItem("__2048_test");return localStorage}catch{return{getItem:key=>memory.get(key)||null,setItem:(key,value)=>memory.set(key,String(value))}}})();const gtag=()=>{};
+// Game state
+let grid = [];
+let score = 0;
+let bestScore = 0;
+let playerName = '';
+let moveHistory = [];
+let isGameOver = false;
+let hasWon = false;
+
+// DOM elements
+const startScreen = document.getElementById('startScreen');
+const gameScreen = document.getElementById('gameScreen');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const winScreen = document.getElementById('winScreen');
+const gridContainer = document.querySelector('.grid-container');
+const scoreElement = document.getElementById('score');
+const bestScoreElement = document.getElementById('bestScore');
+const playerNameInput = document.getElementById('playerName');
+const playerNameDisplay = document.getElementById('playerNameDisplay');
+const winPlayerNameDisplay = document.getElementById('winPlayerNameDisplay');
+const finalScoreElement = document.getElementById('finalScore');
+const winFinalScoreElement = document.getElementById('winFinalScore');
+const leaderboardList = document.getElementById('leaderboardList');
+
+// Audio elements
+const backgroundMusic = document.getElementById('backgroundMusic');
+const moveSound = document.getElementById('moveSound');
+const mergeSound = document.getElementById('mergeSound');
+const gameOverSound = document.getElementById('gameOverSound');
+const winSound = document.getElementById('winSound');
+const toggleMusicButton = document.getElementById('toggleMusic');
+const toggleSoundButton = document.getElementById('toggleSound');
+
+// Audio state
+let isMusicEnabled = true;
+let isSoundEnabled = true;
+
+// Initialize game
+function initGame () {
+  grid = Array(4).fill().map(() => Array(4).fill(0));
+  score = 0;
+  moveHistory = [];
+  isGameOver = false;
+  hasWon = false;
+  updateScore();
+  addNewTile();
+  addNewTile();
+  renderGrid();
+  updateLeaderboard();
+}
+
+// Add new tile
+function addNewTile () {
+  const emptyCells = [];
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      if (grid[i][j] === 0) {
+        emptyCells.push({ x: i, y: j });
+      }
+    }
+  }
+  if (emptyCells.length > 0) {
+    const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    grid[randomCell.x][randomCell.y] = Math.random() < 0.9 ? 2 : 4;
+  }
+}
+
+// Render grid
+function renderGrid () {
+  gridContainer.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      if (grid[i][j] !== 0) {
+        cell.classList.add(`tile-${grid[i][j]}`);
+        cell.textContent = grid[i][j];
+      }
+      gridContainer.appendChild(cell);
+    }
+  }
+}
+
+// Move tiles
+function move (direction) {
+  const oldGrid = JSON.parse(JSON.stringify(grid));
+  let moved = false;
+
+  switch (direction) {
+  case 'left':
+    moved = moveLeft();
+    break;
+  case 'right':
+    moved = moveRight();
+    break;
+  case 'up':
+    moved = moveUp();
+    break;
+  case 'down':
+    moved = moveDown();
+    break;
+  }
+
+  if (moved) {
+    moveHistory.push(oldGrid);
+    document.getElementById('undoMove').disabled = false;
+    addNewTile();
+    renderGrid();
+    checkGameState();
+    playSound('move');
+  }
+
+  return moved;
+}
+
+// Move left
+function moveLeft () {
+  let moved = false;
+  for (let i = 0; i < 4; i++) {
+    const row = grid[i].filter(cell => cell !== 0);
+    for (let j = 0; j < row.length - 1; j++) {
+      if (row[j] === row[j + 1]) {
+        row[j] *= 2;
+        score += row[j];
+        row.splice(j + 1, 1);
+        moved = true;
+        playSound('merge');
+      }
+    }
+    const newRow = row.concat(Array(4 - row.length).fill(0));
+    if (JSON.stringify(grid[i]) !== JSON.stringify(newRow)) {
+      moved = true;
+    }
+    grid[i] = newRow;
+  }
+  return moved;
+}
+
+// Move right
+function moveRight () {
+  let moved = false;
+  for (let i = 0; i < 4; i++) {
+    const row = grid[i].filter(cell => cell !== 0);
+    for (let j = row.length - 1; j > 0; j--) {
+      if (row[j] === row[j - 1]) {
+        row[j] *= 2;
+        score += row[j];
+        row.splice(j - 1, 1);
+        moved = true;
+        playSound('merge');
+      }
+    }
+    const newRow = Array(4 - row.length).fill(0).concat(row);
+    if (JSON.stringify(grid[i]) !== JSON.stringify(newRow)) {
+      moved = true;
+    }
+    grid[i] = newRow;
+  }
+  return moved;
+}
+
+// Move up
+function moveUp () {
+  let moved = false;
+  for (let j = 0; j < 4; j++) {
+    const column = grid.map(row => row[j]).filter(cell => cell !== 0);
+    for (let i = 0; i < column.length - 1; i++) {
+      if (column[i] === column[i + 1]) {
+        column[i] *= 2;
+        score += column[i];
+        column.splice(i + 1, 1);
+        moved = true;
+        playSound('merge');
+      }
+    }
+    const newColumn = column.concat(Array(4 - column.length).fill(0));
+    for (let i = 0; i < 4; i++) {
+      if (grid[i][j] !== newColumn[i]) {
+        moved = true;
+      }
+      grid[i][j] = newColumn[i];
+    }
+  }
+  return moved;
+}
+
+// Move down
+function moveDown () {
+  let moved = false;
+  for (let j = 0; j < 4; j++) {
+    const column = grid.map(row => row[j]).filter(cell => cell !== 0);
+    for (let i = column.length - 1; i > 0; i--) {
+      if (column[i] === column[i - 1]) {
+        column[i] *= 2;
+        score += column[i];
+        column.splice(i - 1, 1);
+        moved = true;
+        playSound('merge');
+      }
+    }
+    const newColumn = Array(4 - column.length).fill(0).concat(column);
+    for (let i = 0; i < 4; i++) {
+      if (grid[i][j] !== newColumn[i]) {
+        moved = true;
+      }
+      grid[i][j] = newColumn[i];
+    }
+  }
+  return moved;
+}
+
+// Check game state
+function checkGameState () {
+  // Check for win
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      if (grid[i][j] === 2048) {
+        hasWon = true;
+        showWinScreen();
+        return;
+      }
+    }
+  }
+
+  // Check for game over
+  if (isGridFull()) {
+    isGameOver = true;
+    showGameOverScreen();
+  }
+}
+
+// Check if grid is full
+function isGridFull () {
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      if (grid[i][j] === 0) return false;
+    }
+  }
+  return true;
+}
+
+// Update score
+function updateScore () {
+  scoreElement.textContent = score;
+  if (score > bestScore) {
+    bestScore = score;
+    bestScoreElement.textContent = bestScore;
+  }
+}
+
+// Show game over screen
+function showGameOverScreen () {
+  gameScreen.classList.add('hidden');
+  gameOverScreen.classList.remove('hidden');
+  finalScoreElement.textContent = score;
+  playerNameDisplay.textContent = playerName;
+  playSound('gameOver');
+  trackGameOver();
+}
+
+// Show win screen
+function showWinScreen () {
+  gameScreen.classList.add('hidden');
+  winScreen.classList.remove('hidden');
+  winFinalScoreElement.textContent = score;
+  winPlayerNameDisplay.textContent = playerName;
+  playSound('win');
+  trackWin();
+}
+
+// Update leaderboard
+function updateLeaderboard () {
+  const leaderboard = JSON.parse(gameStorage.getItem('2046Leaderboard') || '[]');
+  leaderboard.sort((a, b) => b.score - a.score);
+  leaderboardList.innerHTML = leaderboard.slice(0, 5).map((entry, index) => `
+        <div class="leaderboard-entry">
+            <span>${index + 1}. ${entry.name}</span>
+            <span>${entry.score}</span>
+        </div>
+    `).join('');
+}
+
+// Save to leaderboard
+function saveToLeaderboard () {
+  const leaderboard = JSON.parse(gameStorage.getItem('2046Leaderboard') || '[]');
+  leaderboard.push({ name: playerName, score });
+  leaderboard.sort((a, b) => b.score - a.score);
+  gameStorage.setItem('2046Leaderboard', JSON.stringify(leaderboard.slice(0, 10)));
+}
+
+// Undo move
+function undoMove () {
+  if (moveHistory.length > 0) {
+    grid = moveHistory.pop();
+    renderGrid();
+    if (moveHistory.length === 0) {
+      document.getElementById('undoMove').disabled = true;
+    }
+  }
+}
+
+// Play sound
+function playSound (sound) {
+  if (!isSoundEnabled) return;
+  switch (sound) {
+  case 'move':
+    moveSound.currentTime = 0;
+    moveSound.play().catch(()=>{});
+    break;
+  case 'merge':
+    mergeSound.currentTime = 0;
+    mergeSound.play().catch(()=>{});
+    break;
+  case 'gameOver':
+    gameOverSound.currentTime = 0;
+    gameOverSound.play().catch(()=>{});
+    break;
+  case 'win':
+    winSound.currentTime = 0;
+    winSound.play().catch(()=>{});
+    break;
+  }
+}
+
+// Track game events with Google Analytics
+function trackGameStart () {
+  gtag('event', 'game_start', {
+    game_name: '2046',
+    player_name: playerName
+  });
+}
+
+function trackGameOver () {
+  gtag('event', 'game_over', {
+    game_name: '2046',
+    player_name: playerName,
+    score
+  });
+}
+
+function trackWin () {
+  gtag('event', 'game_win', {
+    game_name: '2046',
+    player_name: playerName,
+    score
+  });
+}
+
+// Event listeners
+document.addEventListener('keydown', (e) => {
+  if (isGameOver || hasWon) return;
+  switch (e.key) {
+  case 'ArrowLeft':
+    e.preventDefault();
+    move('left');
+    break;
+  case 'ArrowRight':
+    e.preventDefault();
+    move('right');
+    break;
+  case 'ArrowUp':
+    e.preventDefault();
+    move('up');
+    break;
+  case 'ArrowDown':
+    e.preventDefault();
+    move('down');
+    break;
+  }
+});
+
+// Touch events for mobile
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+});
+
+document.addEventListener('touchend', (e) => {
+  if (isGameOver || hasWon) return;
+  const touchEndX = e.changedTouches[0].clientX;
+  const touchEndY = e.changedTouches[0].clientY;
+  const deltaX = touchEndX - touchStartX;
+  const deltaY = touchEndY - touchStartY;
+
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (deltaX > 0) move('right');
+    else move('left');
+  } else {
+    if (deltaY > 0) move('down');
+    else move('up');
+  }
+});
+
+// Button event listeners
+document.getElementById('startGame').addEventListener('click', () => {
+  playerName = playerNameInput.value.trim() || 'Anonymous';
+  startScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  initGame();
+  trackGameStart();
+});
+
+document.getElementById('newGame').addEventListener('click', () => {
+  initGame();
+  trackGameStart();
+});
+
+document.getElementById('undoMove').addEventListener('click', undoMove);
+
+document.getElementById('playAgain').addEventListener('click', () => {
+  gameOverScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  initGame();
+  trackGameStart();
+});
+
+document.getElementById('continuePlaying').addEventListener('click', () => {
+  winScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  hasWon = false;
+});
+
+document.getElementById('mainMenu').addEventListener('click', () => {
+  gameOverScreen.classList.add('hidden');
+  startScreen.classList.remove('hidden');
+  saveToLeaderboard();
+});
+
+document.getElementById('winMainMenu').addEventListener('click', () => {
+  winScreen.classList.add('hidden');
+  startScreen.classList.remove('hidden');
+  saveToLeaderboard();
+});
+
+toggleMusicButton.addEventListener('click', () => {
+  isMusicEnabled = !isMusicEnabled;
+  if (isMusicEnabled) {
+    backgroundMusic.play();
+    toggleMusicButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+  } else {
+    backgroundMusic.pause();
+    toggleMusicButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+  }
+});
+
+toggleSoundButton.addEventListener('click', () => {
+  isSoundEnabled = !isSoundEnabled;
+  toggleSoundButton.innerHTML = isSoundEnabled
+    ? '<i class="fas fa-volume-mute"></i>'
+    : '<i class="fas fa-volume-off"></i>';
+});
+
+// Initialize game
+initGame();
+</script></body>
+</html>

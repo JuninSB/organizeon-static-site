@@ -40,6 +40,42 @@
       "cover": "covers/space-dodge.svg",
       "size": 3133,
       "sha256": "1fb0a78f8771cb2c64a66fd187587afe6ee0191a8739e3df328bfa892ea54a4d"
+    },
+    {
+      "id": "classic-2048",
+      "name": "2048",
+      "description": "Combine números iguais até chegar ao bloco 2048.",
+      "category": "Puzzle",
+      "entry": "library/classic-2048.html",
+      "cover": "covers/classic-2048.svg",
+      "attribution": "MIT · jpatel3/ArcadeGames",
+      "source": "https://github.com/jpatel3/ArcadeGames",
+      "size": 22570,
+      "sha256": "93e9dfd6359feadc92bf695af632bee5b3a9bc0d9f087600bd342dec12e284a1"
+    },
+    {
+      "id": "classic-tetris",
+      "name": "Tetris",
+      "description": "Encaixe as peças, complete linhas e aumente a pontuação.",
+      "category": "Arcade",
+      "entry": "library/classic-tetris.html",
+      "cover": "covers/classic-tetris.svg",
+      "attribution": "MIT · iampavangandhi/JSGames",
+      "source": "https://github.com/iampavangandhi/JSGames",
+      "size": 8928,
+      "sha256": "452aa53dc08248359812bb781144280dbd4ee76a5c1db3ed7fa7fca5f8c64fee"
+    },
+    {
+      "id": "tic-tac-toe",
+      "name": "Jogo da Velha",
+      "description": "Partida local para duas pessoas no mesmo aparelho.",
+      "category": "Casual",
+      "entry": "library/tic-tac-toe.html",
+      "cover": "covers/tic-tac-toe.svg",
+      "attribution": "MIT · iampavangandhi/JSGames",
+      "source": "https://github.com/iampavangandhi/JSGames",
+      "size": 4560,
+      "sha256": "348698e96bf2b335a447ecf0da42aca7c4455a9b05eef6facb8b7b879df8633b"
     }
   ]
 }

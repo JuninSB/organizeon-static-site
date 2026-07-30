@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420">
+  <defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#195565"/><stop offset="1" stop-color="#071012"/></linearGradient></defs>
+  <rect width="640" height="420" rx="28" fill="url(#b)"/>
+  <path d="M260 95v265M380 95v265M135 185h370M135 280h370" stroke="#7ce9dd" stroke-width="9" opacity=".65"/>
+  <g stroke="#ff7790" stroke-width="20" stroke-linecap="round"><path d="M165 115l65 50m0-50l-65 50M405 205l70 55m0-55l-70 55M275 300l70 50m0-50l-70 50"/></g>
+  <g fill="none" stroke="#67ead3" stroke-width="18"><circle cx="320" cy="140" r="34"/><circle cx="195" cy="235" r="34"/><circle cx="440" cy="325" r="34"/></g>
+  <text x="34" y="57" fill="#effcff" font-family="system-ui,sans-serif" font-size="34" font-weight="900">JOGO DA VELHA</text>
+</svg>

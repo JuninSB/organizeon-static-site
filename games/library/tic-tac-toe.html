@@ -1,0 +1,128 @@
+<!doctype html>
+<!-- Adapted from iampavangandhi/JSGames (https://github.com/iampavangandhi/JSGames), MIT License. See games/THIRD_PARTY_LICENSES.md. -->
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Jogo da Velha</title><style>
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;
+color:#effcff;background:radial-gradient(circle at 50% 20%,#174b58,#071012 68%);
+font-family:system-ui,sans-serif}.game{text-align:center}h1{margin:0 0 20px;
+font-size:clamp(28px,8vw,46px)}.board{display:grid;grid-template-columns:repeat(3,1fr);
+width:min(82vw,390px);aspect-ratio:1}.cell{position:relative;border:2px solid #79e6dc88;
+cursor:pointer}.cell:nth-child(-n+3){border-top:0}.cell:nth-child(3n+1){border-left:0}
+.cell:nth-child(3n){border-right:0}.cell:nth-child(n+7){border-bottom:0}
+.cell.x:before,.cell.x:after{content:"";position:absolute;left:47%;top:12%;width:8%;
+height:76%;border-radius:9px;background:#ff7890;transform:rotate(45deg)}
+.cell.x:after{transform:rotate(-45deg)}.cell.circle:before{content:"";position:absolute;
+inset:18%;border:10px solid #67ead3;border-radius:50%}.winning-message{position:fixed;
+inset:0;display:none;place-items:center;text-align:center;background:#050b0aeF;
+font-size:clamp(28px,8vw,58px)}.winning-message.show{display:grid}
+.winning-message button{display:block;margin:18px auto 0;min-height:48px;padding:0 22px;
+border:1px solid #73e8d355;border-radius:12px;color:#061713;background:#6ce5ce;
+font:700 17px system-ui}
+</style></head><body><main class="game"><h1>Jogo da Velha</h1>
+<div class="board" id="board"><button class="cell" data-cell></button><button class="cell" data-cell></button><button class="cell" data-cell></button><button class="cell" data-cell></button><button class="cell" data-cell></button><button class="cell" data-cell></button><button class="cell" data-cell></button><button class="cell" data-cell></button><button class="cell" data-cell></button></div>
+</main><div class="winning-message" id="winningMessage"><div>
+<div data-winning-message-text></div><button id="restartButton">Jogar novamente</button>
+</div></div><script>//Tic Tac Toe
+
+const X_CLASS = "x";
+const CIRCLE_CLASS = "circle";
+
+//Winning Conditions
+const WINNING_COMBINATIONS = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
+
+const cellElements = document.querySelectorAll("[data-cell]");
+const board = document.getElementById("board");
+
+const winningMessageElement = document.getElementById("winningMessage");
+const restartButton = document.getElementById("restartButton");
+const winningMessageTextElement = document.querySelector(
+  "[data-winning-message-text]"
+);
+
+let circleTurn;
+
+function startGame() {
+  circleTurn = false;
+  cellElements.forEach((cell) => {
+    cell.classList.remove(X_CLASS);
+    cell.classList.remove(CIRCLE_CLASS);
+    cell.removeEventListener("click", handleClick);
+    cell.addEventListener("click", handleClick, { once: true });
+  });
+  setBoardHoverClass();
+  winningMessageElement.classList.remove("show");
+}
+
+function handleClick(e) {
+  const cell = e.target;
+  const currentClass = circleTurn ? CIRCLE_CLASS : X_CLASS;
+  placeMark(cell, currentClass);
+  if (checkWin(currentClass)) {
+    endGame(false);
+  } else if (isDraw()) {
+    endGame(true);
+  } else {
+    swapTurns();
+    setBoardHoverClass();
+  }
+}
+
+function endGame(draw) {
+  if (draw) {
+    winningMessageTextElement.innerHTML = `<h3>Match Draw!</h3>`;
+  } else {
+    winningMessageTextElement.innerHTML = `<h3>${
+      circleTurn ? "O's" : "X's"
+    } Wins!</h3>`;
+  }
+  winningMessageElement.classList.add("show");
+}
+
+function isDraw() {
+  return [...cellElements].every((cell) => {
+    return (
+      cell.classList.contains(X_CLASS) || cell.classList.contains(CIRCLE_CLASS)
+    );
+  });
+}
+
+function placeMark(cell, currentClass) {
+  cell.classList.add(currentClass);
+}
+
+function swapTurns() {
+  circleTurn = !circleTurn;
+}
+
+function setBoardHoverClass() {
+  board.classList.remove(X_CLASS);
+  board.classList.remove(CIRCLE_CLASS);
+  if (circleTurn) {
+    board.classList.add(CIRCLE_CLASS);
+  } else {
+    board.classList.add(X_CLASS);
+  }
+}
+
+function checkWin(currentClass) {
+  return WINNING_COMBINATIONS.some((combination) => {
+    return combination.every((index) => {
+      return cellElements[index].classList.contains(currentClass);
+    });
+  });
+}
+
+startGame();
+
+restartButton.addEventListener("click", startGame);
+</script></body></html>

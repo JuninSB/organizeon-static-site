@@ -30,5 +30,35 @@
     "category": "Ação",
     "entry": "library/space-dodge.html",
     "cover": "covers/space-dodge.svg"
+  },
+  {
+    "id": "classic-2048",
+    "name": "2048",
+    "description": "Combine números iguais até chegar ao bloco 2048.",
+    "category": "Puzzle",
+    "entry": "library/classic-2048.html",
+    "cover": "covers/classic-2048.svg",
+    "attribution": "MIT · jpatel3/ArcadeGames",
+    "source": "https://github.com/jpatel3/ArcadeGames"
+  },
+  {
+    "id": "classic-tetris",
+    "name": "Tetris",
+    "description": "Encaixe as peças, complete linhas e aumente a pontuação.",
+    "category": "Arcade",
+    "entry": "library/classic-tetris.html",
+    "cover": "covers/classic-tetris.svg",
+    "attribution": "MIT · iampavangandhi/JSGames",
+    "source": "https://github.com/iampavangandhi/JSGames"
+  },
+  {
+    "id": "tic-tac-toe",
+    "name": "Jogo da Velha",
+    "description": "Partida local para duas pessoas no mesmo aparelho.",
+    "category": "Casual",
+    "entry": "library/tic-tac-toe.html",
+    "cover": "covers/tic-tac-toe.svg",
+    "attribution": "MIT · iampavangandhi/JSGames",
+    "source": "https://github.com/iampavangandhi/JSGames"
   }
 ]
