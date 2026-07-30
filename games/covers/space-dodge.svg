@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420">
+  <defs><radialGradient id="b"><stop stop-color="#29376f"/><stop offset="1" stop-color="#070817"/></radialGradient><filter id="g"><feGaussianBlur stdDeviation="12"/></filter></defs>
+  <rect width="640" height="420" rx="28" fill="url(#b)"/>
+  <g fill="#fff" opacity=".7"><circle cx="90" cy="100" r="2"/><circle cx="180" cy="280" r="3"/><circle cx="260" cy="90" r="2"/><circle cx="530" cy="130" r="3"/><circle cx="580" cy="340" r="2"/><circle cx="390" cy="250" r="2"/><circle cx="70" cy="350" r="3"/></g>
+  <circle cx="170" cy="190" r="55" fill="#806889"/><circle cx="150" cy="175" r="16" fill="#4b3c56"/><circle cx="195" cy="210" r="12" fill="#4b3c56"/>
+  <circle cx="500" cy="110" r="37" fill="#a06d69"/><circle cx="490" cy="100" r="10" fill="#654545"/>
+  <path d="M325 175l62 130-62-30-62 30z" fill="#78f2dc" filter="url(#g)" opacity=".45"/><path d="M325 175l62 130-62-30-62 30z" fill="#78f2dc"/><path d="M310 275h30l-6 67h-18z" fill="#ff9f54"/>
+  <text x="34" y="55" fill="#f3f6ff" font-family="system-ui,sans-serif" font-size="34" font-weight="800">SPACE DODGE</text>
+</svg>

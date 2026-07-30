@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "games": [
+    {
+      "id": "neon-snake",
+      "name": "Neon Snake",
+      "description": "Pegue as frutas, cresça e não encoste nas paredes.",
+      "category": "Arcade",
+      "entry": "library/neon-snake.html",
+      "cover": "covers/neon-snake.svg",
+      "size": 3172,
+      "sha256": "aefa8990acde205f54d6f0782a859d958b1cb7db721ff97a2ae18bfe778d745d"
+    },
+    {
+      "id": "brick-rush",
+      "name": "Brick Rush",
+      "description": "Quebre todos os blocos sem deixar a bola cair.",
+      "category": "Arcade",
+      "entry": "library/brick-rush.html",
+      "cover": "covers/brick-rush.svg",
+      "size": 2764,
+      "sha256": "a777a08dabb6396bc512c74010206acae3d45c317fb1fc02551b52b4d16c9bec"
+    },
+    {
+      "id": "memory-flip",
+      "name": "Memory Flip",
+      "description": "Encontre todos os pares usando o menor número de jogadas.",
+      "category": "Puzzle",
+      "entry": "library/memory-flip.html",
+      "cover": "covers/memory-flip.svg",
+      "size": 2459,
+      "sha256": "557d69a47daa945e7ae74badc2dc5e53a3abbfb7cb81cd04e2b570103083fd21"
+    },
+    {
+      "id": "space-dodge",
+      "name": "Space Dodge",
+      "description": "Desvie dos meteoros e sobreviva o máximo possível.",
+      "category": "Ação",
+      "entry": "library/space-dodge.html",
+      "cover": "covers/space-dodge.svg",
+      "size": 3133,
+      "sha256": "1fb0a78f8771cb2c64a66fd187587afe6ee0191a8739e3df328bfa892ea54a4d"
+    }
+  ]
+}

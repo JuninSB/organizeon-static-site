@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <title>Neon Snake</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;overflow:hidden;color:#eafff9;background:radial-gradient(circle at 50% 20%,#133d35,#050908 65%);font-family:system-ui,sans-serif;touch-action:none}.game{text-align:center;width:min(94vw,520px)}h1{margin:0 0 6px;font-size:clamp(25px,7vw,42px)}p{margin:5px;color:#84a89e}canvas{width:min(90vw,460px);height:min(90vw,460px);max-height:55dvh;border:1px solid #3de5bd55;border-radius:16px;background:#07110f;box-shadow:0 25px 70px #0008}.pad{margin:14px auto 0;display:grid;grid-template-columns:repeat(3,58px);gap:5px;justify-content:center}.pad button{height:48px;border:1px solid #65eac855;border-radius:11px;color:#bfffee;background:#12342d;font-size:22px}.pad .up{grid-column:2}.pad .left{grid-column:1}.pad .down{grid-column:2}.pad .right{grid-column:3}.score{font-weight:800;color:#55e7c3}
+  </style>
+</head>
+<body><main class="game"><h1>Neon Snake</h1><p>Pontos: <span class="score">0</span> · setas, WASD ou botões</p><canvas width="480" height="480"></canvas><div class="pad"><button class="up">▲</button><button class="left">◀</button><button class="down">▼</button><button class="right">▶</button></div></main>
+<script>
+const c=document.querySelector("canvas"),x=c.getContext("2d"),score=document.querySelector(".score"),n=20,s=c.width/n;let snake,dir,next,food,points,timer;
+function rnd(){return Math.floor(Math.random()*n)}function spawn(){do food={x:rnd(),y:rnd()};while(snake.some(p=>p.x===food.x&&p.y===food.y))}
+function reset(){snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];dir=next={x:1,y:0};points=0;score.textContent=0;spawn();clearInterval(timer);timer=setInterval(step,115)}
+function turn(a,b){if(a!==-dir.x||b!==-dir.y)next={x:a,y:b}}
+function step(){dir=next;const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};if(h.x<0||h.y<0||h.x>=n||h.y>=n||snake.some(p=>p.x===h.x&&p.y===h.y)){reset();return}snake.unshift(h);if(h.x===food.x&&h.y===food.y){points++;score.textContent=points;spawn()}else snake.pop();draw()}
+function draw(){x.fillStyle="#07110f";x.fillRect(0,0,c.width,c.height);x.strokeStyle="#17332d";for(let i=0;i<=n;i++){x.beginPath();x.moveTo(i*s,0);x.lineTo(i*s,c.height);x.stroke();x.beginPath();x.moveTo(0,i*s);x.lineTo(c.width,i*s);x.stroke()}x.fillStyle="#ff6683";x.shadowColor="#ff6683";x.shadowBlur=18;x.beginPath();x.arc((food.x+.5)*s,(food.y+.5)*s,s*.32,0,7);x.fill();x.shadowBlur=0;snake.forEach((p,i)=>{x.fillStyle=i?"#42dcb8":"#baffee";x.fillRect(p.x*s+2,p.y*s+2,s-4,s-4)})}
+addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(k==="arrowup"||k==="w")turn(0,-1);if(k==="arrowdown"||k==="s")turn(0,1);if(k==="arrowleft"||k==="a")turn(-1,0);if(k==="arrowright"||k==="d")turn(1,0)});document.querySelector(".up").onclick=()=>turn(0,-1);document.querySelector(".down").onclick=()=>turn(0,1);document.querySelector(".left").onclick=()=>turn(-1,0);document.querySelector(".right").onclick=()=>turn(1,0);reset();draw();
+</script></body></html>

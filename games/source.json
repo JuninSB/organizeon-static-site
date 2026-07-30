@@ -1,0 +1,34 @@
+[
+  {
+    "id": "neon-snake",
+    "name": "Neon Snake",
+    "description": "Pegue as frutas, cresça e não encoste nas paredes.",
+    "category": "Arcade",
+    "entry": "library/neon-snake.html",
+    "cover": "covers/neon-snake.svg"
+  },
+  {
+    "id": "brick-rush",
+    "name": "Brick Rush",
+    "description": "Quebre todos os blocos sem deixar a bola cair.",
+    "category": "Arcade",
+    "entry": "library/brick-rush.html",
+    "cover": "covers/brick-rush.svg"
+  },
+  {
+    "id": "memory-flip",
+    "name": "Memory Flip",
+    "description": "Encontre todos os pares usando o menor número de jogadas.",
+    "category": "Puzzle",
+    "entry": "library/memory-flip.html",
+    "cover": "covers/memory-flip.svg"
+  },
+  {
+    "id": "space-dodge",
+    "name": "Space Dodge",
+    "description": "Desvie dos meteoros e sobreviva o máximo possível.",
+    "category": "Ação",
+    "entry": "library/space-dodge.html",
+    "cover": "covers/space-dodge.svg"
+  }
+]

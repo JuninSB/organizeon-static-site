@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420">
+  <defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#183e36"/><stop offset="1" stop-color="#050b09"/></linearGradient><filter id="g"><feGaussianBlur stdDeviation="12"/></filter></defs>
+  <rect width="640" height="420" rx="28" fill="url(#b)"/>
+  <path d="M90 80h460M90 150h460M90 220h460M90 290h460M90 360h460M120 50v340M200 50v340M280 50v340M360 50v340M440 50v340M520 50v340" stroke="#4be4bd" opacity=".09"/>
+  <path d="M145 285h85v-70h85v-70h165" fill="none" stroke="#42e2ba" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" filter="url(#g)" opacity=".45"/>
+  <path d="M145 285h85v-70h85v-70h165" fill="none" stroke="#7effd9" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="480" cy="145" r="17" fill="#dffff5"/><circle cx="486" cy="140" r="5" fill="#102c25"/>
+  <circle cx="510" cy="305" r="27" fill="#ff5d7f"/><circle cx="502" cy="296" r="7" fill="#ffb1c1"/>
+  <text x="34" y="55" fill="#eafff9" font-family="system-ui,sans-serif" font-size="34" font-weight="800">NEON SNAKE</text>
+</svg>

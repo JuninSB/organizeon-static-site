@@ -3,6 +3,7 @@ const tokenStorageKey = "organizeon-access-token";
 const proxyServerStorageKey = "organizeon-proxy-server";
 const wispBandwidthStorageKey = "organizeon-wisp-bandwidth-limit";
 const browserIdentityStorageKey = "organizeon-browser-identity";
+const gameCacheName = "organizeon-games-v1";
 const browserIdentityOptions = Object.freeze([
   Object.freeze({
     id: "edge",
@@ -53,6 +54,7 @@ let dashboardPanelCleanup = null;
 window.organizeonOpenProxyServerDialog = showProxyServerDialog;
 window.organizeonResetAndLogout = resetAuthenticationForDataWipe;
 window.organizeonOpenQuickApp = openQuickApp;
+window.organizeonOpenGameCatalog = showGameCatalog;
 setupMobileMode();
 hideDefaultHomepageShortcuts();
 setupWispBandwidthSetting();
@@ -437,6 +439,11 @@ function configureAccountNavigation(account) {
         background: rgba(7,15,13,.97); box-shadow: 25px 0 70px rgba(0,0,0,.4);
         transition: transform .22s ease; backdrop-filter: blur(18px);
       }
+      #organizeon-account-navigation .backdrop {
+        position: fixed; inset: 0; display: none; border: 0;
+        background: rgba(0,0,0,.44); backdrop-filter: blur(2px);
+      }
+      #organizeon-account-navigation.open .backdrop { display: block; }
       #organizeon-account-navigation.open .drawer { transform: translateX(0); }
       #organizeon-account-navigation .account {
         margin: 0 8px 22px; color: #8eaaa2; font-size: 12px;
@@ -467,6 +474,7 @@ function configureAccountNavigation(account) {
     <button class="trigger" type="button" aria-label="Abrir menu">
       <span class="glyph"><i></i><i></i><i></i><i></i></span>
     </button>
+    <button class="backdrop" type="button" aria-label="Fechar menu"></button>
     <aside class="drawer">
       <div class="account">
         <strong></strong>
@@ -495,6 +503,9 @@ function configureAccountNavigation(account) {
     selectedProxy.beta ? "BETA" : "ATIVO";
   navigation.querySelector(".trigger").addEventListener("click", () => {
     navigation.classList.toggle("open");
+  });
+  navigation.querySelector(".backdrop").addEventListener("click", () => {
+    navigation.classList.remove("open");
   });
   navigation.querySelector(".main").addEventListener("click", () => {
     navigation.classList.remove("open");
@@ -606,11 +617,14 @@ function openDashboardWindow() {
 }
 
 async function openQuickApp(app, navigate) {
+  if (app?.id === "games") {
+    showGameCatalog();
+    return true;
+  }
   const handledByOriginalLauncher = new Set([
     "yt",
     "gfn",
     "bw",
-    "games",
     "roblox",
     "chat",
     "play",
@@ -652,6 +666,401 @@ async function openQuickApp(app, navigate) {
     search: { query: window.btoa(url) },
   });
   return true;
+}
+
+async function showGameCatalog() {
+  document.getElementById("organizeon-game-catalog")?.remove();
+  const previousOverflow = document.body.style.overflow;
+  const wrapper = document.createElement("section");
+  wrapper.id = "organizeon-game-catalog";
+  wrapper.setAttribute("aria-label", "Catálogo de jogos");
+  wrapper.innerHTML = `
+    <style>
+      #organizeon-game-catalog {
+        position: fixed; inset: 0; z-index: 2147483646;
+        overflow: auto; color: #eafff8; background:
+          radial-gradient(circle at 50% -10%, #173c34 0, transparent 38%),
+          #070d0b; font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+      #organizeon-game-catalog * { box-sizing: border-box; }
+      #organizeon-game-catalog .shell {
+        width: min(1180px, 100%); min-height: 100%; margin: auto;
+        padding: 28px clamp(16px, 4vw, 42px) 48px;
+      }
+      #organizeon-game-catalog .topbar {
+        display: flex; align-items: center; gap: 13px; margin-bottom: 28px;
+      }
+      #organizeon-game-catalog .back {
+        width: 44px; height: 44px; flex: 0 0 auto; border-radius: 12px;
+        border: 1px solid rgba(101,238,207,.24); cursor: pointer;
+        color: #80efd3; background: rgba(65,208,176,.08); font-size: 23px;
+      }
+      #organizeon-game-catalog h1 {
+        margin: 0; font-size: clamp(28px, 6vw, 48px); line-height: 1;
+      }
+      #organizeon-game-catalog .subtitle {
+        margin: 6px 0 0; color: #8da9a1; font-size: 13px;
+      }
+      #organizeon-game-catalog .search {
+        width: min(320px, 100%); min-height: 43px; margin-left: auto;
+        padding: 0 14px; border: 1px solid rgba(255,255,255,.12);
+        border-radius: 12px; outline: 0; color: #eafff8;
+        background: rgba(255,255,255,.045); font: inherit;
+      }
+      #organizeon-game-catalog .search:focus {
+        border-color: rgba(94,239,205,.6);
+      }
+      #organizeon-game-catalog .grid {
+        display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
+        gap: 18px;
+      }
+      #organizeon-game-catalog .card {
+        overflow: hidden; border: 1px solid rgba(255,255,255,.1);
+        border-radius: 18px; background: rgba(15,27,24,.9);
+        box-shadow: 0 18px 50px rgba(0,0,0,.2);
+      }
+      #organizeon-game-catalog .cover {
+        display: block; width: 100%; aspect-ratio: 16/10;
+        object-fit: cover; background: #10201c;
+      }
+      #organizeon-game-catalog .copy { padding: 15px; }
+      #organizeon-game-catalog .name-row {
+        display: flex; align-items: flex-start; gap: 8px;
+      }
+      #organizeon-game-catalog h2 {
+        margin: 0; font-size: 18px; line-height: 1.25;
+      }
+      #organizeon-game-catalog .size {
+        margin-left: auto; padding: 4px 7px; border-radius: 999px;
+        color: #7feace; background: rgba(79,226,191,.1);
+        font-size: 10px; font-weight: 750; white-space: nowrap;
+      }
+      #organizeon-game-catalog .description {
+        min-height: 39px; margin: 8px 0 13px; color: #91aaa3;
+        font-size: 12px; line-height: 1.5;
+      }
+      #organizeon-game-catalog .actions { display: flex; gap: 8px; }
+      #organizeon-game-catalog .action {
+        min-height: 42px; flex: 1; padding: 0 12px; border-radius: 10px;
+        border: 1px solid rgba(91,238,204,.28); cursor: pointer;
+        color: #062019; background: #63e4c4; font-weight: 800;
+      }
+      #organizeon-game-catalog .remove {
+        display: none; width: 42px; min-height: 42px; border-radius: 10px;
+        border: 1px solid rgba(255,116,130,.24); cursor: pointer;
+        color: #ffabb4; background: rgba(255,92,108,.08);
+      }
+      #organizeon-game-catalog .card.installed .remove { display: block; }
+      #organizeon-game-catalog .progress {
+        display: none; height: 5px; margin-top: 11px; overflow: hidden;
+        border-radius: 999px; background: rgba(96,235,202,.12);
+      }
+      #organizeon-game-catalog .progress span {
+        display: block; width: 0; height: 100%; border-radius: inherit;
+        background: linear-gradient(90deg,#54dfbd,#58cbef);
+        transition: width .12s linear;
+      }
+      #organizeon-game-catalog .card.downloading .progress { display: block; }
+      #organizeon-game-catalog .empty {
+        grid-column: 1/-1; padding: 70px 20px; text-align: center;
+        color: #89a098;
+      }
+      #organizeon-game-catalog .player {
+        position: fixed; inset: 0; z-index: 2; display: none;
+        flex-direction: column; background: #050807;
+      }
+      #organizeon-game-catalog.playing .player { display: flex; }
+      #organizeon-game-catalog .player-head {
+        min-height: 58px; display: flex; align-items: center; gap: 12px;
+        padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,.1);
+        background: #091310;
+      }
+      #organizeon-game-catalog .player-head strong {
+        min-width: 0; overflow: hidden; text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #organizeon-game-catalog .player iframe {
+        display: block; width: 100%; flex: 1; border: 0; background: #050807;
+      }
+      @media (max-width: 820px) {
+        #organizeon-game-catalog .grid {
+          grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px;
+        }
+        #organizeon-game-catalog .topbar { flex-wrap: wrap; }
+        #organizeon-game-catalog .search {
+          order: 3; width: 100%; margin-left: 0;
+        }
+      }
+      @media (max-width: 480px) {
+        #organizeon-game-catalog .shell { padding-inline: 12px; }
+        #organizeon-game-catalog .grid {
+          grid-template-columns: minmax(0,1fr);
+        }
+        #organizeon-game-catalog .description { min-height: 0; }
+      }
+    </style>
+    <div class="shell">
+      <header class="topbar">
+        <button class="back" type="button" aria-label="Voltar">←</button>
+        <div><h1>Jogos</h1><p class="subtitle">Baixe uma vez e jogue direto do cache.</p></div>
+        <input class="search" type="search" placeholder="Pesquisar jogos…" aria-label="Pesquisar jogos">
+      </header>
+      <div class="grid"><div class="empty">Carregando catálogo…</div></div>
+    </div>
+    <div class="player">
+      <header class="player-head">
+        <button class="back player-back" type="button" aria-label="Voltar ao catálogo">←</button>
+        <strong></strong>
+      </header>
+      <iframe title="Jogo" sandbox="allow-scripts allow-modals"></iframe>
+    </div>
+  `;
+  document.body.style.overflow = "hidden";
+  document.body.appendChild(wrapper);
+
+  const grid = wrapper.querySelector(".grid");
+  const search = wrapper.querySelector(".search");
+  const player = wrapper.querySelector(".player");
+  const frame = player.querySelector("iframe");
+  let catalog = [];
+  let playerUrl = null;
+  const assetUrl = (path) => {
+    const basePath = window.__groveBase || new URL("./", location.href).pathname;
+    const base = new URL(basePath, location.origin);
+    return new URL(path.replace(/^\/+/, ""), base);
+  };
+  const close = () => {
+    if (playerUrl) URL.revokeObjectURL(playerUrl);
+    document.body.style.overflow = previousOverflow;
+    wrapper.remove();
+  };
+  wrapper.querySelector(".topbar .back").addEventListener("click", close);
+  wrapper.querySelector(".player-back").addEventListener("click", () => {
+    wrapper.classList.remove("playing");
+    frame.removeAttribute("src");
+    if (playerUrl) URL.revokeObjectURL(playerUrl);
+    playerUrl = null;
+  });
+  search.addEventListener("input", () => renderCatalog(search.value));
+
+  try {
+    const response = await fetch(
+      assetUrl("games/catalog.json"),
+      { cache: "no-cache" },
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    catalog = Array.isArray(payload.games) ? payload.games : [];
+    await renderCatalog();
+  } catch (error) {
+    grid.innerHTML = "";
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent =
+      "Não foi possível carregar o catálogo. Verifique a conexão e tente novamente.";
+    grid.appendChild(empty);
+    console.error("Falha ao abrir catálogo de jogos:", error);
+  }
+
+  async function renderCatalog(query = "") {
+    const normalized = query.trim().toLocaleLowerCase("pt-BR");
+    const games = catalog.filter((game) =>
+      `${game.name} ${game.description} ${game.category}`
+        .toLocaleLowerCase("pt-BR")
+        .includes(normalized),
+    );
+    grid.innerHTML = "";
+    if (!games.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "Nenhum jogo encontrado.";
+      grid.appendChild(empty);
+      return;
+    }
+    await Promise.all(
+      games.map(async (game) => {
+        const card = createGameCard(game);
+        grid.appendChild(card);
+        setCardInstalled(
+          card,
+          await isGameInstalled(game),
+        );
+      }),
+    );
+  }
+
+  function createGameCard(game) {
+    const card = document.createElement("article");
+    card.className = "card";
+    card.dataset.gameId = game.id;
+    const cover = document.createElement("img");
+    cover.className = "cover";
+    cover.src = assetUrl(`games/${game.cover}`).href;
+    cover.alt = `Capa de ${game.name}`;
+    cover.loading = "lazy";
+    const copy = document.createElement("div");
+    copy.className = "copy";
+    const nameRow = document.createElement("div");
+    nameRow.className = "name-row";
+    const title = document.createElement("h2");
+    title.textContent = game.name;
+    const size = document.createElement("span");
+    size.className = "size";
+    size.textContent = formatGameBytes(game.size);
+    nameRow.append(title, size);
+    const description = document.createElement("p");
+    description.className = "description";
+    description.textContent = game.description;
+    const actions = document.createElement("div");
+    actions.className = "actions";
+    const action = document.createElement("button");
+    action.className = "action";
+    action.type = "button";
+    action.textContent = "Verificando…";
+    action.disabled = true;
+    action.addEventListener("click", async () => {
+      if (card.classList.contains("installed")) {
+        await playGame(game);
+      } else {
+        await installGame(game, card);
+      }
+    });
+    const remove = document.createElement("button");
+    remove.className = "remove";
+    remove.type = "button";
+    remove.title = "Apagar jogo do cache";
+    remove.setAttribute("aria-label", `Apagar ${game.name} do cache`);
+    remove.textContent = "×";
+    remove.addEventListener("click", async () => {
+      const cache = await caches.open(gameCacheName);
+      await cache.delete(gameUrl(game));
+      setCardInstalled(card, false);
+    });
+    const progress = document.createElement("div");
+    progress.className = "progress";
+    progress.innerHTML = "<span></span>";
+    actions.append(action, remove);
+    copy.append(nameRow, description, actions, progress);
+    card.append(cover, copy);
+    return card;
+  }
+
+  function setCardInstalled(card, installed) {
+    card.classList.toggle("installed", installed);
+    const action = card.querySelector(".action");
+    action.disabled = false;
+    action.textContent = installed ? "Jogar" : "Baixar";
+  }
+
+  async function isGameInstalled(game) {
+    if (!("caches" in window)) return false;
+    const cache = await caches.open(gameCacheName);
+    const cached = await cache.match(gameUrl(game));
+    return cached?.headers.get("X-OrganizeOn-Game-Hash") === game.sha256;
+  }
+
+  async function installGame(game, card) {
+    if (!("caches" in window)) {
+      window.alert("Este navegador não oferece armazenamento em cache.");
+      return;
+    }
+    const action = card.querySelector(".action");
+    const bar = card.querySelector(".progress span");
+    card.classList.add("downloading");
+    action.disabled = true;
+    action.textContent = "Baixando 0%";
+    try {
+      const response = await fetch(gameUrl(game), { cache: "no-cache" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const reader = response.body?.getReader();
+      const chunks = [];
+      let received = 0;
+      if (reader) {
+        while (true) {
+          const result = await reader.read();
+          if (result.done) break;
+          chunks.push(result.value);
+          received += result.value.byteLength;
+          const percent = Math.min(
+            100,
+            Math.round((received / Math.max(1, game.size)) * 100),
+          );
+          bar.style.width = `${percent}%`;
+          action.textContent = `Baixando ${percent}%`;
+        }
+      } else {
+        const fallback = new Uint8Array(await response.arrayBuffer());
+        chunks.push(fallback);
+        received = fallback.byteLength;
+      }
+      const contents = new Uint8Array(received);
+      let offset = 0;
+      chunks.forEach((chunk) => {
+        contents.set(chunk, offset);
+        offset += chunk.byteLength;
+      });
+      const actualHash = await sha256Hex(contents);
+      if (actualHash && actualHash !== game.sha256) {
+        throw new Error("O arquivo baixado falhou na verificação.");
+      }
+      const headers = new Headers(response.headers);
+      headers.set("Content-Type", "text/html; charset=utf-8");
+      headers.set("X-OrganizeOn-Game-Hash", game.sha256);
+      const cache = await caches.open(gameCacheName);
+      await cache.put(
+        gameUrl(game),
+        new Response(contents, { status: 200, headers }),
+      );
+      setCardInstalled(card, true);
+      bar.style.width = "100%";
+    } catch (error) {
+      action.disabled = false;
+      action.textContent = "Tentar novamente";
+      window.alert(
+        `Não foi possível baixar ${game.name}: ${
+          error instanceof Error ? error.message : "erro desconhecido"
+        }`,
+      );
+    } finally {
+      window.setTimeout(() => {
+        card.classList.remove("downloading");
+        bar.style.width = "0";
+      }, 350);
+    }
+  }
+
+  async function playGame(game) {
+    const cache = await caches.open(gameCacheName);
+    const response = await cache.match(gameUrl(game));
+    if (!response) {
+      await renderCatalog(search.value);
+      return;
+    }
+    if (playerUrl) URL.revokeObjectURL(playerUrl);
+    playerUrl = URL.createObjectURL(await response.blob());
+    player.querySelector("strong").textContent = game.name;
+    frame.title = game.name;
+    frame.src = playerUrl;
+    wrapper.classList.add("playing");
+  }
+
+  function gameUrl(game) {
+    return assetUrl(`games/${game.entry}`).href;
+  }
+
+  async function sha256Hex(contents) {
+    if (!window.crypto?.subtle) return "";
+    const digest = await window.crypto.subtle.digest("SHA-256", contents);
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  function formatGameBytes(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
 }
 
 function getSelectedProxyServer() {
@@ -999,7 +1408,7 @@ function setupWispBandwidthSetting() {
 }
 
 function hideDefaultHomepageShortcuts() {
-  const hiddenLabels = new Set(["Games", "Chat", "Movies"]);
+  const hiddenLabels = new Set(["Chat", "Movies"]);
   const apply = () => {
     document
       .querySelectorAll('nav[class~="fixed"][class~="top-0"]')
