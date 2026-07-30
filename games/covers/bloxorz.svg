@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="Bloxorz">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#142c37"/><stop offset="1" stop-color="#388b83"/></linearGradient></defs>
+  <rect width="480" height="270" rx="24" fill="url(#g)"/>
+  <path d="M314 64l68-25 49 33-67 26zM314 64v98l50 35V98zm50 34 67-26v97l-67 28z" fill="#c8ede0" opacity=".9"/>
+  <text x="32" y="190" fill="#fff" font-family="system-ui,sans-serif" font-size="58" font-weight="900">BLOXORZ</text>
+  <text x="35" y="226" fill="#a7ded2" font-family="system-ui,sans-serif" font-size="20" font-weight="700">ROLE O BLOCO · NÃO CAIA</text>
+</svg>

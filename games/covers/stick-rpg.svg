@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="Stick RPG">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#26262c"/><stop offset="1" stop-color="#714a88"/></linearGradient></defs>
+  <rect width="480" height="270" rx="24" fill="url(#g)"/>
+  <path d="M317 194V89h47v105m-92 0V55h45v139m47 0v-69h53v69" fill="none" stroke="#c79de1" stroke-width="8"/><circle cx="389" cy="58" r="19" fill="none" stroke="#fff" stroke-width="6"/><path d="M389 77v54m0-33-25 20m25-20 27 19m-27 14-24 42m24-42 24 42" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+  <text x="28" y="180" fill="#fff" font-family="system-ui,sans-serif" font-size="58" font-weight="900">STICK RPG</text>
+  <text x="32" y="222" fill="#dfbdf3" font-family="system-ui,sans-serif" font-size="22" font-weight="700">UMA VIDA DE PAPEL</text>
+</svg>

@@ -834,6 +834,383 @@
           "sha256": "4b281a49b40f8f1914e0bc49c2c59f99a9bd8127981f17dbd3bc65d00685385c"
         }
       ]
+    },
+    {
+      "id": "papas-pizzeria",
+      "name": "Papa's Pizzeria",
+      "description": "Prepare pizzas, escolha os ingredientes, asse e entregue os pedidos no tempo certo.",
+      "category": "Culinária",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nos pedidos, ingredientes e controles da cozinha.",
+      "entry": "library/flash-archive/papas-pizzeria.swf",
+      "cover": "covers/papas-pizzeria.svg",
+      "attribution": "Papa's Pizzeria · Flipline Studios",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/papas-pizzeria.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 2562841,
+      "sha256": "a8ad267490e9f03bfea4934191dbc8b3f419d77af726e1631480cb9256095c5b",
+      "files": [
+        {
+          "path": "library/flash-archive/papas-pizzeria.swf",
+          "size": 2562841,
+          "sha256": "a8ad267490e9f03bfea4934191dbc8b3f419d77af726e1631480cb9256095c5b"
+        }
+      ]
+    },
+    {
+      "id": "henry-stickmin-breaking-the-bank",
+      "name": "Breaking the Bank",
+      "description": "Escolha um plano absurdo e ajude Henry Stickmin a tentar entrar no banco.",
+      "category": "Aventura",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nas opções da história.",
+      "entry": "library/flash-archive/henry-stickmin-breaking-the-bank.swf",
+      "cover": "covers/henry-stickmin.svg",
+      "attribution": "Breaking the Bank · PuffballsUnited",
+      "copyright": "Jogo e personagens pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/henry-stickmin-breaking-the-bank.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 3177805,
+      "sha256": "54f40b3698b0f9f09937bd31044cc35da4c87dd02bd136a25b999a25e9c2c055",
+      "files": [
+        {
+          "path": "library/flash-archive/henry-stickmin-breaking-the-bank.swf",
+          "size": 3177805,
+          "sha256": "54f40b3698b0f9f09937bd31044cc35da4c87dd02bd136a25b999a25e9c2c055"
+        }
+      ]
+    },
+    {
+      "id": "age-of-war",
+      "name": "Age of War",
+      "description": "Defenda sua base e evolua das cavernas até uma era futurista.",
+      "category": "Estratégia",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nas unidades e melhorias; arraste a visão quando necessário.",
+      "entry": "library/flash-archive/age-of-war.swf",
+      "cover": "covers/age-of-war.svg",
+      "attribution": "Age of War · Louissi / Max Games",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/age-of-war.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 3628467,
+      "sha256": "5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1",
+      "files": [
+        {
+          "path": "library/flash-archive/age-of-war.swf",
+          "size": 3628467,
+          "sha256": "5f88517846ff0eb75eee3bd6dfebbf9fad75edbb4dbe20ed8ea4c0afb3dfd3a1"
+        }
+      ]
+    },
+    {
+      "id": "bloxorz",
+      "name": "Bloxorz",
+      "description": "Role o bloco pelo tabuleiro e encaixe-o no buraco sem cair.",
+      "category": "Puzzle",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight"
+      ],
+      "instructions": "Use as quatro setas para rolar o bloco.",
+      "entry": "library/flash-archive/bloxorz.swf",
+      "cover": "covers/bloxorz.svg",
+      "attribution": "Bloxorz · Damien Clarke / DX Interactive",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/bloxorz.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 2250714,
+      "sha256": "6f7963e058f06343d6736ec9eb0ff8320e83b7518c9fded18bee5a27ad27e3fb",
+      "files": [
+        {
+          "path": "library/flash-archive/bloxorz.swf",
+          "size": 2250714,
+          "sha256": "6f7963e058f06343d6736ec9eb0ff8320e83b7518c9fded18bee5a27ad27e3fb"
+        }
+      ]
+    },
+    {
+      "id": "bloons",
+      "name": "Bloons",
+      "description": "Mire os dardos e estoure a quantidade necessária de balões em cada fase.",
+      "category": "Puzzle",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque e arraste para escolher direção e força; solte para lançar.",
+      "entry": "library/flash-archive/bloons.swf",
+      "cover": "covers/bloons.svg",
+      "attribution": "Bloons · Ninja Kiwi",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/bloons.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 518506,
+      "sha256": "f741394fccc5f067fcb7eea78351ebe017091e79d779f7e8a0f4aae7cfff0bf1",
+      "files": [
+        {
+          "path": "library/flash-archive/bloons.swf",
+          "size": 518506,
+          "sha256": "f741394fccc5f067fcb7eea78351ebe017091e79d779f7e8a0f4aae7cfff0bf1"
+        }
+      ]
+    },
+    {
+      "id": "duck-life",
+      "name": "Duck Life",
+      "description": "Treine seu pato em diferentes provas e prepare-o para competir.",
+      "category": "Casual",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "touch",
+        "mouse",
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight"
+      ],
+      "instructions": "Use toque/clique nos menus; durante os treinos, use as setas indicadas pelo jogo.",
+      "entry": "library/flash-archive/duck-life.swf",
+      "cover": "covers/duck-life.svg",
+      "attribution": "Duck Life · Wix Games",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/duck-life-1.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 1282209,
+      "sha256": "503eb1608277a0ae4822f71112cdc3820a25d8eca804013875e2b28474cfcfe5",
+      "files": [
+        {
+          "path": "library/flash-archive/duck-life.swf",
+          "size": 1282209,
+          "sha256": "503eb1608277a0ae4822f71112cdc3820a25d8eca804013875e2b28474cfcfe5"
+        }
+      ]
+    },
+    {
+      "id": "bad-ice-cream-3",
+      "name": "Bad Ice-Cream 3",
+      "description": "Colete frutas, crie e quebre paredes de gelo em labirintos cheios de inimigos.",
+      "category": "Arcade",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight",
+        "Space",
+        "W",
+        "A",
+        "S",
+        "D",
+        "F"
+      ],
+      "instructions": "Jogador 1: setas + Espaço · Jogador 2: WASD + F.",
+      "entry": "library/flash-archive/bad-ice-cream-3.swf",
+      "cover": "covers/bad-ice-cream-3.svg",
+      "attribution": "Bad Ice-Cream 3 · Nitrome",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/bad-ice-cream-3-www-boysplaygame-com.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 3245562,
+      "sha256": "a14f2589c86865fc87e1ed2a57e44f73621331298162bad44de1978e6b79f85e",
+      "files": [
+        {
+          "path": "library/flash-archive/bad-ice-cream-3.swf",
+          "size": 3245562,
+          "sha256": "a14f2589c86865fc87e1ed2a57e44f73621331298162bad44de1978e6b79f85e"
+        }
+      ]
+    },
+    {
+      "id": "fancy-pants-adventure",
+      "name": "Fancy Pants Adventure",
+      "description": "Corra por fases desenhadas à mão, salte obstáculos e enfrente inimigos.",
+      "category": "Plataforma",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight",
+        "S"
+      ],
+      "instructions": "←/→ para correr · S para pular · ↓ para abaixar/deslizar.",
+      "entry": "library/flash-archive/fancy-pants-adventure.swf",
+      "cover": "covers/fancy-pants.svg",
+      "attribution": "The Fancy Pants Adventures · Brad Borne",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/the-fancy-pants-adventure-1.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 2672568,
+      "sha256": "8d9bc78b7b2e78055be46bdaa98dd370018838ced632c2aaa890364a18fe298a",
+      "files": [
+        {
+          "path": "library/flash-archive/fancy-pants-adventure.swf",
+          "size": 2672568,
+          "sha256": "8d9bc78b7b2e78055be46bdaa98dd370018838ced632c2aaa890364a18fe298a"
+        }
+      ]
+    },
+    {
+      "id": "stick-rpg",
+      "name": "Stick RPG",
+      "description": "Explore a cidade de papel, trabalhe, estude e desenvolva a vida do seu stickman.",
+      "category": "RPG",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "touch",
+        "mouse",
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight"
+      ],
+      "instructions": "Use as setas para andar e toque/clique para interagir com menus.",
+      "entry": "library/flash-archive/stick-rpg.swf",
+      "cover": "covers/stick-rpg.svg",
+      "attribution": "Stick RPG · XGen Studios",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/stick-rpg.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 1233598,
+      "sha256": "6ff4bf1b09fc3c304b050d696e311deb24b7fb0bd13b18befe3f914addc2ca2b",
+      "files": [
+        {
+          "path": "library/flash-archive/stick-rpg.swf",
+          "size": 1233598,
+          "sha256": "6ff4bf1b09fc3c304b050d696e311deb24b7fb0bd13b18befe3f914addc2ca2b"
+        }
+      ]
+    },
+    {
+      "id": "worlds-hardest-game",
+      "name": "The World's Hardest Game",
+      "description": "Atravesse as áreas perigosas, pegue as moedas e chegue à zona segura.",
+      "category": "Desafio",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight"
+      ],
+      "instructions": "Use as quatro setas para mover o quadrado vermelho.",
+      "entry": "library/flash-archive/worlds-hardest-game.swf",
+      "cover": "covers/worlds-hardest-game.svg",
+      "attribution": "The World's Hardest Game · Snubby Land",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/the-world%27s-hardest-game.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 744124,
+      "sha256": "ee125fff640942ee4cb72a4a195e931b8d6a8bb6a3f6fce268fd8c8d7e0f91a8",
+      "files": [
+        {
+          "path": "library/flash-archive/worlds-hardest-game.swf",
+          "size": 744124,
+          "sha256": "ee125fff640942ee4cb72a4a195e931b8d6a8bb6a3f6fce268fd8c8d7e0f91a8"
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="Papa's Pizzeria">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#9b2028"/><stop offset="1" stop-color="#f09a38"/></linearGradient></defs>
+  <rect width="480" height="270" rx="24" fill="url(#g)"/>
+  <circle cx="367" cy="79" r="67" fill="#ffd578" opacity=".9"/><circle cx="345" cy="60" r="9" fill="#c33"/><circle cx="390" cy="82" r="9" fill="#c33"/><circle cx="358" cy="111" r="9" fill="#c33"/>
+  <text x="32" y="183" fill="#fff" font-family="system-ui,sans-serif" font-size="45" font-weight="900">PAPA'S</text>
+  <text x="34" y="226" fill="#ffe6b3" font-family="system-ui,sans-serif" font-size="31" font-weight="800">PIZZERIA</text>
+</svg>

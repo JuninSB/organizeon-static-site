@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="Bad Ice-Cream 3">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#304c90"/><stop offset="1" stop-color="#a15cc5"/></linearGradient></defs>
+  <rect width="480" height="270" rx="24" fill="url(#g)"/>
+  <path d="M343 43c45 0 72 32 57 72l-43 107-55-108c-18-36 2-71 41-71z" fill="#9cf0ff"/><circle cx="331" cy="91" r="8" fill="#25334d"/><circle cx="367" cy="91" r="8" fill="#25334d"/><path d="M329 121q20 19 41 0" fill="none" stroke="#25334d" stroke-width="7"/>
+  <text x="28" y="162" fill="#fff" font-family="system-ui,sans-serif" font-size="42" font-weight="900">BAD ICE-CREAM</text>
+  <text x="31" y="218" fill="#c9f7ff" font-family="system-ui,sans-serif" font-size="48" font-weight="900">3</text>
+</svg>

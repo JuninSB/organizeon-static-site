@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="The World's Hardest Game">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#121c39"/><stop offset="1" stop-color="#3859a7"/></linearGradient></defs>
+  <rect width="480" height="270" rx="24" fill="url(#g)"/>
+  <g fill="#68a5ff"><circle cx="338" cy="55" r="13"/><circle cx="406" cy="90" r="13"/><circle cx="348" cy="135" r="13"/><circle cx="421" cy="174" r="13"/></g><rect x="375" y="104" width="35" height="35" fill="#ef334c" stroke="#fff" stroke-width="5"/>
+  <text x="28" y="143" fill="#fff" font-family="system-ui,sans-serif" font-size="35" font-weight="900">THE WORLD'S</text>
+  <text x="28" y="190" fill="#fff" font-family="system-ui,sans-serif" font-size="45" font-weight="900">HARDEST GAME</text>
+  <text x="31" y="228" fill="#9fc2ff" font-family="system-ui,sans-serif" font-size="19" font-weight="700">VOCÊ FOI AVISADO</text>
+</svg>

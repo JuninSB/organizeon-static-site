@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="Fancy Pants Adventure">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#f0a02e"/><stop offset="1" stop-color="#ed5141"/></linearGradient></defs>
+  <rect width="480" height="270" rx="24" fill="url(#g)"/>
+  <path d="M363 46c19 15 28 32 27 51l-7 63 42 55m-42-55-41 58m41-104-53 21m53-21 43 14" fill="none" stroke="#25242d" stroke-width="9" stroke-linecap="round"/><circle cx="365" cy="37" r="23" fill="none" stroke="#25242d" stroke-width="9"/>
+  <text x="29" y="164" fill="#fff" font-family="system-ui,sans-serif" font-size="41" font-weight="900">FANCY PANTS</text>
+  <text x="31" y="211" fill="#fff1b8" font-family="system-ui,sans-serif" font-size="35" font-weight="900">ADVENTURE</text>
+</svg>

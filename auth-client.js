@@ -1,5 +1,6 @@
 const config = window.__ORGANIZEON_CONFIG__;
 const tokenStorageKey = "organizeon-access-token";
+const guestStorageKey = "organizeon-guest-mode";
 const proxyServerStorageKey = "organizeon-proxy-server";
 const wispBandwidthStorageKey = "organizeon-wisp-bandwidth-limit";
 const browserIdentityStorageKey = "organizeon-browser-identity";
@@ -51,6 +52,7 @@ let controlReconnectTimer = null;
 let controlReconnectAttempts = 0;
 let maintainControlConnection = false;
 let dashboardPanelCleanup = null;
+let guestMode = false;
 window.organizeonOpenProxyServerDialog = showProxyServerDialog;
 window.organizeonResetAndLogout = resetAuthenticationForDataWipe;
 window.organizeonOpenQuickApp = openQuickApp;
@@ -60,6 +62,15 @@ hideDefaultHomepageShortcuts();
 setupWispBandwidthSetting();
 setupBrowserIdentitySetting();
 window.addEventListener("storage", (event) => {
+  if (
+    event.key === guestStorageKey &&
+    event.oldValue === "1" &&
+    event.newValue === null &&
+    guestMode
+  ) {
+    restartClientAtMain();
+    return;
+  }
   if (
     event.key === tokenStorageKey &&
     event.oldValue &&
@@ -72,7 +83,9 @@ window.addEventListener("storage", (event) => {
   }
 });
 
-if (!config?.authenticationRequired) {
+if (localStorage.getItem(guestStorageKey) === "1") {
+  startGuestApplication();
+} else if (!config?.authenticationRequired) {
   startApplication();
 } else {
   showConnectionStatus(
@@ -105,9 +118,13 @@ async function startApplication(
   if (appStarted) return;
   appStarted = true;
 
-  const proxyServer = getSelectedProxyServer();
+  guestMode = account?.role === "guest";
+  window.__ORGANIZEON_GUEST__ = guestMode;
+  const proxyServer = getSelectedProxyServer(guestMode);
   const browserIdentity = getSelectedBrowserIdentity();
-  window.__FERN_WISP_URL__ = buildProxyWispUrl(proxyServer, token);
+  window.__FERN_WISP_URL__ = guestMode
+    ? proxyServer.url
+    : buildProxyWispUrl(proxyServer, token);
   window.__ORGANIZEON_USER_AGENT__ = browserIdentity.userAgent;
   window.organizeonBrowserIdentity = Object.freeze({
     id: browserIdentity.id,
@@ -122,6 +139,23 @@ async function startApplication(
   removeLogin();
   configureAccountNavigation(account);
   try {
+    if (guestMode) {
+      maintainControlConnection = false;
+      installGuestNetworkIsolation();
+      showConnectionStatus(
+        "Modo convidado",
+        `API e relay OrganizeOn desligados; usando ${proxyServer.name}.`,
+        30,
+      );
+      await import(config.appModule);
+      showConnectionStatus(
+        "Modo convidado pronto",
+        "Jogos usam o GitHub; pesquisas usam somente um relay público externo.",
+        100,
+        8000,
+      );
+      return;
+    }
     maintainControlConnection = true;
     showConnectionStatus(
       "Conectando ao servidor proxy…",
@@ -157,6 +191,55 @@ async function startApplication(
     hideConnectionStatus();
     showLogin("Não foi possível carregar o aplicativo. Tente novamente.");
   }
+}
+
+function startGuestApplication() {
+  localStorage.removeItem(tokenStorageKey);
+  return startApplication(null, {
+    username: "guest",
+    role: "guest",
+    permissions: [],
+  });
+}
+
+function installGuestNetworkIsolation() {
+  if (window.__ORGANIZEON_GUEST_NETWORK_GUARD__) return;
+  window.__ORGANIZEON_GUEST_NETWORK_GUARD__ = true;
+  const privateHost = new URL(config.apiOrigin).host;
+  const isPrivateUrl = (value) => {
+    try {
+      const raw = value instanceof Request ? value.url : String(value);
+      return new URL(raw, document.baseURI).host === privateHost;
+    } catch {
+      return false;
+    }
+  };
+  const blockedError = () =>
+    new DOMException(
+      "A API e o relay OrganizeOn estão bloqueados no modo convidado.",
+      "SecurityError",
+    );
+
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = (input, init) => {
+    if (isPrivateUrl(input)) return Promise.reject(blockedError());
+    return nativeFetch(input, init);
+  };
+
+  const NativeWebSocket = window.WebSocket;
+  window.WebSocket = class GuestWebSocket extends NativeWebSocket {
+    constructor(url, protocols) {
+      if (isPrivateUrl(url)) throw blockedError();
+      if (protocols === undefined) super(url);
+      else super(url, protocols);
+    }
+  };
+
+  const nativeXhrOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function (method, url, ...args) {
+    if (isPrivateUrl(url)) throw blockedError();
+    return nativeXhrOpen.call(this, method, url, ...args);
+  };
 }
 
 function connectControlSocket(token = localStorage.getItem(tokenStorageKey)) {
@@ -408,6 +491,7 @@ function configureAccountNavigation(account) {
   navigation.id = "organizeon-account-navigation";
   const canOpenDashboard =
     normalized.permissions.includes("admin.dashboard");
+  const isGuest = normalized.role === "guest";
   navigation.innerHTML = `
     <style>
       #organizeon-account-navigation {
@@ -481,9 +565,10 @@ function configureAccountNavigation(account) {
         <span></span>
       </div>
       <button class="item main" type="button">⌂ <span>Main</span></button>
+      <button class="item games" type="button">◇ <span>Jogos</span></button>
       <button class="item settings" type="button">⚙ <span>Settings</span></button>
       <button class="item proxy-server" type="button">
-        ⇄ <span>Proxy Server</span>
+        ⇄ <span>${isGuest ? "Proxy externo" : "Proxy Server"}</span>
         <small class="badge proxy-badge"></small>
       </button>
       ${
@@ -497,10 +582,16 @@ function configureAccountNavigation(account) {
   navigation.querySelector(".account strong").textContent =
     normalized.username;
   navigation.querySelector(".account span").textContent =
-    normalized.role === "admin" ? "Administrador" : "Usuário";
+    normalized.role === "admin"
+      ? "Administrador"
+      : isGuest
+        ? "Convidado · somente GitHub"
+        : "Usuário";
   const selectedProxy = getSelectedProxyServer();
-  navigation.querySelector(".proxy-badge").textContent =
-    selectedProxy.beta ? "BETA" : "ATIVO";
+  const proxyBadge = navigation.querySelector(".proxy-badge");
+  if (proxyBadge) {
+    proxyBadge.textContent = selectedProxy.beta ? "BETA" : "ATIVO";
+  }
   navigation.querySelector(".trigger").addEventListener("click", () => {
     navigation.classList.toggle("open");
   });
@@ -511,13 +602,17 @@ function configureAccountNavigation(account) {
     navigation.classList.remove("open");
     navigateClientRoute("/");
   });
+  navigation.querySelector(".games").addEventListener("click", () => {
+    navigation.classList.remove("open");
+    showGameCatalog();
+  });
   navigation.querySelector(".settings").addEventListener("click", () => {
     navigation.classList.remove("open");
     navigateClientRoute("/settings");
   });
   navigation
     .querySelector(".proxy-server")
-    .addEventListener("click", () => {
+    ?.addEventListener("click", () => {
       navigation.classList.remove("open");
       showProxyServerDialog();
     });
@@ -529,7 +624,9 @@ function configureAccountNavigation(account) {
     });
   navigation.querySelector(".logout").addEventListener("click", () => {
     const confirmed = window.confirm(
-      "Deseja realmente sair desta conta?",
+      isGuest
+        ? "Deseja sair do modo convidado?"
+        : "Deseja realmente sair desta conta?",
     );
     if (!confirmed) return;
     window.organizeonAuth.logout();
@@ -1185,7 +1282,7 @@ async function showGameCatalog() {
       link.href = game.source;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.textContent = "Abrir código-fonte e licença";
+      link.textContent = game.sourceLabel || "Abrir código-fonte e licença";
       sourceLine.appendChild(link);
       dialog.appendChild(sourceLine);
     }
@@ -1464,9 +1561,12 @@ async function showGameCatalog() {
   }
 }
 
-function getSelectedProxyServer() {
+function getSelectedProxyServer(externalOnly = guestMode) {
   const selectedId =
     localStorage.getItem(proxyServerStorageKey) || "organizeon";
+  if (externalOnly && selectedId === "organizeon") {
+    return proxyServerOptions.find((option) => option.id === "fern-original");
+  }
   return (
     proxyServerOptions.find((option) => option.id === selectedId) ||
     proxyServerOptions[0]
@@ -1832,7 +1932,10 @@ function hideDefaultHomepageShortcuts() {
 
 function showProxyServerDialog() {
   document.getElementById("organizeon-proxy-dialog")?.remove();
-  const current = getSelectedProxyServer();
+  const availableOptions = guestMode
+    ? proxyServerOptions.filter((option) => option.id !== "organizeon")
+    : proxyServerOptions;
+  const current = getSelectedProxyServer(guestMode);
   let pendingId = current.id;
   const wrapper = document.createElement("div");
   wrapper.id = "organizeon-proxy-dialog";
@@ -1931,10 +2034,11 @@ function showProxyServerDialog() {
       aria-labelledby="organizeon-proxy-title">
       <h2 id="organizeon-proxy-title">Escolher servidor proxy</h2>
       <p class="intro">
-        Isto escolhe o servidor WISP. Ultraviolet e Scramjet continuam
-        disponíveis separadamente em Settings → Proxy. A latência abaixo é
-        o tempo completo para abrir o WebSocket neste dispositivo, não ping
-        ICMP.
+        ${guestMode
+          ? "Convidados podem usar apenas os WISP públicos externos; o relay OrganizeOn e a API privada permanecem isolados."
+          : "Isto escolhe o servidor WISP. Ultraviolet e Scramjet continuam disponíveis separadamente em Settings → Proxy."}
+        A latência abaixo é o tempo completo para abrir o WebSocket neste
+        dispositivo, não ping ICMP.
       </p>
       <div class="options"></div>
       <p class="warning">
@@ -1948,7 +2052,7 @@ function showProxyServerDialog() {
     </section>
   `;
   const options = wrapper.querySelector(".options");
-  for (const option of proxyServerOptions) {
+  for (const option of availableOptions) {
     const button = document.createElement("button");
     button.type = "button";
     button.className =
@@ -1988,19 +2092,22 @@ function showProxyServerDialog() {
     if (event.target === wrapper) wrapper.remove();
   });
   document.body.appendChild(wrapper);
-  measureProxyServerOptions(wrapper);
+  measureProxyServerOptions(wrapper, availableOptions);
 }
 
-async function measureProxyServerOptions(dialog) {
-  const token = localStorage.getItem(tokenStorageKey);
+async function measureProxyServerOptions(
+  dialog,
+  availableOptions = proxyServerOptions,
+) {
+  const token = guestMode ? null : localStorage.getItem(tokenStorageKey);
   const measurements = await Promise.all(
-    proxyServerOptions.map(async (option) => {
+    availableOptions.map(async (option) => {
       const button = dialog.querySelector(
         `[data-proxy-id="${option.id}"]`,
       );
       const connection = button?.querySelector(".connection");
       const result = await measureWispHandshake(
-        buildProxyWispUrl(option, token),
+        guestMode ? option.url : buildProxyWispUrl(option, token),
       );
       if (!dialog.isConnected || !button || !connection) return result;
       connection.classList.add(result.online ? "online" : "offline");
@@ -2300,6 +2407,14 @@ function showLogin(message = "") {
         color: #08120d; background: #86e7b8; font-weight: 700;
       }
       #organizeon-login button:disabled { cursor: wait; opacity: .65; }
+      #organizeon-login .guest {
+        margin-top: 10px; color: #d8eee7;
+        border: 1px solid #40534c; background: #18211e;
+      }
+      #organizeon-login .guest:hover { border-color: #76d6a8; }
+      #organizeon-login .guest-note {
+        margin: 9px 0 0; color: #82938d; text-align: center; font-size: 12px;
+      }
       #organizeon-login .message {
         min-height: 19px; margin: 14px 0 0;
         color: #ff9c9c; font-size: 13px;
@@ -2314,6 +2429,8 @@ function showLogin(message = "") {
       <input id="organizeon-password" name="password" type="password"
              autocomplete="current-password" required>
       <button type="submit">Entrar</button>
+      <button class="guest" type="button">Continuar como convidado</button>
+      <p class="guest-note">Sem API/relay privado · jogos e WISP público disponíveis</p>
       <div class="message" role="status" aria-live="polite"></div>
     </form>
   `;
@@ -2322,7 +2439,15 @@ function showLogin(message = "") {
   setMessage(message);
 
   const form = wrapper.querySelector("form");
-  const button = wrapper.querySelector("button");
+  const button = wrapper.querySelector('button[type="submit"]');
+  const guestButton = wrapper.querySelector(".guest");
+  guestButton.addEventListener("click", async () => {
+    button.disabled = true;
+    guestButton.disabled = true;
+    localStorage.removeItem(tokenStorageKey);
+    localStorage.setItem(guestStorageKey, "1");
+    await startGuestApplication();
+  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     button.disabled = true;
@@ -2351,6 +2476,7 @@ function showLogin(message = "") {
       }
 
       localStorage.setItem(tokenStorageKey, result.token);
+      localStorage.removeItem(guestStorageKey);
       scheduleExpiration(result.expiresAt);
       await startApplication(result.token, result.account);
     } catch (error) {
@@ -2368,6 +2494,11 @@ function showLogin(message = "") {
 }
 
 function apiRequest(path, options) {
+  if (guestMode) {
+    return Promise.reject(
+      new Error("A API permanece desligada no modo convidado."),
+    );
+  }
   const token = localStorage.getItem(tokenStorageKey);
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
@@ -2404,6 +2535,7 @@ function scheduleExpiration(expiresAt) {
 
 async function resetAuthenticationForDataWipe() {
   try {
+    if (guestMode) return;
     await apiRequest("/auth/logout", { method: "POST" });
   } catch (error) {
     console.warn("Não foi possível invalidar o cookie da API:", error);
@@ -2412,18 +2544,22 @@ async function resetAuthenticationForDataWipe() {
     window.clearTimeout(controlReconnectTimer);
     controlSocket?.close(1000, "Site data reset");
     localStorage.removeItem(tokenStorageKey);
+    localStorage.removeItem(guestStorageKey);
   }
 }
 
 window.organizeonAuth = Object.freeze({
   async logout() {
     try {
-      await apiRequest("/auth/logout", { method: "POST" });
+      if (!guestMode) {
+        await apiRequest("/auth/logout", { method: "POST" });
+      }
     } finally {
       maintainControlConnection = false;
       window.clearTimeout(controlReconnectTimer);
       controlSocket?.close(1000, "Logout");
       localStorage.removeItem(tokenStorageKey);
+      localStorage.removeItem(guestStorageKey);
       restartClientAtMain();
     }
   },

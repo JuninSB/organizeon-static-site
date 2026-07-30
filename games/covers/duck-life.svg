@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="Duck Life">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#0f7695"/><stop offset="1" stop-color="#7ccf69"/></linearGradient></defs>
+  <rect width="480" height="270" rx="24" fill="url(#g)"/>
+  <circle cx="376" cy="91" r="58" fill="#ffe15a"/><circle cx="394" cy="78" r="7" fill="#17222d"/><path d="M418 91l45 15-45 15z" fill="#ef8a2f"/><path d="M351 143l-18 62m57-62 15 62" stroke="#ef8a2f" stroke-width="9" stroke-linecap="round"/>
+  <text x="30" y="181" fill="#fff" font-family="system-ui,sans-serif" font-size="60" font-weight="900">DUCK LIFE</text>
+  <text x="34" y="224" fill="#d9ffd2" font-family="system-ui,sans-serif" font-size="24" font-weight="700">TREINE E COMPITA</text>
+</svg>

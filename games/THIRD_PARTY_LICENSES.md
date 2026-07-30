@@ -31,6 +31,32 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+## Flash Games Directory preservation package
+
+Archive source: https://github.com/AmmarSAA/Flash-Games-Directory
+
+Imported from commit: `c840ab5be6cf5a9ce4dcc6f072470b02111eca79`
+
+Included SWF files:
+
+- Age of War
+- Bad Ice-Cream 3
+- Bloons
+- Bloxorz
+- Duck Life
+- Breaking the Bank
+- Papa's Pizzeria
+- Stick RPG
+- The Fancy Pants Adventure
+- The World's Hardest Game
+
+The archive README states that these games remain the property of their
+respective creators. It does not provide an individual redistribution license
+for the SWF files. The GPL file at the archive root and the README's separate
+MIT statement are therefore not presented here as licenses for the games.
+Each catalog entry names the known original creator and links to the exact
+archived file used by this build.
+
 ## Flx Invaders and Mode
 
 Sources:

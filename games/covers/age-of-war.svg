@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" role="img" aria-label="Age of War">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#422616"/><stop offset=".55" stop-color="#a44d20"/><stop offset="1" stop-color="#f2ad3e"/></linearGradient></defs>
+  <rect width="480" height="270" rx="24" fill="url(#g)"/>
+  <path d="M360 38l18 57 59 1-48 34 17 57-46-35-47 35 18-57-48-34 59-1z" fill="#ffd267" opacity=".8"/>
+  <text x="30" y="173" fill="#fff" font-family="system-ui,sans-serif" font-size="54" font-weight="900">AGE OF WAR</text>
+  <text x="33" y="215" fill="#ffdda2" font-family="system-ui,sans-serif" font-size="22" font-weight="700">EVOLUA · DEFENDA · CONQUISTE</text>
+</svg>
