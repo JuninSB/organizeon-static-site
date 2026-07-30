@@ -1,5 +1,29 @@
 const config = window.__ORGANIZEON_CONFIG__;
 const tokenStorageKey = "organizeon-access-token";
+const proxyServerStorageKey = "organizeon-proxy-server";
+const proxyServerOptions = Object.freeze([
+  Object.freeze({
+    id: "organizeon",
+    name: "OrganizeOn",
+    description: "Servidor próprio, autenticado e recomendado.",
+    url: null,
+    beta: false,
+  }),
+  Object.freeze({
+    id: "fern-original",
+    name: "Fern original",
+    description: "Servidor WISP público usado pelo cliente original.",
+    url: "wss://fern.best/wisp/",
+    beta: true,
+  }),
+  Object.freeze({
+    id: "legacy-chicago",
+    name: "Original — Chicago",
+    description: "Rota WISP legada encontrada no código original.",
+    url: "wss://girlspreples.org/wi/",
+    beta: true,
+  }),
+]);
 let appStarted = false;
 let controlSocket = null;
 let controlReady = false;
@@ -40,11 +64,20 @@ async function startApplication(
   if (appStarted) return;
   appStarted = true;
 
+  const proxyServer = getSelectedProxyServer();
   const wispBase =
     `${config.apiOrigin.replace(/^http/, "ws")}${config.apiPrefix}/wisp/`;
-  window.__FERN_WISP_URL__ = token
-    ? `${wispBase}${encodeURIComponent(token)}/`
-    : wispBase;
+  window.__FERN_WISP_URL__ =
+    proxyServer.id === "organizeon"
+      ? token
+        ? `${wispBase}${encodeURIComponent(token)}/`
+        : wispBase
+      : proxyServer.url;
+  window.organizeonProxyServer = Object.freeze({
+    id: proxyServer.id,
+    name: proxyServer.name,
+    beta: proxyServer.beta,
+  });
 
   removeLogin();
   configureAccountNavigation(account);
@@ -73,7 +106,7 @@ async function startApplication(
     showConnectionStatus(
       "Cliente pronto",
       controlReady
-        ? "Proxy autenticado e ativos essenciais carregados."
+        ? `${proxyServer.name} selecionado e ativos essenciais carregados.`
         : "Ativos carregados; reconectando o proxy em segundo plano.",
       100,
       1800,
@@ -383,6 +416,10 @@ function configureAccountNavigation(account) {
       </div>
       <button class="item main" type="button">⌂ <span>Main</span></button>
       <button class="item settings" type="button">⚙ <span>Settings</span></button>
+      <button class="item proxy-server" type="button">
+        ⇄ <span>Proxy Server</span>
+        <small class="badge proxy-badge"></small>
+      </button>
       ${
         canOpenDashboard
           ? '<button class="item dashboard" type="button">◫ <span>Dashboard</span><small class="badge">ADMIN</small></button>'
@@ -394,23 +431,26 @@ function configureAccountNavigation(account) {
     normalized.username;
   navigation.querySelector(".account span").textContent =
     normalized.role === "admin" ? "Administrador" : "Usuário";
+  const selectedProxy = getSelectedProxyServer();
+  navigation.querySelector(".proxy-badge").textContent =
+    selectedProxy.beta ? "BETA" : "ATIVO";
   navigation.querySelector(".trigger").addEventListener("click", () => {
     navigation.classList.toggle("open");
   });
   navigation.querySelector(".main").addEventListener("click", () => {
     navigation.classList.remove("open");
-    if (window.parent !== window) {
-      window.parent.postMessage({ type: "organizeon:open-main" }, "*");
-      return;
-    }
-    window.location.href = new URL("./", document.baseURI).href;
+    navigateClientRoute("/");
   });
   navigation.querySelector(".settings").addEventListener("click", () => {
     navigation.classList.remove("open");
-    const settingsUrl = new URL("./", document.baseURI);
-    settingsUrl.searchParams.set("route", "/settings");
-    window.location.href = settingsUrl.href;
+    navigateClientRoute("/settings");
   });
+  navigation
+    .querySelector(".proxy-server")
+    .addEventListener("click", () => {
+      navigation.classList.remove("open");
+      showProxyServerDialog();
+    });
   navigation
     .querySelector(".dashboard")
     ?.addEventListener("click", () => {
@@ -427,6 +467,173 @@ function configureAccountNavigation(account) {
       navigation.classList.remove("open");
     });
   document.body.appendChild(navigation);
+}
+
+function navigateClientRoute(route) {
+  const target = new URL(window.location.href);
+  const objectStorageHost =
+    target.hostname === "storage.googleapis.com" ||
+    target.hostname === "s3.amazonaws.com" ||
+    /\.s3[.-][^.]*\.amazonaws\.com$/i.test(target.hostname) ||
+    /\.storage\.googleapis\.com$/i.test(target.hostname);
+
+  if (objectStorageHost) {
+    target.searchParams.delete("route");
+    if (route !== "/") target.searchParams.set("route", route);
+  } else {
+    const base = new URL("./", document.baseURI);
+    target.pathname =
+      route === "/"
+        ? base.pathname
+        : `${base.pathname.replace(/\/+$/, "")}${route}`;
+    target.searchParams.delete("route");
+  }
+
+  window.history.pushState({}, "", target);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+}
+
+function getSelectedProxyServer() {
+  const selectedId =
+    localStorage.getItem(proxyServerStorageKey) || "organizeon";
+  return (
+    proxyServerOptions.find((option) => option.id === selectedId) ||
+    proxyServerOptions[0]
+  );
+}
+
+function showProxyServerDialog() {
+  document.getElementById("organizeon-proxy-dialog")?.remove();
+  const current = getSelectedProxyServer();
+  let pendingId = current.id;
+  const wrapper = document.createElement("div");
+  wrapper.id = "organizeon-proxy-dialog";
+  wrapper.innerHTML = `
+    <style>
+      #organizeon-proxy-dialog {
+        position: fixed; inset: 0; z-index: 2147483647;
+        display: grid; place-items: center; padding: 22px;
+        color: #eafff9; background: rgba(1, 7, 6, .76);
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        backdrop-filter: blur(10px);
+      }
+      #organizeon-proxy-dialog * { box-sizing: border-box; }
+      #organizeon-proxy-dialog .panel {
+        width: min(100%, 520px); padding: 24px;
+        border: 1px solid rgba(104, 241, 210, .22); border-radius: 18px;
+        background: #091512; box-shadow: 0 28px 90px rgba(0,0,0,.55);
+      }
+      #organizeon-proxy-dialog h2 { margin: 0; font-size: 22px; }
+      #organizeon-proxy-dialog .intro {
+        margin: 7px 0 18px; color: #91aaa3; font-size: 13px;
+        line-height: 1.5;
+      }
+      #organizeon-proxy-dialog .option {
+        width: 100%; margin: 8px 0; padding: 14px;
+        display: flex; align-items: flex-start; gap: 12px;
+        border: 1px solid rgba(255,255,255,.1); border-radius: 13px;
+        color: #dcebe7; background: rgba(255,255,255,.025);
+        cursor: pointer; text-align: left;
+      }
+      #organizeon-proxy-dialog .option:hover {
+        border-color: rgba(97,239,207,.35);
+      }
+      #organizeon-proxy-dialog .option.selected {
+        border-color: #54e3c2; background: rgba(72,224,190,.09);
+      }
+      #organizeon-proxy-dialog .radio {
+        width: 17px; height: 17px; margin-top: 2px; flex: 0 0 auto;
+        border: 2px solid #58716a; border-radius: 50%;
+      }
+      #organizeon-proxy-dialog .selected .radio {
+        border: 5px solid #54e3c2;
+      }
+      #organizeon-proxy-dialog strong { font-size: 14px; }
+      #organizeon-proxy-dialog .description {
+        display: block; margin-top: 4px; color: #8ea69f;
+        font-size: 12px; line-height: 1.4;
+      }
+      #organizeon-proxy-dialog .beta {
+        margin-left: 7px; padding: 2px 6px; border-radius: 999px;
+        color: #fbd38d; background: rgba(245,158,11,.13);
+        font-size: 9px; letter-spacing: .05em;
+      }
+      #organizeon-proxy-dialog .warning {
+        margin: 16px 0; padding: 11px 12px;
+        border: 1px solid rgba(245,158,11,.22); border-radius: 10px;
+        color: #d7b97b; background: rgba(245,158,11,.07);
+        font-size: 11px; line-height: 1.45;
+      }
+      #organizeon-proxy-dialog .actions {
+        display: flex; justify-content: flex-end; gap: 9px;
+      }
+      #organizeon-proxy-dialog .actions button {
+        min-height: 40px; padding: 0 15px; border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.12); cursor: pointer;
+        color: #dcebe7; background: transparent; font-weight: 700;
+      }
+      #organizeon-proxy-dialog .actions .apply {
+        border-color: #54e3c2; color: #062018; background: #54e3c2;
+      }
+    </style>
+    <section class="panel" role="dialog" aria-modal="true"
+      aria-labelledby="organizeon-proxy-title">
+      <h2 id="organizeon-proxy-title">Escolher servidor proxy</h2>
+      <p class="intro">
+        Isto escolhe o servidor WISP. Ultraviolet e Scramjet continuam
+        disponíveis separadamente em Settings → Proxy.
+      </p>
+      <div class="options"></div>
+      <p class="warning">
+        Servidores BETA são externos, podem ficar lentos ou sair do ar e o
+        tráfego de navegação não passará pelo backend OrganizeOn.
+      </p>
+      <div class="actions">
+        <button class="cancel" type="button">Cancelar</button>
+        <button class="apply" type="button">Aplicar e reiniciar</button>
+      </div>
+    </section>
+  `;
+  const options = wrapper.querySelector(".options");
+  for (const option of proxyServerOptions) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className =
+      "option" + (option.id === pendingId ? " selected" : "");
+    button.dataset.proxyId = option.id;
+    button.innerHTML = `
+      <span class="radio"></span>
+      <span>
+        <strong></strong>
+        ${option.beta ? '<small class="beta">BETA</small>' : ""}
+        <span class="description"></span>
+      </span>
+    `;
+    button.querySelector("strong").textContent = option.name;
+    button.querySelector(".description").textContent =
+      option.description;
+    button.addEventListener("click", () => {
+      pendingId = option.id;
+      options.querySelectorAll(".option").forEach((item) => {
+        item.classList.toggle(
+          "selected",
+          item.dataset.proxyId === pendingId,
+        );
+      });
+    });
+    options.appendChild(button);
+  }
+  wrapper.querySelector(".cancel").addEventListener("click", () => {
+    wrapper.remove();
+  });
+  wrapper.querySelector(".apply").addEventListener("click", () => {
+    localStorage.setItem(proxyServerStorageKey, pendingId);
+    window.location.reload();
+  });
+  wrapper.addEventListener("click", (event) => {
+    if (event.target === wrapper) wrapper.remove();
+  });
+  document.body.appendChild(wrapper);
 }
 
 function showLogin(message = "") {

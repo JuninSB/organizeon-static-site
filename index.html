@@ -290,7 +290,7 @@
         var versionStorageKey = "organizeon-update-version-v2";
         var manifestStorageKey = "organizeon-update-manifest-v2";
         var fileHashesStorageKey = "organizeon-update-files-v2";
-        var loaderVersion = "2.1.0";
+        var loaderVersion = "2.2.0";
         window.__ORGANIZEON_LOADER_VERSION__ = loaderVersion;
         var latestLoaderVersion = "";
         var indexUpdateRequired = false;
@@ -912,7 +912,13 @@
           mainUrl.searchParams.delete("dashboard");
           mainUrl.searchParams.delete("embedded");
           mainUrl.searchParams.delete("route");
-          window.location.href = mainUrl.href;
+          window.history.replaceState({}, "", mainUrl.href);
+          dashboardMode = false;
+          if (dashboardFrame) {
+            dashboardFrame.remove();
+            dashboardFrame = null;
+          }
+          if (!embeddedClientFrame) startEmbeddedClient();
         }
 
         async function resetOuterClient() {

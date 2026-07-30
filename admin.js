@@ -4,7 +4,7 @@ const state = {
   account: null,
   permissions: [],
   monitoring: null,
-  pollTimer: null,
+  monitorSocket: null,
   terminal: null,
 };
 
@@ -92,15 +92,11 @@ function showView(name) {
 }
 
 async function toggleMonitoring() {
-  const next = !state.monitoring?.active;
-  const response = await api("/admin/monitoring", {
-    method: "POST",
-    body: JSON.stringify({ active: next }),
-  });
-  if (!response.ok) return showToast("Não foi possível alterar o monitoramento.");
-  const result = await response.json();
-  state.monitoring = result.monitoring;
-  renderMonitoring(result.monitoring);
+  if (state.monitorSocket) {
+    disconnectMonitoring();
+    return;
+  }
+  connectMonitoring();
 }
 
 function renderMonitoring(monitoring) {
@@ -108,12 +104,13 @@ function renderMonitoring(monitoring) {
   document.getElementById("monitoring-off").hidden = monitoring.active;
   document.getElementById("monitoring-content").hidden = !monitoring.active;
   const toggle = document.getElementById("monitor-toggle");
-  toggle.textContent = monitoring.active
+  toggle.textContent = state.monitorSocket
     ? "Stop monitoring"
-    : "Activate monitoring";
-  toggle.classList.toggle("danger", monitoring.active);
-  toggle.classList.toggle("primary", !monitoring.active);
-  window.clearTimeout(state.pollTimer);
+    : monitoring.active
+      ? "Join monitoring"
+      : "Activate monitoring";
+  toggle.classList.toggle("danger", Boolean(state.monitorSocket));
+  toggle.classList.toggle("primary", !state.monitorSocket);
   if (!monitoring.active) return;
 
   document.getElementById("cpu-value").textContent =
@@ -131,23 +128,59 @@ function renderMonitoring(monitoring) {
   document.getElementById("uptime-value").textContent =
     formatDuration(monitoring.uptimeSeconds);
   document.getElementById("process-detail").textContent =
-    `Node RSS ${formatBytes(monitoring.ram.processRssBytes)}`;
+    `Node RSS ${formatBytes(monitoring.ram.processRssBytes)} · ${monitoring.viewers || 1} viewer(s)`;
   renderCharts(monitoring.history);
+}
 
-  state.pollTimer = window.setTimeout(async () => {
+function connectMonitoring() {
+  const token = localStorage.getItem(tokenKey);
+  const base =
+    `${config.apiOrigin.replace(/^http/, "ws")}` +
+    `${config.apiPrefix}/monitoring/`;
+  const url = token ? `${base}${encodeURIComponent(token)}/` : base;
+  const socket = new WebSocket(url);
+  state.monitorSocket = socket;
+  renderMonitoring(
+    state.monitoring || {
+      active: false,
+      history: [],
+    },
+  );
+
+  socket.addEventListener("message", (event) => {
     try {
-      const response = await api("/admin/status");
-      if (response.ok) {
-        const result = await response.json();
-        renderMonitoring(result.monitoring);
-      }
+      renderMonitoring(JSON.parse(event.data));
     } catch {
-      state.pollTimer = window.setTimeout(
-        () => renderMonitoring(state.monitoring),
-        2500,
-      );
+      showToast("Snapshot de monitoramento inválido.");
     }
-  }, 2000);
+  });
+  socket.addEventListener("close", () => {
+    if (state.monitorSocket !== socket) return;
+    state.monitorSocket = null;
+    renderMonitoring({
+      ...state.monitoring,
+      active: false,
+      viewers: 0,
+      history: [],
+    });
+  });
+  socket.addEventListener("error", () => {
+    if (state.monitorSocket === socket) {
+      showToast("Não foi possível ativar o monitoramento.");
+    }
+  });
+}
+
+function disconnectMonitoring() {
+  const socket = state.monitorSocket;
+  state.monitorSocket = null;
+  socket?.close(1000, "Monitoring disabled");
+  renderMonitoring({
+    ...state.monitoring,
+    active: false,
+    viewers: 0,
+    history: [],
+  });
 }
 
 function renderCharts(history) {
