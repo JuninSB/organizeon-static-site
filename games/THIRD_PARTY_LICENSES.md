@@ -40,13 +40,39 @@ Imported from commit: `c840ab5be6cf5a9ce4dcc6f072470b02111eca79`
 Included SWF files:
 
 - Age of War
+- Animation vs. Animator
 - Bloons
+- Bloons Tower Defense
 - Bloxorz
+- Checkers
+- Don't Escape
 - Duck Life
+- Duck Life 2
+- Fish Tales Deluxe
+- Ultimate Flash Sonic
 - Breaking the Bank
+- Interactive Buddy
+- Learn to Fly
+- Motherload
+- N
+- Pac-Man Flash
 - Papa's Pizzeria
+- PC Breakdown
+- Penguin Diner 1–2
+- Portal: The Flash Version
+- Riddle School 1 and 3
+- Rollercoaster Creator
+- Shopping Cart Hero
+- Showdown
 - Stick RPG
+- Storm the House 1–2
+- Sugar, Sugar
+- Sugar, Sugar 2
+- Super Mario Flash
+- Super Mario Flash 2
+- Tetris Flash
 - The Fancy Pants Adventure
+- The Impossible Quiz
 - The World's Hardest Game
 
 The archive README states that these games remain the property of their
@@ -55,6 +81,13 @@ for the SWF files. The GPL file at the archive root and the README's separate
 MIT statement are therefore not presented here as licenses for the games.
 Each catalog entry names the known original creator and links to the exact
 archived file used by this build.
+
+The catalog artwork uses real game listing images or title-screen captures,
+stored locally so the client remains offline-capable. Listing images were
+collected from UBGHyper GameList, FlashLegacy, Addicting Games, PrimaryGames,
+FunnyGames, Blipzi, FlashGamesPlayer, StickPage, MarioGames, FlashGhetto and
+QGames. Those images are used only to identify their respective games and do
+not receive a new license from this project.
 
 ## Flx Invaders and Mode
 

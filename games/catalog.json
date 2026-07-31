@@ -1174,6 +1174,1044 @@
           "sha256": "ee125fff640942ee4cb72a4a195e931b8d6a8bb6a3f6fce268fd8c8d7e0f91a8"
         }
       ]
+    },
+    {
+      "id": "bloons-tower-defense",
+      "name": "Bloons Tower Defense",
+      "description": "Monte defesas de macacos e impeça os balões de atravessarem o mapa.",
+      "category": "Estratégia",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique para comprar, posicionar e melhorar as torres.",
+      "entry": "library/flash-archive/bloons-tower-defence.swf",
+      "cover": "covers/bloons-tower-defense.jpg",
+      "attribution": "Bloons Tower Defense · Ninja Kiwi",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/bloons-tower-defence.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 531015,
+      "sha256": "b030231c32b48cbb7c8afed67d61355dd4a28369bdadaf73f7c669488dcc9cb8",
+      "files": [
+        {
+          "path": "library/flash-archive/bloons-tower-defence.swf",
+          "size": 531015,
+          "sha256": "b030231c32b48cbb7c8afed67d61355dd4a28369bdadaf73f7c669488dcc9cb8"
+        }
+      ]
+    },
+    {
+      "id": "animation-vs-animator",
+      "name": "Animation vs. Animator",
+      "description": "Controle ferramentas de animação e enfrente um personagem rebelde na tela.",
+      "category": "Ação",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque, arraste ou clique nas ferramentas e elementos da animação.",
+      "entry": "library/flash-archive/animator.swf",
+      "cover": "covers/animation-vs-animator.jpg",
+      "attribution": "Animation vs. Animator · Alan Becker",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/animator.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 1333766,
+      "sha256": "0197aeb76822150656d9f889f385976dcd851225c06e5028d86e3c868acd6a5d",
+      "files": [
+        {
+          "path": "library/flash-archive/animator.swf",
+          "size": 1333766,
+          "sha256": "0197aeb76822150656d9f889f385976dcd851225c06e5028d86e3c868acd6a5d"
+        }
+      ]
+    },
+    {
+      "id": "checkers",
+      "name": "Checkers",
+      "description": "Uma partida clássica de damas contra o computador.",
+      "category": "Tabuleiro",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique numa peça e depois na casa de destino.",
+      "entry": "library/flash-archive/checkers.swf",
+      "cover": "covers/checkers.jpg",
+      "attribution": "Checkers · arquivo de preservação",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/checkers.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 136173,
+      "sha256": "a26dad4b412d598019a75c7111ac0ad6a7a9b4af25340bd9b741a152ebcc3e13",
+      "files": [
+        {
+          "path": "library/flash-archive/checkers.swf",
+          "size": 136173,
+          "sha256": "a26dad4b412d598019a75c7111ac0ad6a7a9b4af25340bd9b741a152ebcc3e13"
+        }
+      ]
+    },
+    {
+      "id": "dont-escape",
+      "name": "Don't Escape",
+      "description": "Prepare um quarto para impedir que o lobisomem escape durante a noite.",
+      "category": "Aventura",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nos objetos para investigar e combiná-los.",
+      "entry": "library/flash-archive/dont-escape.swf",
+      "cover": "covers/dont-escape.webp",
+      "attribution": "Don't Escape · Scriptwelder",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/dont-escape.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 6712156,
+      "sha256": "5dacf03b89685c59127b6db54ea5248c1266865ee02fc8b2c0e1dcc63866fa56",
+      "files": [
+        {
+          "path": "library/flash-archive/dont-escape.swf",
+          "size": 6712156,
+          "sha256": "5dacf03b89685c59127b6db54ea5248c1266865ee02fc8b2c0e1dcc63866fa56"
+        }
+      ]
+    },
+    {
+      "id": "duck-life-2",
+      "name": "Duck Life 2",
+      "description": "Treine corrida, natação, voo e escalada para virar campeão mundial.",
+      "category": "Casual",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "touch",
+        "mouse",
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight",
+        "Space"
+      ],
+      "instructions": "Use toque nos menus e as setas ou Espaço durante os treinos.",
+      "entry": "library/flash-archive/duck-life-2.swf",
+      "cover": "covers/duck-life-2.jpg",
+      "attribution": "Duck Life 2 · Wix Games",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/duck-life-2-world-champion.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 1901133,
+      "sha256": "7164c45030ec3e4718e621fc65627be19312e67f2849730c786cd6f80d5c1fcf",
+      "files": [
+        {
+          "path": "library/flash-archive/duck-life-2.swf",
+          "size": 1901133,
+          "sha256": "7164c45030ec3e4718e621fc65627be19312e67f2849730c786cd6f80d5c1fcf"
+        }
+      ]
+    },
+    {
+      "id": "super-mario-flash-2",
+      "name": "Super Mario Flash 2",
+      "description": "Explore novas fases de plataforma com inimigos, moedas e passagens secretas.",
+      "category": "Plataforma",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight",
+        "Space"
+      ],
+      "instructions": "Setas para mover · Espaço para pular.",
+      "entry": "library/flash-archive/super-mario-flash-2.swf",
+      "cover": "covers/super-mario-flash-2.png",
+      "attribution": "Super Mario Flash 2 · versão comunitária preservada",
+      "copyright": "Mario e marcas relacionadas pertencem aos respectivos proprietários.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/super-mario-flash-2.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 3847858,
+      "sha256": "89c4d26eae31528d7b884a4623521af36648244b130efe3cf0be43be421eddb9",
+      "files": [
+        {
+          "path": "library/flash-archive/super-mario-flash-2.swf",
+          "size": 3847858,
+          "sha256": "89c4d26eae31528d7b884a4623521af36648244b130efe3cf0be43be421eddb9"
+        }
+      ]
+    },
+    {
+      "id": "interactive-buddy",
+      "name": "Interactive Buddy",
+      "description": "Interaja com um boneco, experimente ferramentas e desbloqueie itens.",
+      "category": "Sandbox",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque, arraste ou clique para usar as ferramentas no boneco.",
+      "entry": "library/flash-archive/interactive-buddy.swf",
+      "cover": "covers/interactive-buddy.png",
+      "attribution": "Interactive Buddy · Shock Value",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/interactive-buddy.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 1224969,
+      "sha256": "bec7ff26ebb4ffab6a6793255e606dfbdfe19ed71055d8660380a677e5751179",
+      "files": [
+        {
+          "path": "library/flash-archive/interactive-buddy.swf",
+          "size": 1224969,
+          "sha256": "bec7ff26ebb4ffab6a6793255e606dfbdfe19ed71055d8660380a677e5751179"
+        }
+      ]
+    },
+    {
+      "id": "learn-to-fly",
+      "name": "Learn to Fly",
+      "description": "Ajude um pinguim a construir equipamentos e finalmente aprender a voar.",
+      "category": "Arcade",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowLeft",
+        "ArrowRight",
+        "Space"
+      ],
+      "instructions": "Use ←/→ para ajustar o voo e Espaço para usar o foguete.",
+      "entry": "library/flash-archive/learn-to-fly.swf",
+      "cover": "covers/learn-to-fly.jpg",
+      "attribution": "Learn to Fly · Light Bringer Games",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/learn-to-fly.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 892238,
+      "sha256": "1793925d71e001907651599ea0ba787da6123cb06b2cec5669bc60900c1b4750",
+      "files": [
+        {
+          "path": "library/flash-archive/learn-to-fly.swf",
+          "size": 892238,
+          "sha256": "1793925d71e001907651599ea0ba787da6123cb06b2cec5669bc60900c1b4750"
+        }
+      ]
+    },
+    {
+      "id": "motherload",
+      "name": "Motherload",
+      "description": "Escave Marte, venda minérios e melhore sua máquina sem ficar sem combustível.",
+      "category": "Arcade",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight",
+        "Space"
+      ],
+      "instructions": "Setas para pilotar e Espaço para usar itens quando disponível.",
+      "entry": "library/flash-archive/motherload.swf",
+      "cover": "covers/motherload.jpg",
+      "attribution": "Motherload · XGen Studios",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/motherload.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 3977393,
+      "sha256": "85c57bd779fcac6b459dea2850748023fb3e8f39521748e4034d9f9a89296809",
+      "files": [
+        {
+          "path": "library/flash-archive/motherload.swf",
+          "size": 3977393,
+          "sha256": "85c57bd779fcac6b459dea2850748023fb3e8f39521748e4034d9f9a89296809"
+        }
+      ]
+    },
+    {
+      "id": "n-game",
+      "name": "N",
+      "description": "Controle um ninja veloz por salas cheias de minas, robôs e saltos precisos.",
+      "category": "Plataforma",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowLeft",
+        "ArrowRight",
+        "Shift"
+      ],
+      "instructions": "←/→ para correr · Shift para pular.",
+      "entry": "library/flash-archive/n-game.swf",
+      "cover": "covers/n-game.jpg",
+      "attribution": "N · Metanet Software",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/n.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 380412,
+      "sha256": "4467309102d02ca7427eca0e2f53693a276183a1e4948dbeba611a90a4034647",
+      "files": [
+        {
+          "path": "library/flash-archive/n-game.swf",
+          "size": 380412,
+          "sha256": "4467309102d02ca7427eca0e2f53693a276183a1e4948dbeba611a90a4034647"
+        }
+      ]
+    },
+    {
+      "id": "pacman-flash",
+      "name": "Pac-Man Flash",
+      "description": "Coma os pontos do labirinto e evite os fantasmas.",
+      "category": "Arcade",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight"
+      ],
+      "instructions": "Use as quatro setas para atravessar o labirinto.",
+      "entry": "library/flash-archive/pacman.swf",
+      "cover": "covers/pacman-flash.png",
+      "attribution": "Pac-Man Flash · versão comunitária preservada",
+      "copyright": "Pac-Man é marca de seus respectivos proprietários.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/pacman.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 42511,
+      "sha256": "e0a61ed23375aaacf92dcac91c24e6d0111612b420024756f0872f56fd59cb26",
+      "files": [
+        {
+          "path": "library/flash-archive/pacman.swf",
+          "size": 42511,
+          "sha256": "e0a61ed23375aaacf92dcac91c24e6d0111612b420024756f0872f56fd59cb26"
+        }
+      ]
+    },
+    {
+      "id": "pc-breakdown",
+      "name": "PC Breakdown",
+      "description": "Desconte a frustração destruindo um computador virtual.",
+      "category": "Casual",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique repetidamente nas partes do computador.",
+      "entry": "library/flash-archive/pc-breakdown.swf",
+      "cover": "covers/pc-breakdown.jpg",
+      "attribution": "PC Breakdown · arquivo de preservação",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/pc-breakdown.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 653848,
+      "sha256": "bdfa1814acca8e8bfdec67228d13df32d31995aea2c3aba025b9de6fbc448dab",
+      "files": [
+        {
+          "path": "library/flash-archive/pc-breakdown.swf",
+          "size": 653848,
+          "sha256": "bdfa1814acca8e8bfdec67228d13df32d31995aea2c3aba025b9de6fbc448dab"
+        }
+      ]
+    },
+    {
+      "id": "penguin-diner",
+      "name": "Penguin Diner",
+      "description": "Atenda os pinguins, entregue pedidos e melhore o restaurante.",
+      "category": "Casual",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nos clientes, mesas e pedidos.",
+      "entry": "library/flash-archive/penguin-diner.swf",
+      "cover": "covers/penguin-diner.webp",
+      "attribution": "Penguin Diner · BigWig / 2DPlay",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/penguin-diner.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 824167,
+      "sha256": "62493f3e243410e1889571f610a54885bba9d651313b34aae8c59616d8cebb01",
+      "files": [
+        {
+          "path": "library/flash-archive/penguin-diner.swf",
+          "size": 824167,
+          "sha256": "62493f3e243410e1889571f610a54885bba9d651313b34aae8c59616d8cebb01"
+        }
+      ]
+    },
+    {
+      "id": "penguin-diner-2",
+      "name": "Penguin Diner 2",
+      "description": "Administre restaurantes maiores e atenda novos clientes gelados.",
+      "category": "Casual",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nos clientes, mesas, pratos e caixa.",
+      "entry": "library/flash-archive/penguin-diner-2.swf",
+      "cover": "covers/penguin-diner-2.jpg",
+      "attribution": "Penguin Diner 2 · BigWig",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/penguin-diner-2.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 2320642,
+      "sha256": "1eaf11093d90338e45caa53cd17fb225ac337ddf81147534c723f1f8d4b0890d",
+      "files": [
+        {
+          "path": "library/flash-archive/penguin-diner-2.swf",
+          "size": 2320642,
+          "sha256": "1eaf11093d90338e45caa53cd17fb225ac337ddf81147534c723f1f8d4b0890d"
+        }
+      ]
+    },
+    {
+      "id": "portal-flash",
+      "name": "Portal: The Flash Version",
+      "description": "Resolva câmaras de teste usando portais, física e raciocínio.",
+      "category": "Puzzle",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard",
+        "mouse"
+      ],
+      "keys": [
+        "W",
+        "A",
+        "S",
+        "D",
+        "Q",
+        "E",
+        "F"
+      ],
+      "instructions": "WASD para mover · Q/E para portais · F para pegar objetos.",
+      "entry": "library/flash-archive/portal-flash.swf",
+      "cover": "covers/portal-flash.png",
+      "attribution": "Portal: The Flash Version · We Create Stuff",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/portal-flash.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 7104282,
+      "sha256": "cfac31b884392f354ce22f9aaf3470c53bd47f01e8e0d83685c44eebe060f2b9",
+      "files": [
+        {
+          "path": "library/flash-archive/portal-flash.swf",
+          "size": 7104282,
+          "sha256": "cfac31b884392f354ce22f9aaf3470c53bd47f01e8e0d83685c44eebe060f2b9"
+        }
+      ]
+    },
+    {
+      "id": "riddle-school",
+      "name": "Riddle School",
+      "description": "Encontre objetos e resolva enigmas para escapar da escola.",
+      "category": "Aventura",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique para investigar salas e usar itens.",
+      "entry": "library/flash-archive/riddle-school.swf",
+      "cover": "covers/riddle-school.png",
+      "attribution": "Riddle School · JonBro",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/riddle-school.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 627624,
+      "sha256": "caabbf8dbf8dddb029ed168d452bcd37680af43dc5d88feb1ae7b91635973523",
+      "files": [
+        {
+          "path": "library/flash-archive/riddle-school.swf",
+          "size": 627624,
+          "sha256": "caabbf8dbf8dddb029ed168d452bcd37680af43dc5d88feb1ae7b91635973523"
+        }
+      ]
+    },
+    {
+      "id": "riddle-school-3",
+      "name": "Riddle School 3",
+      "description": "Explore uma escola maior e combine pistas para encontrar a saída.",
+      "category": "Aventura",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique para investigar, conversar e usar objetos.",
+      "entry": "library/flash-archive/riddle-school-3.swf",
+      "cover": "covers/riddle-school-3.png",
+      "attribution": "Riddle School 3 · JonBro",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/riddle-school-3.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 7701743,
+      "sha256": "925df57627a6dbae3355b021ce945b024db6126c6a9b15a441c37867ce0b3110",
+      "files": [
+        {
+          "path": "library/flash-archive/riddle-school-3.swf",
+          "size": 7701743,
+          "sha256": "925df57627a6dbae3355b021ce945b024db6126c6a9b15a441c37867ce0b3110"
+        }
+      ]
+    },
+    {
+      "id": "shopping-cart-hero",
+      "name": "Shopping Cart Hero",
+      "description": "Ganhe velocidade, salte com um carrinho e compre melhorias.",
+      "category": "Arcade",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight",
+        "Space"
+      ],
+      "instructions": "Setas para equilibrar · Espaço para correr, entrar e executar ações.",
+      "entry": "library/flash-archive/shopping-cart-hero.swf",
+      "cover": "covers/shopping-cart-hero.jpg",
+      "attribution": "Shopping Cart Hero · MonkeyWantBanana",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/shopping-cart-hero.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 150276,
+      "sha256": "af7ffdbcb78fb201b9e2f9f43d82fd808b4069508270d101eddf4ed25fbf7321",
+      "files": [
+        {
+          "path": "library/flash-archive/shopping-cart-hero.swf",
+          "size": 150276,
+          "sha256": "af7ffdbcb78fb201b9e2f9f43d82fd808b4069508270d101eddf4ed25fbf7321"
+        }
+      ]
+    },
+    {
+      "id": "storm-the-house",
+      "name": "Storm the House",
+      "description": "Defenda a casa de ondas de invasores e compre melhorias.",
+      "category": "Ação",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nos inimigos para atirar.",
+      "entry": "library/flash-archive/storm-the-house.swf",
+      "cover": "covers/storm-the-house.jpg",
+      "attribution": "Storm the House · Ivory Drive",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/storm-the-house.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 143373,
+      "sha256": "bf5924426bdc3ac2a35fd682b6cf3e2fd7a2e7a2822ea63372426c0ade9d4b94",
+      "files": [
+        {
+          "path": "library/flash-archive/storm-the-house.swf",
+          "size": 143373,
+          "sha256": "bf5924426bdc3ac2a35fd682b6cf3e2fd7a2e7a2822ea63372426c0ade9d4b94"
+        }
+      ]
+    },
+    {
+      "id": "storm-the-house-2",
+      "name": "Storm the House 2",
+      "description": "Proteja sua posição com novas armas, atiradores e defesas.",
+      "category": "Ação",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse",
+        "keyboard"
+      ],
+      "keys": [
+        "Space"
+      ],
+      "instructions": "Toque ou clique para atirar · Espaço para recarregar.",
+      "entry": "library/flash-archive/storm-the-house-2.swf",
+      "cover": "covers/storm-the-house-2.jpg",
+      "attribution": "Storm the House 2 · Ivory Drive",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/storm-the-house-2.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 305229,
+      "sha256": "f730183370316a9867ac51a25ff1295a20c986a55e14a0f21be88881daf0c4f0",
+      "files": [
+        {
+          "path": "library/flash-archive/storm-the-house-2.swf",
+          "size": 305229,
+          "sha256": "f730183370316a9867ac51a25ff1295a20c986a55e14a0f21be88881daf0c4f0"
+        }
+      ]
+    },
+    {
+      "id": "sugar-sugar",
+      "name": "Sugar, Sugar",
+      "description": "Desenhe caminhos para conduzir cada grão de açúcar à xícara correta.",
+      "category": "Puzzle",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque e arraste para desenhar linhas no cenário.",
+      "entry": "library/flash-archive/sugar-sugar.swf",
+      "cover": "covers/sugar-sugar.png",
+      "attribution": "Sugar, Sugar · Bart Bonte",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/sugar-sugar.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 880682,
+      "sha256": "5e7d7e44ea3a7b25607a1a3b4f90244b3070e61d72cf1349fa8c191635d2861b",
+      "files": [
+        {
+          "path": "library/flash-archive/sugar-sugar.swf",
+          "size": 880682,
+          "sha256": "5e7d7e44ea3a7b25607a1a3b4f90244b3070e61d72cf1349fa8c191635d2861b"
+        }
+      ]
+    },
+    {
+      "id": "the-impossible-quiz",
+      "name": "The Impossible Quiz",
+      "description": "Responda perguntas absurdas, armadilhas e desafios de lógica imprevisíveis.",
+      "category": "Quiz",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nas respostas e observe cada detalhe da tela.",
+      "entry": "library/flash-archive/the-impossible-quiz.swf",
+      "cover": "covers/the-impossible-quiz.png",
+      "attribution": "The Impossible Quiz · Splapp-me-do",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/the-impossible-quiz.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 4861363,
+      "sha256": "8a865ab92b4d3c20fa0d67db8af6d983e57d7f665af6feaba9875fe52b208b75",
+      "files": [
+        {
+          "path": "library/flash-archive/the-impossible-quiz.swf",
+          "size": 4861363,
+          "sha256": "8a865ab92b4d3c20fa0d67db8af6d983e57d7f665af6feaba9875fe52b208b75"
+        }
+      ]
+    },
+    {
+      "id": "flash-sonic",
+      "name": "Ultimate Flash Sonic",
+      "description": "Corra em alta velocidade por fases inspiradas nos clássicos do Sonic.",
+      "category": "Plataforma",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight",
+        "Space"
+      ],
+      "instructions": "Setas para mover · Espaço para pular.",
+      "entry": "library/flash-archive/flash-sonic.swf",
+      "cover": "covers/flash-sonic.jpg",
+      "attribution": "Ultimate Flash Sonic · Dennis Gid",
+      "copyright": "Sonic e marcas relacionadas pertencem aos respectivos proprietários.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/flash-sonic.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 1506632,
+      "sha256": "a54d2c0748852907f3f9a2d8c4da12261762befc14f5eef65100622b4b7b00d9",
+      "files": [
+        {
+          "path": "library/flash-archive/flash-sonic.swf",
+          "size": 1506632,
+          "sha256": "a54d2c0748852907f3f9a2d8c4da12261762befc14f5eef65100622b4b7b00d9"
+        }
+      ]
+    },
+    {
+      "id": "rollercoaster-creator",
+      "name": "Rollercoaster Creator",
+      "description": "Desenhe trilhos seguros, pegue as moedas e leve o carrinho ao destino.",
+      "category": "Puzzle",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque e arraste para desenhar os trilhos.",
+      "entry": "library/flash-archive/rollercoaster-creator.swf",
+      "cover": "covers/rollercoaster-creator.png",
+      "attribution": "Rollercoaster Creator · Rabbit Mountain",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/rollercoaster-creator.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 2386953,
+      "sha256": "3299088a5629e4c53fc12527b1f267c2372e8bce152c544420e0815509d0c0fd",
+      "files": [
+        {
+          "path": "library/flash-archive/rollercoaster-creator.swf",
+          "size": 2386953,
+          "sha256": "3299088a5629e4c53fc12527b1f267c2372e8bce152c544420e0815509d0c0fd"
+        }
+      ]
+    },
+    {
+      "id": "sugar-sugar-2",
+      "name": "Sugar, Sugar 2",
+      "description": "Resolva novos desafios desenhando caminhos para cada grão de açúcar.",
+      "category": "Puzzle",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque e arraste para desenhar linhas no cenário.",
+      "entry": "library/flash-archive/sugar-sugar-2.swf",
+      "cover": "covers/sugar-sugar-2.png",
+      "attribution": "Sugar, Sugar 2 · Bart Bonte",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/sugar-sugar-2.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 892897,
+      "sha256": "41635cfb58129ec299f6e320bae53926ff3fc968b06844ccfdfaa59f17dc3d4a",
+      "files": [
+        {
+          "path": "library/flash-archive/sugar-sugar-2.swf",
+          "size": 892897,
+          "sha256": "41635cfb58129ec299f6e320bae53926ff3fc968b06844ccfdfaa59f17dc3d4a"
+        }
+      ]
+    },
+    {
+      "id": "tetris-flash",
+      "name": "Tetris Flash",
+      "description": "Organize as peças, complete linhas e sobreviva à velocidade crescente.",
+      "category": "Puzzle",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight",
+        "Space"
+      ],
+      "instructions": "←/→ para mover · ↑ para girar · ↓ para descer · Espaço para soltar.",
+      "entry": "library/flash-archive/tetris-flash.swf",
+      "cover": "covers/tetris-flash.jpg",
+      "attribution": "Tetris Flash · versão comunitária preservada",
+      "copyright": "Tetris é marca de seus respectivos proprietários.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/tetris.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 14461,
+      "sha256": "3e84eb3747a556f32aa145d402601f6164252a5b5974f5db6a39ef5d31253223",
+      "files": [
+        {
+          "path": "library/flash-archive/tetris-flash.swf",
+          "size": 14461,
+          "sha256": "3e84eb3747a556f32aa145d402601f6164252a5b5974f5db6a39ef5d31253223"
+        }
+      ]
+    },
+    {
+      "id": "fish-tales-deluxe",
+      "name": "Fish Tales Deluxe",
+      "description": "Coma peixes menores, cresça e evite os predadores maiores.",
+      "category": "Arcade",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Mova o dedo ou mouse para controlar o peixe.",
+      "entry": "library/flash-archive/fish-tales-deluxe.swf",
+      "cover": "covers/fish-tales-deluxe.jpg",
+      "attribution": "Fish Tales Deluxe · arquivo de preservação",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/fish-tales-deluxe-edition.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 1800226,
+      "sha256": "76a8717df0c49fdfd85fcd7dbdd8a4caf43a41c8bda251bd4df510c1ca915cbe",
+      "files": [
+        {
+          "path": "library/flash-archive/fish-tales-deluxe.swf",
+          "size": 1800226,
+          "sha256": "76a8717df0c49fdfd85fcd7dbdd8a4caf43a41c8bda251bd4df510c1ca915cbe"
+        }
+      ]
+    },
+    {
+      "id": "showdown",
+      "name": "Showdown",
+      "description": "Teste seus reflexos em duelos rápidos no velho oeste.",
+      "category": "Ação",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Mire e toque ou clique assim que o duelo começar.",
+      "entry": "library/flash-archive/showdown.swf",
+      "cover": "covers/showdown.png",
+      "attribution": "Showdown · arquivo de preservação",
+      "copyright": "Jogo e marcas pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/showdown.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 2936366,
+      "sha256": "ec5ed7a32e194b9985af9f05b22e246053ae2ed9263692c9e94d588e413c470b",
+      "files": [
+        {
+          "path": "library/flash-archive/showdown.swf",
+          "size": 2936366,
+          "sha256": "ec5ed7a32e194b9985af9f05b22e246053ae2ed9263692c9e94d588e413c470b"
+        }
+      ]
+    },
+    {
+      "id": "super-mario-flash",
+      "name": "Super Mario Flash",
+      "description": "Atravesse fases clássicas, colete moedas e alcance a bandeira.",
+      "category": "Plataforma",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "mobileWarning": true,
+      "controls": [
+        "keyboard"
+      ],
+      "keys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight",
+        "Space"
+      ],
+      "instructions": "Setas para mover · Espaço para pular.",
+      "entry": "library/flash-archive/super-mario-flash.swf",
+      "cover": "covers/super-mario-flash.png",
+      "attribution": "Super Mario Flash · versão comunitária preservada",
+      "copyright": "Mario e marcas relacionadas pertencem aos respectivos proprietários.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://github.com/AmmarSAA/Flash-Games-Directory/blob/c840ab5be6cf5a9ce4dcc6f072470b02111eca79/super-mario-flash-by-smf_creator.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 2254961,
+      "sha256": "7dbc1829cdb5a899508489c0de36d14def244554553657453fb94ff9594cbd99",
+      "files": [
+        {
+          "path": "library/flash-archive/super-mario-flash.swf",
+          "size": 2254961,
+          "sha256": "7dbc1829cdb5a899508489c0de36d14def244554553657453fb94ff9594cbd99"
+        }
+      ]
     }
   ]
 }

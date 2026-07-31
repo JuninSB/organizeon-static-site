@@ -1265,8 +1265,8 @@ async function showGameCatalog() {
     <div class="shell">
       <header class="topbar">
         <button class="back" type="button" aria-label="Voltar">←</button>
-        <div><h1>Jogos</h1><p class="subtitle">Baixe uma vez e jogue direto do cache.</p></div>
-        <input class="search" type="search" placeholder="Pesquisar jogos…" aria-label="Pesquisar jogos">
+        <div><h1>Jogos</h1><p class="subtitle">Carregando biblioteca…</p></div>
+        <input class="search" type="search" placeholder="🔎 Pesquisar por nome, gênero ou descrição…" aria-label="Pesquisar jogos">
       </header>
       <nav class="filters" aria-label="Filtrar jogos">
         <button class="filter active" type="button" data-filter="all">Todos</button>
@@ -1378,6 +1378,10 @@ async function showGameCatalog() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     catalog = Array.isArray(payload.games) ? payload.games : [];
+    search.placeholder =
+      `🔎 Pesquisar entre ${catalog.length} jogos…`;
+    wrapper.querySelector(".subtitle").textContent =
+      `${catalog.length} jogos · baixe uma vez e jogue direto do cache.`;
     await pruneRemovedGameCache(catalog).catch((error) => {
       console.warn("Não foi possível limpar jogos removidos do cache:", error);
     });
