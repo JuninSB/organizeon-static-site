@@ -871,6 +871,9 @@ async function showGameCatalog() {
       #organizeon-game-catalog .badge.flash {
         color: #ffd574; background: rgba(255,193,59,.11);
       }
+      #organizeon-game-catalog .badge.hot {
+        color: #ffb4a4; background: rgba(255,102,74,.13);
+      }
       #organizeon-game-catalog .cover {
         display: block; width: 100%; aspect-ratio: 16/10;
         object-fit: cover; background: #10201c;
@@ -894,6 +897,10 @@ async function showGameCatalog() {
       #organizeon-game-catalog .attribution {
         min-height: 17px; margin: 0 0 11px; color: #5f8d81;
         font-size: 10px; line-height: 1.4;
+      }
+      #organizeon-game-catalog .game-stats {
+        display: flex; gap: 11px; min-height: 17px; margin: -5px 0 10px;
+        color: #789d93; font-size: 10px; font-weight: 720;
       }
       #organizeon-game-catalog .actions { display: flex; gap: 8px; }
       #organizeon-game-catalog .action {
@@ -1271,6 +1278,7 @@ async function showGameCatalog() {
       </header>
       <nav class="filters" aria-label="Filtrar jogos">
         <button class="filter active" type="button" data-filter="all">Todos</button>
+        <button class="filter" type="button" data-filter="trending">🔥 Em alta</button>
         <button class="filter" type="button" data-filter="mobile">Mobile</button>
         <button class="filter" type="button" data-filter="pc">PC</button>
         <button class="filter" type="button" data-filter="flash">Flash</button>
@@ -1309,6 +1317,7 @@ async function showGameCatalog() {
   const closedMenuGlyph = String.fromCodePoint(0x22ee);
   const openMenuGlyph = String.fromCodePoint(0x00d7);
   let catalog = [];
+  let gameStats = { games: {}, trending: [] };
   let playerUrl = null;
   let activeFilter = "all";
   let activeGame = null;
@@ -1402,6 +1411,9 @@ async function showGameCatalog() {
       console.warn("Não foi possível limpar jogos removidos do cache:", error);
     });
     await renderCatalog();
+    refreshGameStats().catch((error) => {
+      console.warn("Estatísticas de jogos indisponíveis:", error);
+    });
   } catch (error) {
     grid.innerHTML = "";
     const empty = document.createElement("div");
@@ -1440,11 +1452,15 @@ async function showGameCatalog() {
 
   async function renderCatalog(query = "") {
     const normalized = query.trim().toLocaleLowerCase("pt-BR");
+    const trendingOrder = new Map(
+      (gameStats.trending || []).map((gameId, index) => [gameId, index]),
+    );
     const games = catalog.filter((game) => {
       const matchesQuery = `${game.name} ${game.description} ${game.category} ${game.type}`
         .toLocaleLowerCase("pt-BR")
         .includes(normalized);
       if (!matchesQuery) return false;
+      if (activeFilter === "trending") return trendingOrder.has(game.id);
       if (activeFilter === "flash") return game.type === "flash";
       if (activeFilter.startsWith("category:")) {
         return game.category === activeFilter.slice("category:".length);
@@ -1454,6 +1470,11 @@ async function showGameCatalog() {
       }
       return true;
     });
+    if (activeFilter === "trending") {
+      games.sort((left, right) =>
+        trendingOrder.get(left.id) - trendingOrder.get(right.id)
+      );
+    }
     grid.innerHTML = "";
     if (!games.length) {
       const empty = document.createElement("div");
@@ -1516,6 +1537,12 @@ async function showGameCatalog() {
       warning.textContent = "melhor com teclado/mouse";
       badges.appendChild(warning);
     }
+    if ((gameStats.trending || []).includes(game.id)) {
+      const hot = document.createElement("span");
+      hot.className = "badge hot";
+      hot.textContent = "🔥 Em alta";
+      badges.appendChild(hot);
+    }
     const nameRow = document.createElement("div");
     nameRow.className = "name-row";
     const title = document.createElement("h2");
@@ -1541,6 +1568,9 @@ async function showGameCatalog() {
       : game.type === "external-download"
         ? `${game.attribution || "Download externo"} · não usa o relay`
         : game.attribution || "OrganizeOn";
+    const statistics = document.createElement("div");
+    statistics.className = "game-stats";
+    updateGameStatsElement(statistics, game.id);
     const actions = document.createElement("div");
     actions.className = "actions";
     const action = document.createElement("button");
@@ -1586,7 +1616,15 @@ async function showGameCatalog() {
     actions.append(action);
     if (creditsButton) actions.append(creditsButton);
     actions.append(remove);
-    copy.append(badges, nameRow, description, attribution, actions, progress);
+    copy.append(
+      badges,
+      nameRow,
+      description,
+      attribution,
+      statistics,
+      actions,
+      progress,
+    );
     card.append(cover, copy);
     return card;
   }
@@ -1841,6 +1879,7 @@ async function showGameCatalog() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      reportGameEvent(game, "download");
       window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
       bar.style.width = "100%";
       action.textContent = "HTML baixado";
@@ -1984,6 +2023,7 @@ async function showGameCatalog() {
         );
       }
       setCardInstalled(card, true);
+      reportGameEvent(game, "download");
       bar.style.width = "100%";
     } catch (error) {
       action.disabled = false;
@@ -2052,6 +2092,74 @@ async function showGameCatalog() {
       frame.src = playerUrl;
     }
     wrapper.classList.add("playing");
+    reportGameEvent(game, "play");
+  }
+
+  async function refreshGameStats() {
+    const response = await fetch(
+      `${config.apiOrigin}${config.apiPrefix}/games/stats`,
+      { cache: "no-store", credentials: "omit" },
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    gameStats = {
+      games: payload.games && typeof payload.games === "object"
+        ? payload.games
+        : {},
+      trending: Array.isArray(payload.trending) ? payload.trending : [],
+    };
+    if (wrapper.isConnected) await renderCatalog(search.value);
+  }
+
+  async function reportGameEvent(game, event) {
+    try {
+      const response = await fetch(
+        `${config.apiOrigin}${config.apiPrefix}/games/stats`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gameId: game.id, event }),
+          credentials: "omit",
+          keepalive: true,
+        },
+      );
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (payload.game) {
+        gameStats.games[game.id] = payload.game;
+        rebuildTrendingGames();
+        wrapper.querySelectorAll(`[data-game-id="${game.id}"] .game-stats`)
+          .forEach((element) => updateGameStatsElement(element, game.id));
+      }
+    } catch (error) {
+      console.warn("Não foi possível registrar a atividade do jogo:", error);
+    }
+  }
+
+  function rebuildTrendingGames() {
+    gameStats.trending = Object.entries(gameStats.games)
+      .filter(([, statistics]) => Number(statistics.plays7d || 0) > 0)
+      .sort((left, right) =>
+        Number(right[1].plays7d || 0) - Number(left[1].plays7d || 0) ||
+        Number(right[1].plays || 0) - Number(left[1].plays || 0)
+      )
+      .slice(0, 12)
+      .map(([gameId]) => gameId);
+  }
+
+  function updateGameStatsElement(element, gameId) {
+    const statistics = gameStats.games[gameId] || {};
+    element.textContent = "";
+    const downloads = document.createElement("span");
+    downloads.textContent = `↓ ${formatGameCount(statistics.downloads)} downloads`;
+    const plays = document.createElement("span");
+    plays.textContent = `▶ ${formatGameCount(statistics.plays)} jogadas`;
+    element.append(downloads, plays);
+  }
+
+  function formatGameCount(value) {
+    return new Intl.NumberFormat("pt-BR", { notation: "compact" })
+      .format(Number(value || 0));
   }
 
   async function ensureGameServiceWorker() {
