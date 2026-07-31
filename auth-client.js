@@ -780,6 +780,10 @@ async function showGameCatalog() {
           #070d0b; font-family: Inter, ui-sans-serif, system-ui, sans-serif;
       }
       #organizeon-game-catalog * { box-sizing: border-box; }
+      #organizeon-game-catalog button {
+        user-select: none; -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
       #organizeon-game-catalog .shell {
         width: min(1180px, 100%); min-height: 100%; margin: auto;
         padding: 28px clamp(16px, 4vw, 42px) 48px;
@@ -925,6 +929,9 @@ async function showGameCatalog() {
         color: #78e8cd; background: rgba(99,228,196,.08);
         font-weight: 800; cursor: pointer;
       }
+      #organizeon-game-catalog .player-menu-trigger {
+        display: none;
+      }
       #organizeon-game-catalog .controls {
         display: none; flex-wrap: wrap; align-items: center; gap: 7px;
         padding: 9px; border-top: 1px solid rgba(255,255,255,.1);
@@ -1000,12 +1007,20 @@ async function showGameCatalog() {
           position: absolute; z-index: 4;
           top: max(4px, env(safe-area-inset-top)); left: 6px; right: 6px;
           min-height: 44px; display: grid;
-          grid-template-columns: 40px minmax(0,1fr) 40px;
+          grid-template-columns: 40px minmax(0,1fr) 40px 40px;
           gap: 7px; padding: 4px;
           border: 1px solid rgba(255,255,255,.1); border-radius: 13px;
           background: rgba(5,13,11,.72);
           box-shadow: 0 8px 28px rgba(0,0,0,.25);
           backdrop-filter: blur(10px);
+          opacity: 0; visibility: hidden; pointer-events: none;
+          transform: translateY(-10px);
+          transition:
+            opacity .16s ease, transform .16s ease, visibility .16s;
+        }
+        #organizeon-game-catalog .player.menu-open .player-head {
+          opacity: 1; visibility: visible; pointer-events: auto;
+          transform: translateY(0);
         }
         #organizeon-game-catalog .player-head .back {
           width: 38px; height: 38px; border-radius: 10px;
@@ -1031,6 +1046,21 @@ async function showGameCatalog() {
         }
         #organizeon-game-catalog .controls-toggle[hidden] {
           display: none;
+        }
+        #organizeon-game-catalog .player-menu-trigger {
+          position: absolute; z-index: 5;
+          top: max(10px, calc(env(safe-area-inset-top) + 6px)); right: 10px;
+          display: grid; place-items: center;
+          width: 38px; height: 38px; padding: 0;
+          border: 1px solid rgba(99,228,196,.3); border-radius: 11px;
+          color: #a9f5e2; background: rgba(5,18,15,.74);
+          box-shadow: 0 8px 24px rgba(0,0,0,.24);
+          backdrop-filter: blur(9px);
+          font: 900 24px/1 system-ui; letter-spacing: 1px;
+          cursor: pointer;
+        }
+        #organizeon-game-catalog .player.menu-open .player-menu-trigger {
+          color: #e9fff9; background: rgba(30,50,44,.9);
         }
         #organizeon-game-catalog .controls {
           position: absolute; z-index: 3;
@@ -1178,6 +1208,8 @@ async function showGameCatalog() {
       <div class="grid"><div class="empty">Carregando catálogo…</div></div>
     </div>
     <div class="player">
+      <button class="player-menu-trigger" type="button"
+        aria-label="Abrir menu do jogo" aria-expanded="false">&#8942;</button>
       <header class="player-head">
         <button class="back player-back" type="button" aria-label="Voltar ao catálogo">←</button>
         <strong></strong>
@@ -1198,6 +1230,9 @@ async function showGameCatalog() {
   const frame = player.querySelector("iframe");
   const controls = player.querySelector(".controls");
   const controlsToggle = player.querySelector(".controls-toggle");
+  const playerMenuTrigger = player.querySelector(".player-menu-trigger");
+  const closedMenuGlyph = String.fromCodePoint(0x22ee);
+  const openMenuGlyph = String.fromCodePoint(0x00d7);
   let catalog = [];
   let playerUrl = null;
   let activeFilter = "all";
@@ -1216,7 +1251,10 @@ async function showGameCatalog() {
   wrapper.querySelector(".topbar .back").addEventListener("click", close);
   wrapper.querySelector(".player-back").addEventListener("click", () => {
     wrapper.classList.remove("playing");
-    player.classList.remove("controls-open");
+    player.classList.remove("controls-open", "menu-open");
+    playerMenuTrigger.textContent = closedMenuGlyph;
+    playerMenuTrigger.setAttribute("aria-expanded", "false");
+    playerMenuTrigger.setAttribute("aria-label", "Abrir menu do jogo");
     frame.removeAttribute("src");
     if (playerUrl) URL.revokeObjectURL(playerUrl);
     playerUrl = null;
@@ -1235,7 +1273,24 @@ async function showGameCatalog() {
     const open = !player.classList.contains("controls-open");
     player.classList.toggle("controls-open", open);
     controlsToggle.setAttribute("aria-expanded", String(open));
+    if (isMobileViewport) {
+      player.classList.remove("menu-open");
+      playerMenuTrigger.textContent = closedMenuGlyph;
+      playerMenuTrigger.setAttribute("aria-expanded", "false");
+    }
   });
+  playerMenuTrigger.addEventListener("click", () => {
+    const open = !player.classList.contains("menu-open");
+    player.classList.toggle("menu-open", open);
+    playerMenuTrigger.textContent =
+      open ? openMenuGlyph : closedMenuGlyph;
+    playerMenuTrigger.setAttribute("aria-expanded", String(open));
+    playerMenuTrigger.setAttribute(
+      "aria-label",
+      open ? "Fechar menu do jogo" : "Abrir menu do jogo",
+    );
+  });
+  frame.addEventListener("load", installEmbeddedGameInputGuard);
 
   try {
     const response = await fetch(
@@ -1254,6 +1309,32 @@ async function showGameCatalog() {
       "Não foi possível carregar o catálogo. Verifique a conexão e tente novamente.";
     grid.appendChild(empty);
     console.error("Falha ao abrir catálogo de jogos:", error);
+  }
+
+  function installEmbeddedGameInputGuard() {
+    try {
+      const documentRoot = frame.contentDocument;
+      if (!documentRoot?.head || documentRoot.getElementById(
+        "organizeon-game-input-guard"
+      )) {
+        return;
+      }
+      const style = documentRoot.createElement("style");
+      style.id = "organizeon-game-input-guard";
+      style.textContent = `
+        button, [role="button"], canvas, .controls, .pad {
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -webkit-touch-callout: none !important;
+        }
+        button, [role="button"] {
+          touch-action: manipulation;
+        }
+      `;
+      documentRoot.head.appendChild(style);
+    } catch {
+      // Flash and any future cross-origin package keep their own input rules.
+    }
   }
 
   async function renderCatalog(query = "") {
@@ -1554,6 +1635,10 @@ async function showGameCatalog() {
       game.instructions || "Toque direto na tela para clicar.";
     frame.title = game.name;
     activeGame = game;
+    player.classList.remove("menu-open");
+    playerMenuTrigger.textContent = closedMenuGlyph;
+    playerMenuTrigger.setAttribute("aria-expanded", "false");
+    playerMenuTrigger.setAttribute("aria-label", "Abrir menu do jogo");
     buildVirtualControls(game);
     if (game.type === "flash" || game.packageRoot) {
       try {
@@ -1634,13 +1719,18 @@ async function showGameCatalog() {
       required.has(definition.key);
     const requiredDefinitions = keyDefinitions.filter(isRequired);
     const showControls = requiredDefinitions.length > 0;
+    const hasNativeTouchControls =
+      isMobileViewport &&
+      (game.controls || []).includes("touch");
+    const openControlsByDefault =
+      isMobileViewport && showControls && !hasNativeTouchControls;
     controlsToggle.hidden = !showControls;
     controlsToggle.setAttribute("aria-expanded", String(
-      isMobileViewport && showControls,
+      openControlsByDefault,
     ));
     player.classList.toggle(
       "controls-open",
-      isMobileViewport && showControls,
+      openControlsByDefault,
     );
     if (!showControls) return;
 
