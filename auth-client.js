@@ -931,6 +931,9 @@ async function showGameCatalog() {
         background: #091310; touch-action: none; user-select: none;
       }
       #organizeon-game-catalog .player.controls-open .controls { display: flex; }
+      #organizeon-game-catalog .control-zone {
+        display: contents;
+      }
       #organizeon-game-catalog .key {
         min-width: 39px; height: 39px; padding: 0 9px; border-radius: 9px;
         border: 1px solid rgba(255,255,255,.16); color: #dffbf3;
@@ -949,16 +952,6 @@ async function showGameCatalog() {
       #organizeon-game-catalog .control-help {
         width: 100%; margin: 0 2px 2px; color: #71978c;
         font: 650 10px/1.35 system-ui;
-      }
-      #organizeon-game-catalog .trackpad {
-        position: relative; min-width: 140px; height: 50px; margin-left: auto;
-        overflow: hidden; border: 1px dashed rgba(99,228,196,.32);
-        border-radius: 10px; color: #6fa397; background: rgba(0,0,0,.2);
-        font: 700 10px system-ui; touch-action: none; cursor: crosshair;
-      }
-      #organizeon-game-catalog .trackpad span {
-        position: absolute; inset: 0; display: grid; place-items: center;
-        pointer-events: none;
       }
       #organizeon-game-catalog .dialog-backdrop {
         position: fixed; inset: 0; z-index: 5; display: grid; place-items: center;
@@ -988,41 +981,186 @@ async function showGameCatalog() {
           order: 3; width: 100%; margin-left: 0;
         }
       }
-      @media (max-width: 480px) {
+      @media (max-width: 700px), (pointer: coarse) {
         #organizeon-game-catalog .shell { padding-inline: 12px; }
-        #organizeon-game-catalog .grid {
-          grid-template-columns: minmax(0,1fr);
-        }
         #organizeon-game-catalog .description { min-height: 0; }
         #organizeon-game-catalog .card.mobile-warning {
           border-color: rgba(255,198,73,.72);
           background: linear-gradient(180deg,rgba(64,48,18,.92),rgba(15,27,24,.95));
           box-shadow: 0 0 0 1px rgba(255,198,73,.08),0 18px 50px rgba(0,0,0,.2);
         }
-        #organizeon-game-catalog .player-head { min-height: 52px; }
+        #organizeon-game-catalog .player {
+          position: fixed; display: none; overflow: hidden;
+        }
+        #organizeon-game-catalog.playing .player { display: block; }
+        #organizeon-game-catalog .player iframe {
+          position: absolute; inset: 0; width: 100%; height: 100%;
+        }
         #organizeon-game-catalog .player-head {
-          display: grid; grid-template-columns: 42px minmax(0,1fr) 42px;
-          gap: 8px; padding: 5px 8px;
+          position: absolute; z-index: 4;
+          top: max(4px, env(safe-area-inset-top)); left: 6px; right: 6px;
+          min-height: 44px; display: grid;
+          grid-template-columns: 40px minmax(0,1fr) 40px;
+          gap: 7px; padding: 4px;
+          border: 1px solid rgba(255,255,255,.1); border-radius: 13px;
+          background: rgba(5,13,11,.72);
+          box-shadow: 0 8px 28px rgba(0,0,0,.25);
+          backdrop-filter: blur(10px);
+        }
+        #organizeon-game-catalog .player-head .back {
+          width: 38px; height: 38px; border-radius: 10px;
         }
         #organizeon-game-catalog .player-head strong {
-          align-self: end; font-size: 13px;
+          align-self: center; font-size: 12px;
         }
         #organizeon-game-catalog .player-help {
-          grid-column: 2; align-self: start; font-size: 9px;
+          display: none;
         }
         #organizeon-game-catalog .player-head .controls-toggle {
-          grid-column: 3; grid-row: 1 / span 2;
+          grid-column: 3; grid-row: 1;
         }
         #organizeon-game-catalog .player-head .player-back {
-          grid-column: 1; grid-row: 1 / span 2;
+          grid-column: 1; grid-row: 1;
         }
-        #organizeon-game-catalog .controls-toggle { font-size: 0; width: 42px; }
-        #organizeon-game-catalog .controls-toggle::after { content: "⌨"; font-size: 18px; }
+        #organizeon-game-catalog .controls-toggle {
+          width: 38px; min-height: 38px; margin: 0; padding: 0;
+          border-radius: 10px; font-size: 0;
+        }
+        #organizeon-game-catalog .controls-toggle::after {
+          content: "⌨"; font-size: 17px;
+        }
+        #organizeon-game-catalog .controls-toggle[hidden] {
+          display: none;
+        }
         #organizeon-game-catalog .controls {
-          max-height: 150px; overflow: auto; gap: 5px; padding: 7px;
+          position: absolute; z-index: 3;
+          left: 0; right: 0; bottom: 0;
+          min-height: clamp(150px, 24vh, 210px);
+          padding:
+            12px max(12px, env(safe-area-inset-right))
+            max(12px, env(safe-area-inset-bottom))
+            max(12px, env(safe-area-inset-left));
+          grid-template-columns: minmax(132px,1fr) minmax(94px,1fr);
+          align-items: end; gap: clamp(20px,8vw,72px);
+          overflow: visible; border: 0;
+          background: linear-gradient(
+            0deg,
+            rgba(2,8,7,.62) 0,
+            rgba(2,8,7,.2) 62%,
+            transparent 100%
+          );
+          pointer-events: none;
         }
-        #organizeon-game-catalog .key { min-width: 36px; height: 36px; }
-        #organizeon-game-catalog .trackpad { min-width: 100%; margin-left: 0; }
+        #organizeon-game-catalog .player.controls-open .controls {
+          display: grid;
+        }
+        #organizeon-game-catalog .control-zone {
+          min-width: 0; pointer-events: none;
+        }
+        #organizeon-game-catalog .movement-zone {
+          display: grid; justify-content: start; align-content: end;
+        }
+        #organizeon-game-catalog .action-zone {
+          display: flex; flex-wrap: wrap-reverse; align-items: flex-end;
+          justify-content: flex-end; align-content: flex-end;
+          gap: clamp(9px,2.8vw,16px);
+        }
+        #organizeon-game-catalog .dpad {
+          width: min(48vw, 210px);
+          grid-template-columns: repeat(3,minmax(48px,1fr));
+          grid-template-rows: repeat(3,minmax(48px,1fr));
+          gap: clamp(7px,2vw,12px);
+        }
+        #organizeon-game-catalog .dpad .key {
+          width: 100%; height: 100%; min-width: 0; min-height: 60px;
+          padding: 0; border-radius: 17px; font-size: 24px;
+        }
+        #organizeon-game-catalog .dpad .up { grid-column: 2; grid-row: 1; }
+        #organizeon-game-catalog .dpad .left { grid-column: 1; grid-row: 2; }
+        #organizeon-game-catalog .dpad .down { grid-column: 2; grid-row: 3; }
+        #organizeon-game-catalog .dpad .right { grid-column: 3; grid-row: 2; }
+        #organizeon-game-catalog .movement-row {
+          display: flex; align-items: end; gap: clamp(12px,4vw,22px);
+        }
+        #organizeon-game-catalog .movement-row .key {
+          width: clamp(64px,20vw,92px); height: clamp(62px,18vw,86px);
+          padding: 0; border-radius: 19px; font-size: 25px;
+        }
+        #organizeon-game-catalog .action-zone .key {
+          min-width: clamp(54px,15vw,72px);
+          height: clamp(54px,15vw,72px);
+          padding: 0 10px; border-radius: 50%;
+          border-color: rgba(255,211,111,.58);
+          color: #ffe7aa; background: rgba(36,31,18,.72);
+          box-shadow: 0 8px 22px rgba(0,0,0,.24);
+          font-size: 12px; backdrop-filter: blur(7px);
+          pointer-events: auto;
+        }
+        #organizeon-game-catalog .action-zone .key.space {
+          min-width: clamp(76px,23vw,106px); border-radius: 22px;
+        }
+        #organizeon-game-catalog .movement-zone .key {
+          border-color: rgba(103,235,204,.56);
+          color: #cffff3; background: rgba(13,38,32,.72);
+          box-shadow: 0 8px 22px rgba(0,0,0,.24);
+          backdrop-filter: blur(7px); pointer-events: auto;
+        }
+        #organizeon-game-catalog .key.pressed {
+          color: #061d17; border-color: #65e7c7; background: #65e7c7;
+          transform: scale(.95);
+        }
+        #organizeon-game-catalog .control-help { display: none; }
+        #organizeon-game-catalog .controls.no-movement {
+          grid-template-columns: 1fr;
+        }
+        #organizeon-game-catalog .controls.no-movement .action-zone {
+          justify-content: flex-end;
+        }
+        #organizeon-game-catalog .controls.no-actions {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 700px) and (orientation: landscape),
+             (pointer: coarse) and (orientation: landscape) {
+        #organizeon-game-catalog .controls {
+          min-height: clamp(88px, 27vh, 118px);
+          grid-template-columns: minmax(180px,1fr) minmax(180px,1fr);
+          gap: clamp(48px,18vw,180px);
+          padding-top: 7px;
+        }
+        #organizeon-game-catalog .dpad {
+          width: min(48vw, 360px);
+          grid-template-columns: repeat(4,minmax(52px,1fr));
+          grid-template-rows: minmax(54px,1fr);
+          gap: clamp(7px,1.6vw,12px);
+        }
+        #organizeon-game-catalog .dpad .key {
+          min-height: clamp(54px,19vh,72px);
+        }
+        #organizeon-game-catalog .dpad .left {
+          grid-column: 1; grid-row: 1;
+        }
+        #organizeon-game-catalog .dpad .up {
+          grid-column: 2; grid-row: 1;
+        }
+        #organizeon-game-catalog .dpad .down {
+          grid-column: 3; grid-row: 1;
+        }
+        #organizeon-game-catalog .dpad .right {
+          grid-column: 4; grid-row: 1;
+        }
+        #organizeon-game-catalog .movement-row .key {
+          width: clamp(68px,12vw,98px); height: clamp(58px,18vh,82px);
+        }
+        #organizeon-game-catalog .action-zone .key {
+          min-width: clamp(54px,9vw,74px);
+          height: clamp(54px,16vh,74px);
+        }
+      }
+      @media (max-width: 480px) {
+        #organizeon-game-catalog .grid {
+          grid-template-columns: minmax(0,1fr);
+        }
       }
     </style>
     <div class="shell">
@@ -1465,50 +1603,171 @@ async function showGameCatalog() {
 
   function buildVirtualControls(game) {
     controls.innerHTML = "";
+    const required = new Set(game.keys || []);
+    const keyDefinitions = [
+      { label: "W", code: "KeyW", keyCode: 87, direction: "up" },
+      { label: "A", code: "KeyA", keyCode: 65, direction: "left" },
+      { label: "S", code: "KeyS", keyCode: 83, direction: "down" },
+      { label: "D", code: "KeyD", keyCode: 68, direction: "right" },
+      { label: "↑", code: "ArrowUp", keyCode: 38, key: "ArrowUp", direction: "up" },
+      { label: "←", code: "ArrowLeft", keyCode: 37, key: "ArrowLeft", direction: "left" },
+      { label: "↓", code: "ArrowDown", keyCode: 40, key: "ArrowDown", direction: "down" },
+      { label: "→", code: "ArrowRight", keyCode: 39, key: "ArrowRight", direction: "right" },
+      { label: "E", code: "KeyE", keyCode: 69 },
+      { label: "F", code: "KeyF", keyCode: 70 },
+      { label: "Q", code: "KeyQ", keyCode: 81 },
+      { label: "R", code: "KeyR", keyCode: 82 },
+      { label: "J", code: "KeyJ", keyCode: 74 },
+      { label: "K", code: "KeyK", keyCode: 75 },
+      { label: "X", code: "KeyX", keyCode: 88 },
+      { label: "C", code: "KeyC", keyCode: 67 },
+      { label: "Shift", code: "ShiftLeft", keyCode: 16, key: "Shift" },
+      { label: "Ctrl", code: "ControlLeft", keyCode: 17, key: "Control" },
+      { label: "Alt", code: "AltLeft", keyCode: 18, key: "Alt" },
+      { label: "Enter", code: "Enter", keyCode: 13, key: "Enter" },
+      { label: "Tab", code: "Tab", keyCode: 9, key: "Tab" },
+      { label: "Espaço", code: "Space", keyCode: 32, key: " ", wide: true },
+    ];
+    const isRequired = (definition) =>
+      required.has(definition.label) ||
+      required.has(definition.code) ||
+      required.has(definition.key);
+    const requiredDefinitions = keyDefinitions.filter(isRequired);
+    const showControls = requiredDefinitions.length > 0;
+    controlsToggle.hidden = !showControls;
+    controlsToggle.setAttribute("aria-expanded", String(
+      isMobileViewport && showControls,
+    ));
+    player.classList.toggle(
+      "controls-open",
+      isMobileViewport && showControls,
+    );
+    if (!showControls) return;
+
+    if (isMobileViewport) {
+      buildMobileControls(requiredDefinitions);
+      return;
+    }
+
     const help = document.createElement("p");
     help.className = "control-help";
     help.textContent =
       "Segure várias teclas ao mesmo tempo para combinações. No jogo: 1 toque = clique esquerdo; toque duplo ou 2 dedos = botão direito.";
     controls.appendChild(help);
-    const required = new Set(game.keys || []);
-    const keyDefinitions = [
-      ["W", "KeyW", 87], ["A", "KeyA", 65], ["S", "KeyS", 83],
-      ["D", "KeyD", 68], ["↑", "ArrowUp", 38, "ArrowUp"],
-      ["←", "ArrowLeft", 37, "ArrowLeft"], ["↓", "ArrowDown", 40, "ArrowDown"],
-      ["→", "ArrowRight", 39, "ArrowRight"], ["E", "KeyE", 69],
-      ["F", "KeyF", 70], ["Q", "KeyQ", 81], ["R", "KeyR", 82],
-      ["J", "KeyJ", 74], ["K", "KeyK", 75],
-      ["X", "KeyX", 88], ["C", "KeyC", 67],
-      ["Shift", "ShiftLeft", 16, "Shift"], ["Ctrl", "ControlLeft", 17, "Control"],
-      ["Alt", "AltLeft", 18, "Alt"], ["Enter", "Enter", 13, "Enter"],
-      ["Tab", "Tab", 9, "Tab"],
-      ["Espaço", "Space", 32, " ", true],
-    ];
-    keyDefinitions.forEach(([label, code, keyCode, explicitKey, wide]) => {
-      const button = document.createElement("button");
-      button.className = `key${wide ? " space" : ""}`;
-      button.type = "button";
-      button.textContent = label;
-      const key = explicitKey || label;
-      if (required.has(key) || required.has(code) || required.has(label)) {
-        button.classList.add("needed");
+    const movementZone = document.createElement("div");
+    movementZone.className = "control-zone movement-zone";
+    const actionZone = document.createElement("div");
+    actionZone.className = "control-zone action-zone";
+    keyDefinitions.forEach((definition) => {
+      const button = createVirtualKey(definition);
+      if (isRequired(definition)) button.classList.add("needed");
+      (definition.direction ? movementZone : actionZone).appendChild(button);
+    });
+    controls.append(movementZone, actionZone);
+
+    function buildMobileControls(definitions) {
+      controls.classList.remove("no-movement", "no-actions");
+      const arrowMovement = definitions.filter((definition) =>
+        definition.direction && definition.code.startsWith("Arrow")
+      );
+      const letterMovement = definitions.filter((definition) =>
+        definition.direction && definition.code.startsWith("Key")
+      );
+      const configuredMovement = new Set(game.movementKeys || []);
+      const hasConfiguredMovement = configuredMovement.size > 0;
+      const movementDefinitions = hasConfiguredMovement
+        ? definitions.filter((definition) =>
+            definition.direction &&
+            (
+              configuredMovement.has(definition.label) ||
+              configuredMovement.has(definition.code) ||
+              configuredMovement.has(definition.key)
+            )
+          )
+        : arrowMovement.length
+          ? arrowMovement
+          : letterMovement;
+      const selectedMovement = new Set(movementDefinitions);
+      const actionDefinitions = definitions.filter((definition) => {
+        if (selectedMovement.has(definition)) return false;
+        if (
+          definition.direction &&
+          !hasConfiguredMovement &&
+          !game.preserveSecondaryMovement
+        ) {
+          return false;
+        }
+        return true;
+      });
+
+      if (movementDefinitions.length) {
+        const movementZone = document.createElement("div");
+        const hasFullDirectionPad = ["up", "left", "down", "right"].every(
+          (direction) =>
+            movementDefinitions.some(
+              (definition) => definition.direction === direction,
+            ),
+        );
+        movementZone.className =
+          `control-zone movement-zone ${
+            hasFullDirectionPad ? "dpad" : "movement-row"
+          }`;
+        movementDefinitions.forEach((definition) => {
+          const button = createVirtualKey(definition);
+          button.classList.add(definition.direction);
+          movementZone.appendChild(button);
+        });
+        controls.appendChild(movementZone);
+      } else {
+        controls.classList.add("no-movement");
       }
+
+      if (actionDefinitions.length) {
+        const actionZone = document.createElement("div");
+        actionZone.className = "control-zone action-zone";
+        actionDefinitions.forEach((definition) => {
+          actionZone.appendChild(createVirtualKey(definition));
+        });
+        controls.appendChild(actionZone);
+      } else {
+        controls.classList.add("no-actions");
+      }
+    }
+
+    function createVirtualKey(definition) {
+      const button = document.createElement("button");
+      button.className = `key${definition.wide ? " space" : ""}`;
+      button.type = "button";
+      button.textContent = definition.label;
+      button.dataset.code = definition.code;
+      button.setAttribute("aria-label", `Tecla ${definition.label}`);
+      const key = definition.key || definition.label;
       const release = (event) => {
         event.preventDefault();
         button.classList.remove("pressed");
-        sendVirtualKey(key, code, keyCode, false);
+        sendVirtualKey(
+          key,
+          definition.code,
+          definition.keyCode,
+          false,
+        );
       };
       button.addEventListener("pointerdown", (event) => {
         event.preventDefault();
         button.setPointerCapture?.(event.pointerId);
         button.classList.add("pressed");
-        sendVirtualKey(key, code, keyCode, true);
+        sendVirtualKey(
+          key,
+          definition.code,
+          definition.keyCode,
+          true,
+        );
       });
       button.addEventListener("pointerup", release);
       button.addEventListener("pointercancel", release);
       button.addEventListener("contextmenu", (event) => event.preventDefault());
-      controls.appendChild(button);
-    });
+      return button;
+    }
   }
 
   function sendVirtualKey(key, code, keyCode, down) {

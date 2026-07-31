@@ -18,6 +18,10 @@
       #status.error { color:#ff9ca8; padding:24px; text-align:center }
     </style>
     <script>
+      const compactPlayer = matchMedia(
+        "(max-width: 700px), (pointer: coarse)"
+      ).matches;
+      const playerAlignment = compactPlayer ? "T" : "";
       window.RufflePlayer = window.RufflePlayer || {};
       window.RufflePlayer.config = {
         publicPath: new URL("./runtime/ruffle/", document.baseURI).href,
@@ -26,7 +30,8 @@
         scale: "showAll",
         forceScale: true,
         letterbox: "on",
-        salign: "",
+        salign: playerAlignment,
+        forceAlign: compactPlayer,
         warnOnUnsupportedContent: true
       };
     </script>
@@ -54,7 +59,8 @@
             scale: "showAll",
             forceScale: true,
             letterbox: "on",
-            salign: ""
+            salign: playerAlignment,
+            forceAlign: compactPlayer
           });
           player.focus();
           installDirectTouchMouse(player);

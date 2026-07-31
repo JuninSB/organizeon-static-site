@@ -339,6 +339,10 @@
         "Space",
         "Enter"
       ],
+      "movementKeys": [
+        "A",
+        "D"
+      ],
       "instructions": "A/D mover · W pular · S defender · J soco · K chute.",
       "entry": "library/stick-arena.html",
       "cover": "covers/stick-arena.svg",
@@ -1072,6 +1076,12 @@
         "S",
         "D",
         "F"
+      ],
+      "movementKeys": [
+        "ArrowUp",
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowRight"
       ],
       "instructions": "Jogador 1: setas + Espaço · Jogador 2: WASD + F.",
       "entry": "library/flash-archive/bad-ice-cream-3.swf",
