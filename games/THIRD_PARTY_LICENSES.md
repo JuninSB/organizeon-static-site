@@ -103,6 +103,21 @@ because the current build traps while initializing that particular SWF. Ruffle
 is licensed under MIT or Apache-2.0; both license texts are stored alongside
 the legacy runtime in `games/runtime/ruffle-legacy`.
 
+## Bloons TD 5 and Fireboy and Watergirl 3
+
+The Bloons TD 5 SWF is preserved from commit
+`eaab9d2c23ec9b876f4fec670ce4713aa3f68a1a` of
+`SJRNoodles/Flash-Game-Archive`. Its catalog cover is the official Bloons TD 5
+Steam listing image. Bloons TD 5, its artwork and its trademarks remain the
+property of Ninja Kiwi; the preservation file did not declare a redistribution
+license.
+
+The Fireboy and Watergirl 3 SWF is the copy preserved by Addicting Games and
+indexed by Drew Chase's Compiled Flash Game Archive. Its catalog cover is the
+game's Poki listing image. Fireboy and Watergirl, its artwork and its
+trademarks remain the property of Oslo Albet and the respective rights holders;
+the preservation file did not declare a redistribution license.
+
 ## Eaglercraft external downloads
 
 The Eaglercraft cards do not redistribute client builds through OrganizeOn.
