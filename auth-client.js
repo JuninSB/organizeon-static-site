@@ -1466,6 +1466,12 @@ async function showGameCatalog() {
       games.map(async (game) => {
         const card = createGameCard(game);
         grid.appendChild(card);
+        if (game.type === "external-download") {
+          const action = card.querySelector(".action");
+          action.disabled = false;
+          action.textContent = "Baixar HTML";
+          return;
+        }
         setCardInstalled(
           card,
           await isGameInstalled(game),
@@ -1492,7 +1498,11 @@ async function showGameCatalog() {
     badges.className = "badges";
     const typeBadge = document.createElement("span");
     typeBadge.className = `badge${game.type === "flash" ? " flash" : ""}`;
-    typeBadge.textContent = game.type === "flash" ? "Flash · Ruffle" : "HTML5";
+    typeBadge.textContent = game.type === "flash"
+      ? "Flash · Ruffle"
+      : game.type === "external-download"
+        ? "HTML offline · GitHub"
+        : "HTML5";
     badges.appendChild(typeBadge);
     (game.platforms || ["pc"]).forEach((platform) => {
       const badge = document.createElement("span");
@@ -1514,7 +1524,9 @@ async function showGameCatalog() {
     size.className = "size";
     size.textContent = game.type === "flash"
       ? `${formatGameBytes(game.size)} + Ruffle`
-      : formatGameBytes(game.size);
+      : game.type === "external-download"
+        ? `HTML ${formatGameBytes(game.externalDownload.outputSize)}`
+        : formatGameBytes(game.size);
     if (game.type === "flash") {
       size.title = "O Ruffle baixa cerca de 15 MB apenas no primeiro uso e fica em cache.";
     }
@@ -1526,7 +1538,9 @@ async function showGameCatalog() {
     attribution.className = "attribution";
     attribution.textContent = game.type === "flash"
       ? `${game.attribution || "OrganizeOn"} · Ruffle ~15 MB no 1º uso`
-      : game.attribution || "OrganizeOn";
+      : game.type === "external-download"
+        ? `${game.attribution || "Download externo"} · não usa o relay`
+        : game.attribution || "OrganizeOn";
     const actions = document.createElement("div");
     actions.className = "actions";
     const action = document.createElement("button");
@@ -1535,6 +1549,10 @@ async function showGameCatalog() {
     action.textContent = "Verificando…";
     action.disabled = true;
     action.addEventListener("click", async () => {
+      if (game.type === "external-download") {
+        await downloadExternalGame(game, card);
+        return;
+      }
       if (card.classList.contains("installed")) {
         await playGame(game);
       } else {
@@ -1746,6 +1764,160 @@ async function showGameCatalog() {
       return cached?.headers.get("X-OrganizeOn-Game-Hash") === file.sha256;
     }));
     return checks.every(Boolean);
+  }
+
+  async function downloadExternalGame(game, card) {
+    const download = game.externalDownload;
+    if (!download?.url || !download.filename) return;
+    const approved = window.confirm(
+      `${game.name} será baixado diretamente do GitHub e salvo como ` +
+      `${download.filename}. O OrganizeOn verificará a integridade antes de ` +
+      "entregar o HTML. Continuar?",
+    );
+    if (!approved) return;
+
+    const action = card.querySelector(".action");
+    const bar = card.querySelector(".progress span");
+    card.classList.add("downloading");
+    action.disabled = true;
+    action.textContent = "Conectando ao GitHub…";
+    try {
+      const response = await fetch(download.url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`GitHub respondeu HTTP ${response.status}`);
+      const reader = response.body?.getReader();
+      const chunks = [];
+      let received = 0;
+      if (reader) {
+        while (true) {
+          const result = await reader.read();
+          if (result.done) break;
+          chunks.push(result.value);
+          received += result.value.byteLength;
+          const percent = Math.min(
+            100,
+            Math.round((received / Math.max(1, download.size)) * 100),
+          );
+          bar.style.width = `${percent}%`;
+          action.textContent =
+            `GitHub ${formatGameBytes(received)}/${formatGameBytes(download.size)} · ${percent}%`;
+        }
+      } else {
+        const fallback = new Uint8Array(await response.arrayBuffer());
+        chunks.push(fallback);
+        received = fallback.byteLength;
+      }
+      const archive = new Uint8Array(received);
+      let offset = 0;
+      chunks.forEach((chunk) => {
+        archive.set(chunk, offset);
+        offset += chunk.byteLength;
+      });
+      const archiveHash = await sha256Hex(archive);
+      if (archiveHash && archiveHash !== download.sha256) {
+        throw new Error("o SHA-256 recebido não corresponde à revisão fixada");
+      }
+
+      action.textContent = download.format === "zip-single-html"
+        ? "Extraindo HTML…"
+        : "Verificando HTML…";
+      const html = download.format === "zip-single-html"
+        ? await extractSingleHtmlFromZip(archive, download.filename)
+        : archive;
+      if (download.outputSize && html.byteLength !== download.outputSize) {
+        throw new Error("o tamanho do HTML extraído é inesperado");
+      }
+      const outputHash = await sha256Hex(html);
+      if (outputHash && outputHash !== download.outputSha256) {
+        throw new Error("o SHA-256 do HTML é inesperado");
+      }
+
+      const blobUrl = URL.createObjectURL(
+        new Blob([html], { type: "text/html;charset=utf-8" }),
+      );
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = download.filename;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      bar.style.width = "100%";
+      action.textContent = "HTML baixado";
+    } catch (error) {
+      action.textContent = "Tentar novamente";
+      window.alert(
+        `Não foi possível baixar ${game.name}: ${
+          error instanceof Error ? error.message : "erro desconhecido"
+        }`,
+      );
+    } finally {
+      action.disabled = false;
+      window.setTimeout(() => {
+        card.classList.remove("downloading");
+        bar.style.width = "0";
+        if (action.textContent === "HTML baixado") {
+          action.textContent = "Baixar novamente";
+        }
+      }, 900);
+    }
+  }
+
+  async function extractSingleHtmlFromZip(archive, expectedFilename) {
+    const view = new DataView(
+      archive.buffer,
+      archive.byteOffset,
+      archive.byteLength,
+    );
+    let endOffset = -1;
+    const minimumOffset = Math.max(0, archive.byteLength - 65_557);
+    for (let offset = archive.byteLength - 22; offset >= minimumOffset; offset -= 1) {
+      if (view.getUint32(offset, true) === 0x06054b50) {
+        endOffset = offset;
+        break;
+      }
+    }
+    if (endOffset < 0) throw new Error("arquivo ZIP inválido");
+    if (view.getUint16(endOffset + 10, true) !== 1) {
+      throw new Error("o pacote deveria conter exatamente um HTML");
+    }
+    const centralOffset = view.getUint32(endOffset + 16, true);
+    if (view.getUint32(centralOffset, true) !== 0x02014b50) {
+      throw new Error("diretório do ZIP inválido");
+    }
+    const method = view.getUint16(centralOffset + 10, true);
+    const compressedSize = view.getUint32(centralOffset + 20, true);
+    const outputSize = view.getUint32(centralOffset + 24, true);
+    const nameLength = view.getUint16(centralOffset + 28, true);
+    const localOffset = view.getUint32(centralOffset + 42, true);
+    const filename = new TextDecoder().decode(
+      archive.subarray(centralOffset + 46, centralOffset + 46 + nameLength),
+    );
+    if (filename !== expectedFilename || !filename.toLowerCase().endsWith(".html")) {
+      throw new Error("nome do HTML dentro do ZIP é inesperado");
+    }
+    if (view.getUint32(localOffset, true) !== 0x04034b50) {
+      throw new Error("entrada local do ZIP inválida");
+    }
+    const localNameLength = view.getUint16(localOffset + 26, true);
+    const localExtraLength = view.getUint16(localOffset + 28, true);
+    const dataOffset = localOffset + 30 + localNameLength + localExtraLength;
+    const compressed = archive.slice(dataOffset, dataOffset + compressedSize);
+    let output;
+    if (method === 0) {
+      output = compressed;
+    } else if (method === 8 && typeof DecompressionStream === "function") {
+      const stream = new Blob([compressed]).stream().pipeThrough(
+        new DecompressionStream("deflate-raw"),
+      );
+      output = new Uint8Array(await new Response(stream).arrayBuffer());
+    } else {
+      throw new Error("este navegador não consegue extrair o ZIP automaticamente");
+    }
+    if (output.byteLength !== outputSize) {
+      throw new Error("HTML extraído com tamanho inválido");
+    }
+    return output;
   }
 
   async function installGame(game, card) {
@@ -2096,6 +2268,7 @@ async function showGameCatalog() {
   }
 
   function gameFiles(game) {
+    if (game.type === "external-download") return [];
     return Array.isArray(game.files) && game.files.length
       ? game.files
       : [{ path: game.entry, size: game.size, sha256: game.sha256 }];

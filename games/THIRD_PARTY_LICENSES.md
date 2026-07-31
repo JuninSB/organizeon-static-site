@@ -103,6 +103,20 @@ because the current build traps while initializing that particular SWF. Ruffle
 is licensed under MIT or Apache-2.0; both license texts are stored alongside
 the legacy runtime in `games/runtime/ruffle-legacy`.
 
+## Eaglercraft external downloads
+
+The Eaglercraft cards do not redistribute client builds through OrganizeOn.
+They fetch files directly from commit
+`6a0c451e4c47a229eba443306c24803d3f1bc113` of the external GitHub repository
+`tonydsas/eaglercraftoffline`. The browser verifies pinned SHA-256 hashes and,
+for ZIP packages, extracts the single HTML locally before presenting the file
+for download. No Eaglercraft client is stored in this site or sent through the
+OrganizeOn backend or relay.
+
+Eaglercraft and Minecraft code, assets, names, and trademarks remain the
+property of their respective owners. The current EaglercraftX source license
+states `All Rights Reserved`; a link is displayed in each card's credits.
+
 ## Flx Invaders and Mode
 
 Sources:
