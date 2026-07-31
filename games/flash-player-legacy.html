@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <title>OrganizeOn Flash Player</title>
+    <style>
+      html,body,#stage,ruffle-player {
+        display:block; width:100%; height:100%; height:100dvh; margin:0;
+        overflow:hidden; background:#050807; touch-action:none;
+        user-select:none; -webkit-user-select:none; -webkit-touch-callout:none
+      }
+      #status { color:#8edfc9; padding:24px; font:600 14px system-ui,sans-serif }
+      #status.error { color:#ff9ca8 }
+    </style>
+    <script>
+      window.RufflePlayer = {
+        config: {
+          preferredRenderer: "canvas",
+          autoplay: "on",
+          unmuteOverlay: "hidden"
+        }
+      };
+    </script>
+    <script src="./runtime/ruffle-legacy/ruffle.js"></script>
+  </head>
+  <body>
+    <main id="stage"><div id="status">Iniciando Ruffle…</div></main>
+    <script>
+      window.addEventListener("load", async () => {
+        const stage = document.getElementById("stage");
+        try {
+          const entry = new URLSearchParams(location.search).get("swf");
+          if (!entry || entry.includes("..")) throw new Error("Jogo Flash inválido.");
+          const player = window.RufflePlayer.newest().createPlayer();
+          player.style.width = "100%";
+          player.style.height = "100%";
+          stage.replaceChildren(player);
+          await player.load(entry);
+          player.focus();
+        } catch (error) {
+          const message = document.createElement("div");
+          message.id = "status";
+          message.className = "error";
+          message.textContent = error instanceof Error ? error.message : "Falha ao abrir o jogo.";
+          stage.replaceChildren(message);
+        }
+      });
+    </script>
+  </body>
+</html>

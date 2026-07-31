@@ -841,6 +841,7 @@ async function showGameCatalog() {
         scrollbar-width: none;
       }
       #organizeon-game-catalog .filters::-webkit-scrollbar { display: none; }
+      #organizeon-game-catalog .category-filters { display: contents; }
       #organizeon-game-catalog .filter {
         min-height: 38px; padding: 0 15px; flex: 0 0 auto;
         border: 1px solid rgba(255,255,255,.12); border-radius: 999px;
@@ -1273,6 +1274,7 @@ async function showGameCatalog() {
         <button class="filter" type="button" data-filter="mobile">Mobile</button>
         <button class="filter" type="button" data-filter="pc">PC</button>
         <button class="filter" type="button" data-filter="flash">Flash</button>
+        <span class="category-filters"></span>
       </nav>
       <div class="grid"><div class="empty">Carregando catálogo…</div></div>
     </div>
@@ -1286,7 +1288,9 @@ async function showGameCatalog() {
         <button class="controls-toggle" type="button" aria-expanded="false">Controles</button>
         <button class="controls-settings" type="button" aria-label="Configurar teclas">Teclas</button>
       </header>
-      <iframe title="Jogo" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+      <iframe title="Jogo"
+        sandbox="allow-scripts allow-modals allow-same-origin allow-pointer-lock allow-forms allow-downloads"
+        allow="fullscreen; gamepad; clipboard-read; clipboard-write"></iframe>
       <div class="controls" aria-label="Controles virtuais"></div>
     </div>
   `;
@@ -1378,6 +1382,18 @@ async function showGameCatalog() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     catalog = Array.isArray(payload.games) ? payload.games : [];
+    const categoryFilters = wrapper.querySelector(".category-filters");
+    const categories = Array.from(
+      new Set(catalog.map((game) => game.category).filter(Boolean)),
+    ).sort((left, right) => left.localeCompare(right, "pt-BR"));
+    categoryFilters.replaceChildren(...categories.map((category) => {
+      const button = document.createElement("button");
+      button.className = "filter";
+      button.type = "button";
+      button.dataset.filter = `category:${category}`;
+      button.textContent = category;
+      return button;
+    }));
     search.placeholder =
       `🔎 Pesquisar entre ${catalog.length} jogos…`;
     wrapper.querySelector(".subtitle").textContent =
@@ -1430,6 +1446,9 @@ async function showGameCatalog() {
         .includes(normalized);
       if (!matchesQuery) return false;
       if (activeFilter === "flash") return game.type === "flash";
+      if (activeFilter.startsWith("category:")) {
+        return game.category === activeFilter.slice("category:".length);
+      }
       if (activeFilter === "pc" || activeFilter === "mobile") {
         return (game.platforms || ["pc"]).includes(activeFilter);
       }
@@ -1847,7 +1866,10 @@ async function showGameCatalog() {
         console.warn("O cache offline do Ruffle não pôde ser ativado:", error);
       }
       if (game.type === "flash") {
-        const flashPlayerUrl = assetUrl("games/flash-player.html");
+        const playerDocument = game.ruffleRuntime === "legacy"
+          ? "games/flash-player-legacy.html"
+          : "games/flash-player.html";
+        const flashPlayerUrl = assetUrl(playerDocument);
         flashPlayerUrl.searchParams.set("swf", game.entry);
         frame.src = flashPlayerUrl.href;
       } else {

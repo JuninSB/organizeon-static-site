@@ -89,6 +89,20 @@ FunnyGames, Blipzi, FlashGamesPlayer, StickPage, MarioGames, FlashGhetto and
 QGames. Those images are used only to identify their respective games and do
 not receive a new license from this project.
 
+The locally stored artwork for Escaping the Prison, Stealing the Diamond,
+Infiltrating the Airship and Fleeing the Complex was obtained from the
+corresponding CrazyGames listings. The four preserved SWF files were obtained
+from the Games-From-Flash archive on GitLab, except Escaping the Prison, whose
+working archived copy came from UBGHyper GameList. The games, Henry Stickmin
+characters and artwork remain the property of PuffballsUnited and their
+respective rights holders; no license was declared by either preservation
+archive.
+
+Infiltrating the Airship uses the archived Ruffle web build dated 2024-07-30
+because the current build traps while initializing that particular SWF. Ruffle
+is licensed under MIT or Apache-2.0; both license texts are stored alongside
+the legacy runtime in `games/runtime/ruffle-legacy`.
+
 ## Flx Invaders and Mode
 
 Sources:

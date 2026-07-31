@@ -55,7 +55,7 @@
           player = ruffle.createPlayer();
           player.id = "ruffle-game";
           stage.replaceChildren(player);
-          await player.ruffle().load({
+          const loadOptions = {
             url: new URL(entry, document.baseURI).href,
             autoplay: "on",
             unmuteOverlay: "hidden",
@@ -66,7 +66,12 @@
             forceAlign: compactPlayer,
             contextMenu: "off",
             menu: false
-          });
+          };
+          if (typeof player.ruffle === "function") {
+            await player.ruffle().load(loadOptions);
+          } else {
+            await player.load(entry);
+          }
           player.focus();
           installDirectTouchMouse(player);
         } catch (error) {

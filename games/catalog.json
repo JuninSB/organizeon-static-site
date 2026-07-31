@@ -908,6 +908,160 @@
       ]
     },
     {
+      "id": "henry-stickmin-escaping-the-prison",
+      "name": "Escaping the Prison",
+      "description": "Escolha os itens certos e ajude Henry a escapar da prisão por caminhos diferentes.",
+      "category": "Aventura",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nas opções da história e reaja rapidamente quando solicitado.",
+      "entry": "library/flash-archive/henry-stickmin-escaping-the-prison.swf",
+      "cover": "covers/henry-stickmin-escaping-the-prison.jpg",
+      "attribution": "Escaping the Prison · PuffballsUnited",
+      "copyright": "Jogo e personagens pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://ubghyper.github.io/GameList.github.io/Escaping-The-Prison/escapingtheprison.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "ruffleRuntime": "legacy",
+      "runtimeFiles": [
+        "flash-player-legacy.html",
+        "runtime/ruffle-legacy/ruffle.js",
+        "runtime/ruffle-legacy/core.ruffle.2e8ab831ebc1911d0d64.js",
+        "runtime/ruffle-legacy/core.ruffle.c4f85407b4577b3bb6f3.js",
+        "runtime/ruffle-legacy/65332a011d3aa09ca820.wasm",
+        "runtime/ruffle-legacy/9a523cf54dd0ca4780c9.wasm",
+        "runtime/ruffle-legacy/LICENSE_APACHE",
+        "runtime/ruffle-legacy/LICENSE_MIT"
+      ],
+      "size": 9799626,
+      "sha256": "42504141d897498c5f4e785a44b66f9d918b07278f14a924c8c93808f602b856",
+      "files": [
+        {
+          "path": "library/flash-archive/henry-stickmin-escaping-the-prison.swf",
+          "size": 9799626,
+          "sha256": "42504141d897498c5f4e785a44b66f9d918b07278f14a924c8c93808f602b856"
+        }
+      ]
+    },
+    {
+      "id": "henry-stickmin-stealing-the-diamond",
+      "name": "Stealing the Diamond",
+      "description": "Invada o museu e escolha entre planos discretos, agressivos e completamente absurdos.",
+      "category": "Aventura",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nas escolhas da história; algumas cenas exigem reação rápida.",
+      "entry": "library/flash-archive/henry-stickmin-stealing-the-diamond.swf",
+      "cover": "covers/henry-stickmin-stealing-the-diamond.jpg",
+      "attribution": "Stealing the Diamond · PuffballsUnited",
+      "copyright": "Jogo e personagens pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://gitlab.com/Games-From-Flash/swf/-/blob/main/Henry%20Stickmin%20-%20Stealing%20the%20Diamond.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 14589227,
+      "sha256": "5352d5302dec2049cf29920a7929c32a921e492c8fbec12d357be18de2bd9b8f",
+      "files": [
+        {
+          "path": "library/flash-archive/henry-stickmin-stealing-the-diamond.swf",
+          "size": 14589227,
+          "sha256": "5352d5302dec2049cf29920a7929c32a921e492c8fbec12d357be18de2bd9b8f"
+        }
+      ]
+    },
+    {
+      "id": "henry-stickmin-infiltrating-the-airship",
+      "name": "Infiltrating the Airship",
+      "description": "Infiltre a aeronave do Toppat Clan e descubra vários caminhos, finais e falhas.",
+      "category": "Aventura",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nas escolhas e nos eventos rápidos exibidos durante a missão.",
+      "entry": "library/flash-archive/henry-stickmin-infiltrating-the-airship.swf",
+      "cover": "covers/henry-stickmin-infiltrating-the-airship.jpg",
+      "attribution": "Infiltrating the Airship · PuffballsUnited",
+      "copyright": "Jogo e personagens pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://gitlab.com/Games-From-Flash/swf/-/blob/main/Henry%20Stickmin%20-%20Infiltrating%20the%20Airship.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "ruffleRuntime": "legacy",
+      "runtimeFiles": [
+        "flash-player-legacy.html",
+        "runtime/ruffle-legacy/ruffle.js",
+        "runtime/ruffle-legacy/core.ruffle.2e8ab831ebc1911d0d64.js",
+        "runtime/ruffle-legacy/core.ruffle.c4f85407b4577b3bb6f3.js",
+        "runtime/ruffle-legacy/65332a011d3aa09ca820.wasm",
+        "runtime/ruffle-legacy/9a523cf54dd0ca4780c9.wasm",
+        "runtime/ruffle-legacy/LICENSE_APACHE",
+        "runtime/ruffle-legacy/LICENSE_MIT"
+      ],
+      "size": 29777969,
+      "sha256": "54bd68aebdad6ee676de59eca1aba68176cdf35b8791dc48a187d9c8f2a947f2",
+      "files": [
+        {
+          "path": "library/flash-archive/henry-stickmin-infiltrating-the-airship.swf",
+          "size": 29777969,
+          "sha256": "54bd68aebdad6ee676de59eca1aba68176cdf35b8791dc48a187d9c8f2a947f2"
+        }
+      ]
+    },
+    {
+      "id": "henry-stickmin-fleeing-the-complex",
+      "name": "Fleeing the Complex",
+      "description": "Escape de uma prisão de segurança máxima escolhendo aliados, rotas e planos improváveis.",
+      "category": "Aventura",
+      "type": "flash",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "mouse"
+      ],
+      "instructions": "Toque ou clique nas opções; fique atento aos eventos de reação rápida.",
+      "entry": "library/flash-archive/henry-stickmin-fleeing-the-complex.swf",
+      "cover": "covers/henry-stickmin-fleeing-the-complex.jpg",
+      "attribution": "Fleeing the Complex · PuffballsUnited",
+      "copyright": "Jogo e personagens pertencem aos respectivos criadores.",
+      "license": "Não informada pelo arquivo de preservação",
+      "source": "https://gitlab.com/Games-From-Flash/swf/-/blob/main/Henry%20Stickmin%20-%20Fleeing%20the%20Complex.swf",
+      "sourceLabel": "Abrir arquivo de preservação",
+      "runtime": "ruffle",
+      "size": 34512019,
+      "sha256": "d19d51294b6cbae01aaffa7e5ae40907b1dad3ccfb1a63c169b6ce37bd0caa2c",
+      "files": [
+        {
+          "path": "library/flash-archive/henry-stickmin-fleeing-the-complex.swf",
+          "size": 34512019,
+          "sha256": "d19d51294b6cbae01aaffa7e5ae40907b1dad3ccfb1a63c169b6ce37bd0caa2c"
+        }
+      ]
+    },
+    {
       "id": "age-of-war",
       "name": "Age of War",
       "description": "Defenda sua base e evolua das cavernas até uma era futurista.",
