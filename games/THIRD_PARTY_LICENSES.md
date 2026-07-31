@@ -40,7 +40,6 @@ Imported from commit: `c840ab5be6cf5a9ce4dcc6f072470b02111eca79`
 Included SWF files:
 
 - Age of War
-- Bad Ice-Cream 3
 - Bloons
 - Bloxorz
 - Duck Life

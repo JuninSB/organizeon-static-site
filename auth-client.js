@@ -5,6 +5,31 @@ const proxyServerStorageKey = "organizeon-proxy-server";
 const wispBandwidthStorageKey = "organizeon-wisp-bandwidth-limit";
 const browserIdentityStorageKey = "organizeon-browser-identity";
 const gameCacheName = "organizeon-games-v1";
+const gameControlSettingsStorageKey = "organizeon-game-controls-v1";
+const virtualGameKeyDefinitions = Object.freeze([
+  Object.freeze({ label: "W", code: "KeyW", keyCode: 87, direction: "up" }),
+  Object.freeze({ label: "A", code: "KeyA", keyCode: 65, direction: "left" }),
+  Object.freeze({ label: "S", code: "KeyS", keyCode: 83, direction: "down" }),
+  Object.freeze({ label: "D", code: "KeyD", keyCode: 68, direction: "right" }),
+  Object.freeze({ label: "↑", code: "ArrowUp", keyCode: 38, key: "ArrowUp", direction: "up" }),
+  Object.freeze({ label: "←", code: "ArrowLeft", keyCode: 37, key: "ArrowLeft", direction: "left" }),
+  Object.freeze({ label: "↓", code: "ArrowDown", keyCode: 40, key: "ArrowDown", direction: "down" }),
+  Object.freeze({ label: "→", code: "ArrowRight", keyCode: 39, key: "ArrowRight", direction: "right" }),
+  Object.freeze({ label: "E", code: "KeyE", keyCode: 69 }),
+  Object.freeze({ label: "F", code: "KeyF", keyCode: 70 }),
+  Object.freeze({ label: "Q", code: "KeyQ", keyCode: 81 }),
+  Object.freeze({ label: "R", code: "KeyR", keyCode: 82 }),
+  Object.freeze({ label: "J", code: "KeyJ", keyCode: 74 }),
+  Object.freeze({ label: "K", code: "KeyK", keyCode: 75 }),
+  Object.freeze({ label: "X", code: "KeyX", keyCode: 88 }),
+  Object.freeze({ label: "C", code: "KeyC", keyCode: 67 }),
+  Object.freeze({ label: "Shift", code: "ShiftLeft", keyCode: 16, key: "Shift" }),
+  Object.freeze({ label: "Ctrl", code: "ControlLeft", keyCode: 17, key: "Control" }),
+  Object.freeze({ label: "Alt", code: "AltLeft", keyCode: 18, key: "Alt" }),
+  Object.freeze({ label: "Enter", code: "Enter", keyCode: 13, key: "Enter" }),
+  Object.freeze({ label: "Tab", code: "Tab", keyCode: 9, key: "Tab" }),
+  Object.freeze({ label: "Espaço", code: "Space", keyCode: 32, key: " ", wide: true }),
+]);
 const browserIdentityOptions = Object.freeze([
   Object.freeze({
     id: "edge",
@@ -923,12 +948,14 @@ async function showGameCatalog() {
         display: block; width: 100%; height: 0; min-width: 0; min-height: 0;
         flex: 1 1 0; border: 0; background: #050807;
       }
-      #organizeon-game-catalog .controls-toggle {
-        margin-left: auto; min-height: 40px; padding: 0 12px;
+      #organizeon-game-catalog .controls-toggle,
+      #organizeon-game-catalog .controls-settings {
+        min-height: 40px; padding: 0 12px;
         border: 1px solid rgba(99,228,196,.25); border-radius: 10px;
         color: #78e8cd; background: rgba(99,228,196,.08);
         font-weight: 800; cursor: pointer;
       }
+      #organizeon-game-catalog .controls-toggle { margin-left: auto; }
       #organizeon-game-catalog .player-menu-trigger {
         display: none;
       }
@@ -979,6 +1006,38 @@ async function showGameCatalog() {
         border-radius: 10px; color: #062019; background: #63e4c4;
         font-weight: 850; cursor: pointer;
       }
+      #organizeon-game-catalog .key-settings {
+        width: min(560px,100%); max-height: min(720px,calc(100dvh - 28px));
+        overflow: auto;
+      }
+      #organizeon-game-catalog .key-settings-grid {
+        display: grid; grid-template-columns: repeat(4,minmax(0,1fr));
+        gap: 8px; margin: 15px 0;
+      }
+      #organizeon-game-catalog .key-choice {
+        display: flex; align-items: center; gap: 8px; min-width: 0;
+        min-height: 43px; padding: 8px 10px; border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.1);
+        color: #d9f5ed; background: rgba(255,255,255,.035);
+        user-select: none; -webkit-user-select: none;
+      }
+      #organizeon-game-catalog .key-choice input {
+        width: 18px; height: 18px; accent-color: #63e4c4;
+      }
+      #organizeon-game-catalog .key-settings-actions {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 9px;
+      }
+      #organizeon-game-catalog .key-settings-actions button {
+        min-height: 43px; border-radius: 10px; cursor: pointer;
+        font-weight: 820;
+      }
+      #organizeon-game-catalog .keys-reset {
+        border: 1px solid rgba(255,255,255,.14);
+        color: #b4ccc5; background: rgba(255,255,255,.04);
+      }
+      #organizeon-game-catalog .keys-save {
+        border: 0; color: #062019; background: #63e4c4;
+      }
       @media (max-width: 820px) {
         #organizeon-game-catalog .grid {
           grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px;
@@ -1007,7 +1066,7 @@ async function showGameCatalog() {
           position: absolute; z-index: 4;
           top: max(4px, env(safe-area-inset-top)); left: 6px; right: 6px;
           min-height: 44px; display: grid;
-          grid-template-columns: 40px minmax(0,1fr) 40px 40px;
+          grid-template-columns: 40px minmax(0,1fr) 40px 40px 40px;
           gap: 7px; padding: 4px;
           border: 1px solid rgba(255,255,255,.1); border-radius: 13px;
           background: rgba(5,13,11,.72);
@@ -1034,15 +1093,22 @@ async function showGameCatalog() {
         #organizeon-game-catalog .player-head .controls-toggle {
           grid-column: 3; grid-row: 1;
         }
+        #organizeon-game-catalog .player-head .controls-settings {
+          grid-column: 4; grid-row: 1;
+        }
         #organizeon-game-catalog .player-head .player-back {
           grid-column: 1; grid-row: 1;
         }
-        #organizeon-game-catalog .controls-toggle {
+        #organizeon-game-catalog .controls-toggle,
+        #organizeon-game-catalog .controls-settings {
           width: 38px; min-height: 38px; margin: 0; padding: 0;
           border-radius: 10px; font-size: 0;
         }
         #organizeon-game-catalog .controls-toggle::after {
           content: "⌨"; font-size: 17px;
+        }
+        #organizeon-game-catalog .controls-settings::after {
+          content: "⚙"; font-size: 17px;
         }
         #organizeon-game-catalog .controls-toggle[hidden] {
           display: none;
@@ -1191,6 +1257,9 @@ async function showGameCatalog() {
         #organizeon-game-catalog .grid {
           grid-template-columns: minmax(0,1fr);
         }
+        #organizeon-game-catalog .key-settings-grid {
+          grid-template-columns: repeat(3,minmax(0,1fr));
+        }
       }
     </style>
     <div class="shell">
@@ -1215,6 +1284,7 @@ async function showGameCatalog() {
         <strong></strong>
         <span class="player-help"></span>
         <button class="controls-toggle" type="button" aria-expanded="false">Controles</button>
+        <button class="controls-settings" type="button" aria-label="Configurar teclas">Teclas</button>
       </header>
       <iframe title="Jogo" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
       <div class="controls" aria-label="Controles virtuais"></div>
@@ -1230,6 +1300,7 @@ async function showGameCatalog() {
   const frame = player.querySelector("iframe");
   const controls = player.querySelector(".controls");
   const controlsToggle = player.querySelector(".controls-toggle");
+  const controlsSettings = player.querySelector(".controls-settings");
   const playerMenuTrigger = player.querySelector(".player-menu-trigger");
   const closedMenuGlyph = String.fromCodePoint(0x22ee);
   const openMenuGlyph = String.fromCodePoint(0x00d7);
@@ -1279,6 +1350,13 @@ async function showGameCatalog() {
       playerMenuTrigger.setAttribute("aria-expanded", "false");
     }
   });
+  controlsSettings.addEventListener("click", () => {
+    if (!activeGame) return;
+    player.classList.remove("menu-open");
+    playerMenuTrigger.textContent = closedMenuGlyph;
+    playerMenuTrigger.setAttribute("aria-expanded", "false");
+    showGameControlSettings(activeGame);
+  });
   playerMenuTrigger.addEventListener("click", () => {
     const open = !player.classList.contains("menu-open");
     player.classList.toggle("menu-open", open);
@@ -1300,6 +1378,9 @@ async function showGameCatalog() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     catalog = Array.isArray(payload.games) ? payload.games : [];
+    await pruneRemovedGameCache(catalog).catch((error) => {
+      console.warn("Não foi possível limpar jogos removidos do cache:", error);
+    });
     await renderCatalog();
   } catch (error) {
     grid.innerHTML = "";
@@ -1519,6 +1600,121 @@ async function showGameCatalog() {
     closeButton.focus();
   }
 
+  function readGameControlSettings() {
+    try {
+      const parsed = JSON.parse(
+        localStorage.getItem(gameControlSettingsStorageKey) || "{}",
+      );
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function configuredGameKeys(game) {
+    const saved = readGameControlSettings()[game.id];
+    return Array.isArray(saved) ? saved : (game.keys || []);
+  }
+
+  function definitionIsSelected(definition, selectedKeys) {
+    const selected = new Set(selectedKeys);
+    return selected.has(definition.label) ||
+      selected.has(definition.code) ||
+      selected.has(definition.key);
+  }
+
+  function showGameControlSettings(game) {
+    const backdrop = document.createElement("div");
+    backdrop.className = "dialog-backdrop";
+    backdrop.setAttribute("role", "dialog");
+    backdrop.setAttribute("aria-modal", "true");
+    const dialog = document.createElement("div");
+    dialog.className = "dialog key-settings";
+    const title = document.createElement("h2");
+    title.textContent = `Teclas · ${game.name}`;
+    const description = document.createElement("p");
+    description.textContent =
+      "Ligue somente as teclas usadas pelo jogo. Esta escolha fica salva neste aparelho.";
+    const grid = document.createElement("div");
+    grid.className = "key-settings-grid";
+    const selectedKeys = configuredGameKeys(game);
+    virtualGameKeyDefinitions.forEach((definition) => {
+      const choice = document.createElement("label");
+      choice.className = "key-choice";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = definition.code;
+      checkbox.checked = definitionIsSelected(definition, selectedKeys);
+      const label = document.createElement("span");
+      label.textContent = definition.label;
+      choice.append(checkbox, label);
+      grid.appendChild(choice);
+    });
+    const actions = document.createElement("div");
+    actions.className = "key-settings-actions";
+    const reset = document.createElement("button");
+    reset.className = "keys-reset";
+    reset.type = "button";
+    reset.textContent = "Restaurar padrão";
+    reset.addEventListener("click", () => {
+      grid.querySelectorAll("input").forEach((checkbox) => {
+        const definition = virtualGameKeyDefinitions.find(
+          (item) => item.code === checkbox.value,
+        );
+        checkbox.checked = definitionIsSelected(
+          definition,
+          game.keys || [],
+        );
+      });
+    });
+    const save = document.createElement("button");
+    save.className = "keys-save";
+    save.type = "button";
+    save.textContent = "Salvar";
+    save.addEventListener("click", () => {
+      const settings = readGameControlSettings();
+      settings[game.id] = Array.from(
+        grid.querySelectorAll("input:checked"),
+        (checkbox) => checkbox.value,
+      );
+      localStorage.setItem(
+        gameControlSettingsStorageKey,
+        JSON.stringify(settings),
+      );
+      buildVirtualControls(game);
+      backdrop.remove();
+    });
+    actions.append(reset, save);
+    dialog.append(title, description, grid, actions);
+    backdrop.appendChild(dialog);
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) backdrop.remove();
+    });
+    wrapper.appendChild(backdrop);
+    save.focus();
+  }
+
+  async function pruneRemovedGameCache(games) {
+    if (!("caches" in window)) return;
+    const allowed = new Set(
+      games.flatMap(gameFiles).map((file) => gameFileUrl(file).href),
+    );
+    const libraryPath = assetUrl("games/library/").pathname;
+    const cache = await caches.open(gameCacheName);
+    const requests = await cache.keys();
+    await Promise.all(requests.map((request) => {
+      const requestUrl = new URL(request.url);
+      if (
+        requestUrl.origin === location.origin &&
+        requestUrl.pathname.startsWith(libraryPath) &&
+        !allowed.has(requestUrl.href)
+      ) {
+        return cache.delete(request);
+      }
+      return false;
+    }));
+  }
+
   async function isGameInstalled(game) {
     if (!("caches" in window)) return false;
     const cache = await caches.open(gameCacheName);
@@ -1688,31 +1884,8 @@ async function showGameCatalog() {
 
   function buildVirtualControls(game) {
     controls.innerHTML = "";
-    const required = new Set(game.keys || []);
-    const keyDefinitions = [
-      { label: "W", code: "KeyW", keyCode: 87, direction: "up" },
-      { label: "A", code: "KeyA", keyCode: 65, direction: "left" },
-      { label: "S", code: "KeyS", keyCode: 83, direction: "down" },
-      { label: "D", code: "KeyD", keyCode: 68, direction: "right" },
-      { label: "↑", code: "ArrowUp", keyCode: 38, key: "ArrowUp", direction: "up" },
-      { label: "←", code: "ArrowLeft", keyCode: 37, key: "ArrowLeft", direction: "left" },
-      { label: "↓", code: "ArrowDown", keyCode: 40, key: "ArrowDown", direction: "down" },
-      { label: "→", code: "ArrowRight", keyCode: 39, key: "ArrowRight", direction: "right" },
-      { label: "E", code: "KeyE", keyCode: 69 },
-      { label: "F", code: "KeyF", keyCode: 70 },
-      { label: "Q", code: "KeyQ", keyCode: 81 },
-      { label: "R", code: "KeyR", keyCode: 82 },
-      { label: "J", code: "KeyJ", keyCode: 74 },
-      { label: "K", code: "KeyK", keyCode: 75 },
-      { label: "X", code: "KeyX", keyCode: 88 },
-      { label: "C", code: "KeyC", keyCode: 67 },
-      { label: "Shift", code: "ShiftLeft", keyCode: 16, key: "Shift" },
-      { label: "Ctrl", code: "ControlLeft", keyCode: 17, key: "Control" },
-      { label: "Alt", code: "AltLeft", keyCode: 18, key: "Alt" },
-      { label: "Enter", code: "Enter", keyCode: 13, key: "Enter" },
-      { label: "Tab", code: "Tab", keyCode: 9, key: "Tab" },
-      { label: "Espaço", code: "Space", keyCode: 32, key: " ", wide: true },
-    ];
+    const required = new Set(configuredGameKeys(game));
+    const keyDefinitions = virtualGameKeyDefinitions;
     const isRequired = (definition) =>
       required.has(definition.label) ||
       required.has(definition.code) ||
@@ -1764,7 +1937,14 @@ async function showGameCatalog() {
         definition.direction && definition.code.startsWith("Key")
       );
       const configuredMovement = new Set(game.movementKeys || []);
-      const hasConfiguredMovement = configuredMovement.size > 0;
+      const hasConfiguredMovement = definitions.some((definition) =>
+        definition.direction &&
+        (
+          configuredMovement.has(definition.label) ||
+          configuredMovement.has(definition.code) ||
+          configuredMovement.has(definition.key)
+        )
+      );
       const movementDefinitions = hasConfiguredMovement
         ? definitions.filter((definition) =>
             definition.direction &&

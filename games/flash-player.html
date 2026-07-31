@@ -12,7 +12,8 @@
       #stage { display:grid; place-items:center; min-width:0; min-height:0 }
       ruffle-player {
         display:block; width:100%; height:100%; max-width:100%; max-height:100%;
-        min-width:0; min-height:0; contain:size layout paint
+        min-width:0; min-height:0; contain:size layout paint;
+        user-select:none; -webkit-user-select:none; -webkit-touch-callout:none
       }
       #status { color:#8edfc9; font:600 14px system-ui,sans-serif }
       #status.error { color:#ff9ca8; padding:24px; text-align:center }
@@ -32,7 +33,9 @@
         letterbox: "on",
         salign: playerAlignment,
         forceAlign: compactPlayer,
-        warnOnUnsupportedContent: true
+        warnOnUnsupportedContent: true,
+        contextMenu: "off",
+        menu: false
       };
     </script>
     <script src="./runtime/ruffle/ruffle.js"></script>
@@ -60,7 +63,9 @@
             forceScale: true,
             letterbox: "on",
             salign: playerAlignment,
-            forceAlign: compactPlayer
+            forceAlign: compactPlayer,
+            contextMenu: "off",
+            menu: false
           });
           player.focus();
           installDirectTouchMouse(player);
