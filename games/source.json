@@ -5,7 +5,7 @@
     "description": "Mundo aberto multiplayer: colete madeira e pedra, fabrique ferramentas, construa bases, lute e saqueie inventários derrubados na morte.",
     "category": "Sobrevivência",
     "type": "remote",
-    "remoteUrl": "https://organizeon.com.br/ieudhe88eejje/nomedojogo/",
+    "remoteUrl": "https://organizeon.com.br/ieudhe88eejje/organizeon-survival/",
     "platforms": ["pc", "mobile"],
     "controls": ["touch", "keyboard", "mouse"],
     "instructions": "Escolha um nick. WASD/toque para mover e ação para coletar ou atacar. O mundo e as bases ficam salvos no servidor.",
