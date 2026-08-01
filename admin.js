@@ -109,6 +109,9 @@ document
   .getElementById("terminal-connect")
   .addEventListener("click", connectTerminal);
 document
+  .getElementById("services-refresh")
+  .addEventListener("click", loadServices);
+document
   .getElementById("terminal-disconnect")
   .addEventListener("click", disconnectTerminal);
 document
@@ -180,7 +183,12 @@ function showView(name) {
 
 async function loadServices() {
   const grid = document.getElementById("services-grid");
+  const refresh = document.getElementById("services-refresh");
+  refresh.disabled = true;
+  refresh.textContent = "↻ Consultando…";
   const response = await api("/admin/services");
+  refresh.disabled = false;
+  refresh.textContent = "↻ Atualizar status";
   if (!response.ok) return showToast(await apiError(response));
   const { services = [] } = await response.json();
   if (!services.length) {
@@ -192,19 +200,36 @@ async function loadServices() {
   grid.replaceChildren(...services.map((service) => {
     const card = document.createElement("article");
     card.className = "card service-control";
+    const heading = document.createElement("div");
+    heading.className = "service-heading";
     const title = document.createElement("h3");
     title.textContent = service.label;
+    const status = document.createElement("span");
+    status.className = `service-status ${service.status?.state || "unknown"}`;
+    status.textContent = service.status?.label || "Desconhecido";
+    heading.append(title, status);
     const description = document.createElement("p");
     description.textContent = service.id === "api"
       ? "Reinicia a API e encerra as conexões atuais por alguns segundos."
       : service.id === "relay"
         ? "Controla o relay dedicado do Eaglercraft."
         : "Controla o servidor dedicado do jogo.";
+    const meta = document.createElement("small");
+    meta.className = "service-meta";
+    const statusParts = [];
+    if (service.status?.pid) statusParts.push(`PID ${service.status.pid}`);
+    if (Number.isFinite(service.status?.uptimeSeconds)) {
+      statusParts.push(`ligado há ${formatDuration(service.status.uptimeSeconds)}`);
+    }
+    meta.textContent = statusParts.join(" · ") || "Estado consultado diretamente no servidor";
     const actions = document.createElement("div");
     actions.className = "service-actions";
     for (const action of service.actions) {
       const control = button(serviceActionLabel(action),
         action === "stop" ? "button danger" : "button");
+      control.disabled =
+        (action === "start" && service.status?.state === "running") ||
+        (action === "stop" && service.status?.state === "stopped");
       control.addEventListener("click", async () => {
         if (!window.confirm(
           `${serviceActionLabel(action)} ${service.label}?`,
@@ -218,10 +243,13 @@ async function loadServices() {
         showToast(response.ok
           ? `${service.label}: comando ${serviceActionLabel(action).toLowerCase()} enviado.`
           : await apiError(response));
+        if (response.ok && service.id !== "api") {
+          window.setTimeout(loadServices, 900);
+        }
       });
       actions.append(control);
     }
-    card.append(title, description, actions);
+    card.append(heading, description, meta, actions);
     return card;
   }));
 }

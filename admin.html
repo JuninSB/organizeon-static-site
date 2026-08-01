@@ -214,8 +214,22 @@
         display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px;
       }
       .service-control { padding: 20px; }
-      .service-control h3 { margin: 0 0 7px; }
+      .service-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+      .service-control h3 { margin: 0; }
       .service-control p { min-height: 38px; margin: 0 0 16px; color: var(--muted); }
+      .service-status {
+        display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;
+        padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px;
+        color: var(--muted); background: rgba(255,255,255,.035); font-size: 11px;
+      }
+      .service-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #73807c; }
+      .service-status.running { color: #82f5ca; border-color: rgba(93,240,168,.3); background: rgba(93,240,168,.08); }
+      .service-status.running::before { background: #5df0a8; box-shadow: 0 0 9px rgba(93,240,168,.7); }
+      .service-status.stopped { color: #ff9298; border-color: rgba(255,107,117,.3); background: rgba(255,107,117,.08); }
+      .service-status.stopped::before { background: #ff6b75; }
+      .service-status.paused { color: #ffe08a; border-color: rgba(242,207,102,.3); background: rgba(242,207,102,.08); }
+      .service-status.paused::before { background: #f2cf66; }
+      .service-meta { display: block; min-height: 18px; margin: -8px 0 15px; color: #829992; font-size: 11px; }
       .service-actions { display: flex; flex-wrap: wrap; gap: 8px; }
       .terminal {
         overflow: hidden; min-height: 610px; background: #030807;
@@ -432,7 +446,7 @@
           <button class="active" data-view="overview">◫ <span>Overview</span></button>
           <button data-view="logs" data-permission="admin.dashboard">≡ <span>Logs</span></button>
           <button data-view="users" data-permission="admin.users">♙ <span>Users</span></button>
-          <button data-view="services" id="services-nav" hidden>⏻ <span>Services</span></button>
+          <button data-view="services" id="services-nav" hidden><span aria-hidden="true">⏻</span> <span>Serviços</span></button>
           <button data-view="terminal" data-permission="admin.terminal">⌘ <span>Terminal</span></button>
         </nav>
         <div class="account"><strong id="account-name">—</strong><small id="account-role">—</small></div>
@@ -540,7 +554,8 @@
         </section>
         <section class="view" id="view-services" hidden>
           <div class="section-title">
-            <div><h2>Gerenciamento de serviços</h2><p>Ações permitidas individualmente pelo Ultra Admin ou Owner.</p></div>
+            <div><h2><span aria-hidden="true">⏻</span> Gerenciamento de serviços</h2><p>Ações permitidas individualmente pelo Ultra Admin ou Owner.</p></div>
+            <button class="button" id="services-refresh" type="button">↻ Atualizar status</button>
           </div>
           <div class="services-grid" id="services-grid"></div>
         </section>

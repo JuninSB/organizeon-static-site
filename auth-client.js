@@ -607,11 +607,13 @@ function configureAccountNavigation(account) {
   navigation.querySelector(".account strong").textContent =
     normalized.username;
   navigation.querySelector(".account span").textContent =
-    normalized.role === "admin"
-      ? "Administrador"
-      : isGuest
-        ? "Convidado · somente GitHub"
-        : "Usuário";
+    ({
+      owner: "Owner",
+      ultra_admin: "Ultra Admin",
+      admin: "Administrador",
+      user: "Usuário",
+      guest: "Convidado · somente GitHub",
+    })[normalized.role] || "Usuário";
   const selectedProxy = getSelectedProxyServer();
   const proxyBadge = navigation.querySelector(".proxy-badge");
   if (proxyBadge) {
