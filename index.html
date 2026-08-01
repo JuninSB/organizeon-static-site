@@ -102,6 +102,11 @@
         color: #d8e2dd;
         background: #303a35;
       }
+      #organizeon-download .continue {
+        flex-basis: 100%;
+        color: #d7eee5;
+        background: #25443a;
+      }
       #organizeon-download .reset {
         flex-basis: 100%;
         color: #ffd8d8;
@@ -184,6 +189,9 @@
             <button class="cancel" type="button" disabled>Cancelar</button>
             <button class="confirm" type="button" disabled>
               Verificando…
+            </button>
+            <button class="continue" type="button" disabled>
+              Continuar sem atualizar
             </button>
             <button class="reset" type="button">
               Limpar dados e cache
@@ -279,6 +287,7 @@
         var progressArea = overlay.querySelector(".progress-area");
         var confirmButton = overlay.querySelector(".confirm");
         var cancelButton = overlay.querySelector(".cancel");
+        var continueButton = overlay.querySelector(".continue");
         var resetButton = overlay.querySelector(".reset");
         var progress = overlay.querySelector("progress");
         var status = overlay.querySelector(".status");
@@ -300,7 +309,7 @@
         var versionStorageKey = "organizeon-update-version-v2";
         var manifestStorageKey = "organizeon-update-manifest-v2";
         var fileHashesStorageKey = "organizeon-update-files-v2";
-        var loaderVersion = "2.4.0";
+        var loaderVersion = "2.5.0";
         window.__ORGANIZEON_LOADER_VERSION__ = loaderVersion;
         var latestLoaderVersion = "";
         var indexUpdateRequired = false;
@@ -361,6 +370,7 @@
         });
 
         confirmButton.addEventListener("click", beginDownload);
+        continueButton.addEventListener("click", continueWithoutUpdate);
 
         resetButton.addEventListener("click", function () {
           if (running) return;
@@ -371,6 +381,7 @@
           if (!accepted) return;
           confirmButton.disabled = true;
           cancelButton.disabled = true;
+          continueButton.disabled = true;
           resetButton.disabled = true;
           confirmationTitle.textContent = "Limpando o cliente…";
           confirmationText.textContent =
@@ -410,6 +421,7 @@
         async function prepareUpdate() {
           confirmButton.disabled = true;
           cancelButton.disabled = true;
+          continueButton.disabled = true;
           confirmButton.textContent = "Verificando…";
           cancelButton.textContent = "Cancelar";
           confirmationTitle.textContent = "Procurando atualizações…";
@@ -469,6 +481,7 @@
                   "Continuar temporariamente";
                 confirmButton.disabled = false;
                 cancelButton.disabled = false;
+                continueButton.disabled = false;
                 return;
               }
             }
@@ -560,6 +573,7 @@
               "Baixar " + formatBytes(pendingBytes);
             confirmButton.disabled = false;
             cancelButton.disabled = false;
+            continueButton.disabled = false;
           } catch (error) {
             confirmationTitle.textContent =
               "Não foi possível verificar atualizações";
@@ -570,6 +584,7 @@
             confirmButton.textContent = "Tentar novamente";
             confirmButton.disabled = false;
             cancelButton.disabled = true;
+            continueButton.disabled = false;
             confirmButton.removeEventListener("click", beginDownload);
             confirmButton.addEventListener("click", function retryCheck() {
               confirmButton.removeEventListener("click", retryCheck);
@@ -577,6 +592,55 @@
               prepareUpdate();
             });
           }
+        }
+
+        async function continueWithoutUpdate() {
+          if (running) return;
+          var installedManifest = readManifest();
+          var installedVersion = readStorage(versionStorageKey);
+          if (!hasInstalledBase(installedManifest, installedVersion)) {
+            confirmationTitle.textContent = "Base do cliente ausente";
+            confirmationText.textContent =
+              "Você ainda não tem a base para funcionar, instale pelo menos isso.";
+            confirmButton.textContent = pendingBytes
+              ? "Instalar " + formatBytes(pendingBytes)
+              : "Instalar base";
+            return;
+          }
+
+          latestVersion = installedVersion;
+          pendingManifest = installedManifest;
+          continueButton.disabled = true;
+          confirmButton.disabled = true;
+          cancelButton.disabled = true;
+          await openClient(
+            "Continuando sem atualizar. Algumas funções novas podem não estar disponíveis.",
+          );
+        }
+
+        function hasInstalledBase(manifest, version) {
+          if (
+            !manifest ||
+            !Array.isArray(manifest.files) ||
+            typeof version !== "string" ||
+            manifest.version !== version
+          ) {
+            return false;
+          }
+          var requiredPaths = [
+            "config.js",
+            "auth-client.js",
+            "assets/jdht-e-DdM4s9z4.js",
+            "assets/jdht-s-SOkYHzV0.css",
+          ];
+          var installedPaths = new Set(
+            manifest.files.map(function (file) {
+              return file.path;
+            }),
+          );
+          return requiredPaths.every(function (path) {
+            return installedPaths.has(path);
+          });
         }
 
         async function beginDownload() {
@@ -602,6 +666,7 @@
             return;
           }
           running = true;
+          continueButton.disabled = true;
           confirmation.style.display = "none";
           progressArea.style.display = "block";
           progress.style.display = "";
