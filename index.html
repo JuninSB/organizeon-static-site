@@ -82,6 +82,7 @@
       }
       #organizeon-download .actions {
         display: flex;
+        flex-wrap: wrap;
         gap: 10px;
       }
       #organizeon-download button {
@@ -100,6 +101,11 @@
       #organizeon-download .cancel {
         color: #d8e2dd;
         background: #303a35;
+      }
+      #organizeon-download .reset {
+        flex-basis: 100%;
+        color: #ffd8d8;
+        background: #4a2428;
       }
       #organizeon-download button:disabled {
         cursor: wait;
@@ -178,6 +184,9 @@
             <button class="cancel" type="button" disabled>Cancelar</button>
             <button class="confirm" type="button" disabled>
               Verificando…
+            </button>
+            <button class="reset" type="button">
+              Limpar dados e cache
             </button>
           </div>
         </div>
@@ -270,6 +279,7 @@
         var progressArea = overlay.querySelector(".progress-area");
         var confirmButton = overlay.querySelector(".confirm");
         var cancelButton = overlay.querySelector(".cancel");
+        var resetButton = overlay.querySelector(".reset");
         var progress = overlay.querySelector("progress");
         var status = overlay.querySelector(".status");
         var numbers = overlay.querySelector(".numbers");
@@ -290,7 +300,7 @@
         var versionStorageKey = "organizeon-update-version-v2";
         var manifestStorageKey = "organizeon-update-manifest-v2";
         var fileHashesStorageKey = "organizeon-update-files-v2";
-        var loaderVersion = "2.3.0";
+        var loaderVersion = "2.4.0";
         window.__ORGANIZEON_LOADER_VERSION__ = loaderVersion;
         var latestLoaderVersion = "";
         var indexUpdateRequired = false;
@@ -351,6 +361,22 @@
         });
 
         confirmButton.addEventListener("click", beginDownload);
+
+        resetButton.addEventListener("click", function () {
+          if (running) return;
+          var accepted = window.confirm(
+            "Isso apagará login, configurações, histórico, jogos em cache " +
+              "e todos os arquivos baixados pelo cliente. Continuar?",
+          );
+          if (!accepted) return;
+          confirmButton.disabled = true;
+          cancelButton.disabled = true;
+          resetButton.disabled = true;
+          confirmationTitle.textContent = "Limpando o cliente…";
+          confirmationText.textContent =
+            "Removendo armazenamento, bancos de dados, caches e service workers.";
+          resetOuterClient();
+        });
 
         if (dashboardMode) {
           confirmation.style.display = "none";
@@ -928,7 +954,10 @@
             localStorage.clear();
             sessionStorage.clear();
 
-            if ("databases" in indexedDB) {
+            if (
+              "indexedDB" in window &&
+              "databases" in indexedDB
+            ) {
               var databases = await indexedDB.databases();
               await Promise.all(
                 databases
