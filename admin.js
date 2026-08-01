@@ -209,11 +209,13 @@ async function loadServices() {
     status.textContent = service.status?.label || "Desconhecido";
     heading.append(title, status);
     const description = document.createElement("p");
-    description.textContent = service.id === "api"
-      ? "Reinicia a API e encerra as conexões atuais por alguns segundos."
-      : service.id === "relay"
-        ? "Controla o relay dedicado do Eaglercraft."
-        : "Controla o servidor dedicado do jogo.";
+    description.textContent = ({
+      api: "API, autenticação, dashboard e proxy web.",
+      relay: "Relay dedicado usado pelo Eaglercraft.",
+      tunnel: "Túnel que publica os serviços e domínios pela Cloudflare.",
+      suroi: "Servidor dedicado do Suroi.",
+      survival: "Servidor dedicado do OrganizeOn Survival.",
+    })[service.id] || "Serviço dedicado do projeto.";
     const meta = document.createElement("small");
     meta.className = "service-meta";
     const statusParts = [];
