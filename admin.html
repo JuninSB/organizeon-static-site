@@ -53,6 +53,10 @@
         display: flex; align-items: center; gap: 10px; border: 0; border-radius: 10px;
         color: #bad0ca; background: transparent; text-align: left; font-weight: 650;
       }
+      .nav-icon {
+        width: 19px; height: 19px; flex: 0 0 19px; fill: none;
+        stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+      }
       .nav button:hover, .nav button.active {
         color: var(--green); background: rgba(74, 234, 198, .1);
       }
@@ -446,7 +450,17 @@
           <button class="active" data-view="overview">◫ <span>Overview</span></button>
           <button data-view="logs" data-permission="admin.dashboard">≡ <span>Logs</span></button>
           <button data-view="users" data-permission="admin.users">♙ <span>Users</span></button>
-          <button data-view="services" id="services-nav" hidden><span aria-hidden="true">⏻</span> <span>Serviços</span></button>
+          <button data-view="services" id="services-nav" hidden>
+            <svg class="lucide lucide-server-cog nav-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="m10.852 14.772-.383.923"/><path d="M13.148 14.772a3 3 0 1 0-2.296-5.544l-.383-.923"/>
+              <path d="m13.148 9.228.383-.923"/><path d="m13.52 15.696-.382-.924a3 3 0 1 1-2.296-5.544"/>
+              <path d="m14.772 10.852.923-.383"/><path d="m14.772 13.148.923.383"/>
+              <path d="M4.5 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-.5"/>
+              <path d="M4.5 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5"/>
+              <path d="M6 18h.01"/><path d="M6 6h.01"/><path d="m9.228 10.852-.923-.383"/><path d="m9.228 13.148-.923.383"/>
+            </svg>
+            <span>Serviços</span>
+          </button>
           <button data-view="terminal" data-permission="admin.terminal">⌘ <span>Terminal</span></button>
         </nav>
         <div class="account"><strong id="account-name">—</strong><small id="account-role">—</small></div>
