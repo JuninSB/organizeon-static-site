@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#132b43"/><stop offset="1" stop-color="#061016"/></linearGradient></defs>
+  <rect width="800" height="450" fill="url(#g)"/>
+  <circle cx="650" cy="80" r="190" fill="#ff7300" opacity=".12"/>
+  <circle cx="120" cy="390" r="230" fill="#008cff" opacity=".14"/>
+  <text x="400" y="218" text-anchor="middle" fill="#fff" stroke="#000" stroke-width="5" paint-order="stroke" font-family="system-ui,sans-serif" font-size="116" font-weight="900">SUR<tspan fill="#ff7300">OI</tspan></text>
+  <text x="400" y="285" text-anchor="middle" fill="#45b8ff" font-family="system-ui,sans-serif" font-size="34" font-weight="800" letter-spacing="12">BATTLE ROYALE</text>
+  <text x="400" y="365" text-anchor="middle" fill="#83f2d2" font-family="system-ui,sans-serif" font-size="25" font-weight="700">SERVIDOR ORGANIZEON · BRASIL</text>
+</svg>

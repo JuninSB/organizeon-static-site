@@ -11,6 +11,8 @@ const dashboardMobile =
 const state = {
   account: null,
   permissions: [],
+  grantablePermissions: [],
+  roles: [],
   monitoring: null,
   monitorSocket: null,
   monitorRefreshPending: false,
@@ -146,7 +148,7 @@ async function initialize() {
   document.getElementById("account-name").textContent =
     result.account.username;
   document.getElementById("account-role").textContent =
-    result.account.role === "admin" ? "Administrador" : "Usuário";
+    roleLabel(result.account.role);
 
   document.querySelectorAll("[data-permission]").forEach((button) => {
     button.hidden = !result.account.permissions.includes(
@@ -157,6 +159,9 @@ async function initialize() {
     !result.account.permissions.includes("admin.monitoring");
   document.getElementById("monitor-activate").hidden =
     !result.account.permissions.includes("admin.monitoring");
+  document.getElementById("services-nav").hidden = !result.account.permissions.some(
+    (permission) => permission.startsWith("services."),
+  );
   renderMonitoring(result.monitoring);
 }
 
@@ -168,8 +173,61 @@ function showView(name) {
     button.classList.toggle("active", button.dataset.view === name);
   });
   if (name === "users") loadUsers();
+  if (name === "services") loadServices();
   if (name === "terminal") ensureTerminalOpen();
   if (name === "logs") connectLogs();
+}
+
+async function loadServices() {
+  const grid = document.getElementById("services-grid");
+  const response = await api("/admin/services");
+  if (!response.ok) return showToast(await apiError(response));
+  const { services = [] } = await response.json();
+  if (!services.length) {
+    const empty = document.createElement("p");
+    empty.textContent = "Nenhum serviço foi liberado para esta conta.";
+    grid.replaceChildren(empty);
+    return;
+  }
+  grid.replaceChildren(...services.map((service) => {
+    const card = document.createElement("article");
+    card.className = "card service-control";
+    const title = document.createElement("h3");
+    title.textContent = service.label;
+    const description = document.createElement("p");
+    description.textContent = service.id === "api"
+      ? "Reinicia a API e encerra as conexões atuais por alguns segundos."
+      : service.id === "relay"
+        ? "Controla o relay dedicado do Eaglercraft."
+        : "Controla o servidor dedicado do jogo.";
+    const actions = document.createElement("div");
+    actions.className = "service-actions";
+    for (const action of service.actions) {
+      const control = button(serviceActionLabel(action),
+        action === "stop" ? "button danger" : "button");
+      control.addEventListener("click", async () => {
+        if (!window.confirm(
+          `${serviceActionLabel(action)} ${service.label}?`,
+        )) return;
+        control.disabled = true;
+        const response = await api(
+          `/admin/services/${encodeURIComponent(service.id)}/${action}`,
+          { method: "POST" },
+        );
+        control.disabled = false;
+        showToast(response.ok
+          ? `${service.label}: comando ${serviceActionLabel(action).toLowerCase()} enviado.`
+          : await apiError(response));
+      });
+      actions.append(control);
+    }
+    card.append(title, description, actions);
+    return card;
+  }));
+}
+
+function serviceActionLabel(action) {
+  return ({ start: "Ligar", stop: "Desligar", restart: "Reiniciar" })[action] || action;
 }
 
 async function toggleMonitoring() {
@@ -625,6 +683,8 @@ async function loadUsers() {
   if (!response.ok) return showToast("Não foi possível carregar as contas.");
   const result = await response.json();
   state.permissions = result.permissions;
+  state.grantablePermissions = result.grantablePermissions || result.permissions;
+  state.roles = result.roles || ["user", "admin"];
   renderPermissionChecks();
   renderUsers(result.users);
 }
@@ -644,10 +704,18 @@ function renderUsers(users) {
 
     const roleCell = document.createElement("td");
     const role = document.createElement("select");
-    role.innerHTML =
-      '<option value="user">User</option><option value="admin">Admin</option>';
+    const availableRoles = new Set([...state.roles, user.role]);
+    role.replaceChildren(...[...availableRoles].map((roleName) => {
+      const option = document.createElement("option");
+      option.value = roleName;
+      option.textContent = roleLabel(roleName);
+      return option;
+    }));
     role.value = user.role;
     roleCell.append(role);
+
+    const canEditAccess = canManageAccess(user);
+    role.disabled = !canEditAccess;
 
     const permissionsCell = document.createElement("td");
     const permissions = document.createElement("div");
@@ -658,7 +726,8 @@ function renderUsers(users) {
       input.type = "checkbox";
       input.value = permission;
       input.checked = user.permissions.includes(permission);
-      input.disabled = user.role === "admin";
+      input.disabled =
+        !canEditAccess || !state.grantablePermissions.includes(permission);
       const caption = document.createElement("small");
       caption.textContent = permission;
       label.append(input, caption);
@@ -672,16 +741,20 @@ function renderUsers(users) {
     disabled.type = "checkbox";
     disabled.checked = user.disabled;
     disabled.title = "Conta desativada";
+    disabled.disabled = !canEditAccess;
     statusCell.append(disabled, document.createTextNode(" Desativada"));
 
     const actions = document.createElement("td");
     const save = button("Salvar", "button");
+    const password = button("Senha", "button");
+    const loginCode = button("Código", "button");
     const remove = button("Excluir", "button danger");
-    remove.disabled = user.username === state.account.username;
+    save.disabled = !canEditAccess;
+    remove.disabled = !canEditAccess || user.username === state.account.username;
     role.addEventListener("change", () => {
       permissionInputs.forEach((input) => {
-        input.disabled = role.value === "admin";
-        if (role.value === "admin") input.checked = true;
+        input.disabled =
+          !canEditAccess || !state.grantablePermissions.includes(input.value);
       });
     });
     save.addEventListener("click", async () => {
@@ -705,6 +778,34 @@ function renderUsers(users) {
         showToast(await apiError(response));
       }
     });
+    password.addEventListener("click", async () => {
+      const nextPassword = window.prompt(
+        `Nova senha para ${user.username} (mínimo 8 caracteres):`,
+      );
+      if (nextPassword === null) return;
+      const response = await api(
+        `/admin/users/${encodeURIComponent(user.username)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ password: nextPassword }),
+        },
+      );
+      if (response.ok) {
+        showToast("Senha alterada; os tokens anteriores foram invalidados.");
+        loadUsers();
+      } else {
+        showToast(await apiError(response));
+      }
+    });
+    loginCode.addEventListener("click", async () => {
+      const response = await api(
+        `/admin/users/${encodeURIComponent(user.username)}/login-code`,
+        { method: "POST" },
+      );
+      if (!response.ok) return showToast(await apiError(response));
+      const result = await response.json();
+      showLoginCodeDialog(user.username, result.code, result.expiresAt);
+    });
     remove.addEventListener("click", async () => {
       if (!window.confirm(`Excluir a conta ${user.username}?`)) return;
       const response = await api(
@@ -718,7 +819,15 @@ function renderUsers(users) {
         showToast(await apiError(response));
       }
     });
-    actions.append(save, document.createTextNode(" "), remove);
+    actions.append(
+      save,
+      document.createTextNode(" "),
+      password,
+      document.createTextNode(" "),
+      loginCode,
+      document.createTextNode(" "),
+      remove,
+    );
     row.append(identity, roleCell, permissionsCell, statusCell, actions);
     body.append(row);
   }
@@ -727,7 +836,7 @@ function renderUsers(users) {
 function renderPermissionChecks() {
   const container = document.getElementById("permission-checks");
   container.replaceChildren();
-  for (const permission of state.permissions) {
+  for (const permission of state.grantablePermissions) {
     const label = document.createElement("label");
     const input = document.createElement("input");
     input.type = "checkbox";
@@ -742,7 +851,57 @@ function renderPermissionChecks() {
 function openCreateUser() {
   document.getElementById("user-form").reset();
   renderPermissionChecks();
+  const roleSelect = document.querySelector('#user-form select[name="role"]');
+  roleSelect.replaceChildren(...state.roles.map((roleName) => {
+    const option = document.createElement("option");
+    option.value = roleName;
+    option.textContent = roleLabel(roleName);
+    return option;
+  }));
   document.getElementById("user-dialog").showModal();
+}
+
+function roleLabel(role) {
+  return ({
+    user: "User",
+    admin: "Admin",
+    ultra_admin: "Ultra Admin",
+    owner: "Owner",
+  })[role] || role;
+}
+
+function canManageAccess(user) {
+  const ranks = { user: 0, admin: 1, ultra_admin: 2, owner: 3 };
+  if (!state.account || user.username === state.account.username) return false;
+  if (state.account.role === "owner") return true;
+  return (ranks[state.account.role] || 0) > (ranks[user.role] || 0);
+}
+
+function showLoginCodeDialog(username, code, expiresAt) {
+  const dialog = document.createElement("dialog");
+  dialog.innerHTML = `
+    <div class="modal">
+      <h2>Código de login</h2>
+      <p>Conta <strong></strong> · uso único · válido até <span></span></p>
+      <input readonly aria-label="Código de login" />
+      <div class="modal-actions">
+        <button class="button copy" type="button">Copiar</button>
+        <button class="button primary close" type="button">Fechar</button>
+      </div>
+    </div>`;
+  dialog.querySelector("strong").textContent = username;
+  dialog.querySelector("span").textContent = new Date(expiresAt).toLocaleTimeString("pt-BR");
+  const input = dialog.querySelector("input");
+  input.value = code;
+  dialog.querySelector(".copy").addEventListener("click", async () => {
+    await navigator.clipboard.writeText(code);
+    showToast("Código copiado.");
+  });
+  dialog.querySelector(".close").addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => dialog.remove());
+  document.body.append(dialog);
+  dialog.showModal();
+  input.select();
 }
 
 async function createUser(event) {
@@ -914,7 +1073,13 @@ async function apiError(response) {
     invalid_username: "Nome de usuário inválido.",
     invalid_role: "Tipo de conta inválido.",
     invalid_permissions: "Permissões inválidas.",
-    last_admin: "Não é possível remover o último administrador.",
+    cannot_assign_role: "Você não pode atribuir esse tipo de conta.",
+    cannot_grant_permission: "Você não pode conceder uma dessas permissões.",
+    cannot_manage_higher_role: "Você não pode gerenciar uma conta de nível superior.",
+    cannot_change_peer_access: "Somente um nível superior altera o acesso dessa conta.",
+    cannot_change_own_access: "Você não pode alterar o próprio nível ou permissões.",
+    owner_required: "Somente o Owner pode alterar o acesso de Ultra Admins.",
+    last_owner: "Não é possível remover o último Owner ativo.",
     cannot_delete_current_user: "Você não pode excluir a própria conta.",
     forbidden: "Permissão insuficiente.",
   };

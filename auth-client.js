@@ -1493,6 +1493,12 @@ async function showGameCatalog() {
           action.textContent = "Baixar HTML";
           return;
         }
+        if (game.type === "remote") {
+          const action = card.querySelector(".action");
+          action.disabled = false;
+          action.textContent = "Jogar online";
+          return;
+        }
         setCardInstalled(
           card,
           await isGameInstalled(game),
@@ -1523,6 +1529,8 @@ async function showGameCatalog() {
       ? "Flash · Ruffle"
       : game.type === "external-download"
         ? "HTML offline · GitHub"
+        : game.type === "remote"
+          ? "Multiplayer online"
         : "HTML5";
     badges.appendChild(typeBadge);
     (game.platforms || ["pc"]).forEach((platform) => {
@@ -1553,6 +1561,8 @@ async function showGameCatalog() {
       ? `${formatGameBytes(game.size)} + Ruffle`
       : game.type === "external-download"
         ? `HTML ${formatGameBytes(game.externalDownload.outputSize)}`
+        : game.type === "remote"
+          ? "Servidor BR"
         : formatGameBytes(game.size);
     if (game.type === "flash") {
       size.title = "O Ruffle baixa cerca de 15 MB apenas no primeiro uso e fica em cache.";
@@ -1567,6 +1577,8 @@ async function showGameCatalog() {
       ? `${game.attribution || "OrganizeOn"} · Ruffle ~15 MB no 1º uso`
       : game.type === "external-download"
         ? `${game.attribution || "Download externo"} · não usa o relay`
+        : game.type === "remote"
+          ? `${game.attribution || "Servidor OrganizeOn"} · multiplayer dedicado`
         : game.attribution || "OrganizeOn";
     const statistics = document.createElement("div");
     statistics.className = "game-stats";
@@ -1581,6 +1593,10 @@ async function showGameCatalog() {
     action.addEventListener("click", async () => {
       if (game.type === "external-download") {
         await downloadExternalGame(game, card);
+        return;
+      }
+      if (game.type === "remote") {
+        await launchRemoteGame(game);
         return;
       }
       if (card.classList.contains("installed")) {
@@ -2091,6 +2107,34 @@ async function showGameCatalog() {
       playerUrl = URL.createObjectURL(await response.blob());
       frame.src = playerUrl;
     }
+    wrapper.classList.add("playing");
+    reportGameEvent(game, "play");
+  }
+
+  async function launchRemoteGame(game) {
+    let url = new URL(game.remoteUrl);
+    if (!guestMode) {
+      const themeId = document.documentElement.getAttribute("data-theme") || "maple";
+      const response = await apiRequest("/games/survival/session", {
+        method: "POST",
+        body: JSON.stringify({ themeId }),
+      });
+      if (!response.ok) {
+        showToast("Não foi possível autorizar a sessão do Survival.");
+        return;
+      }
+      const session = await response.json();
+      url = new URL(session.url || game.remoteUrl);
+      url.searchParams.set("organizeonToken", session.token);
+    }
+    player.querySelector("strong").textContent = game.name;
+    player.querySelector(".player-help").textContent =
+      game.instructions || "Escolha um nick e entre na partida.";
+    frame.title = game.name;
+    frame.src = url.href;
+    activeGame = game;
+    player.classList.remove("menu-open");
+    buildVirtualControls(game);
     wrapper.classList.add("playing");
     reportGameEvent(game, "play");
   }
@@ -3247,6 +3291,16 @@ function showLogin(message = "") {
         margin-top: 10px; color: #d8eee7;
         border: 1px solid #40534c; background: #18211e;
       }
+      #organizeon-login .code-toggle {
+        margin-top: 10px; color: #9ee8d0;
+        border: 1px solid #355b4e; background: transparent;
+      }
+      #organizeon-login .code-fields[hidden],
+      #organizeon-login .password-fields[hidden] { display: none; }
+      #organizeon-login .code-input {
+        text-transform: uppercase; letter-spacing: .28em;
+        text-align: center; font-size: 19px; font-weight: 800;
+      }
       #organizeon-login .guest:hover { border-color: #76d6a8; }
       #organizeon-login .guest-note {
         margin: 9px 0 0; color: #82938d; text-align: center; font-size: 12px;
@@ -3259,12 +3313,20 @@ function showLogin(message = "") {
     <form autocomplete="on">
       <h1>Acesso privado</h1>
       <p>A sessão permanece ativa por até 14 dias neste dispositivo.</p>
-      <label for="organizeon-username">Usuário</label>
-      <input id="organizeon-username" name="username" autocomplete="username" required>
-      <label for="organizeon-password">Senha</label>
-      <input id="organizeon-password" name="password" type="password"
-             autocomplete="current-password" required>
+      <div class="password-fields">
+        <label for="organizeon-username">Usuário</label>
+        <input id="organizeon-username" name="username" autocomplete="username" required>
+        <label for="organizeon-password">Senha</label>
+        <input id="organizeon-password" name="password" type="password"
+               autocomplete="current-password" required>
+      </div>
+      <div class="code-fields" hidden>
+        <label for="organizeon-code">Código de login</label>
+        <input class="code-input" id="organizeon-code" name="loginCode"
+               maxlength="6" pattern="[A-Za-z0-9]{6}" autocomplete="one-time-code">
+      </div>
       <button type="submit">Entrar</button>
+      <button class="code-toggle" type="button">Usar código de login</button>
       <button class="guest" type="button">Continuar como convidado</button>
       <p class="guest-note">Sem API/relay privado · jogos e WISP público disponíveis</p>
       <div class="message" role="status" aria-live="polite"></div>
@@ -3277,6 +3339,22 @@ function showLogin(message = "") {
   const form = wrapper.querySelector("form");
   const button = wrapper.querySelector('button[type="submit"]');
   const guestButton = wrapper.querySelector(".guest");
+  const codeToggle = wrapper.querySelector(".code-toggle");
+  const passwordFields = wrapper.querySelector(".password-fields");
+  const codeFields = wrapper.querySelector(".code-fields");
+  let loginWithCode = false;
+  codeToggle.addEventListener("click", () => {
+    loginWithCode = !loginWithCode;
+    passwordFields.hidden = loginWithCode;
+    codeFields.hidden = !loginWithCode;
+    form.elements.username.required = !loginWithCode;
+    form.elements.password.required = !loginWithCode;
+    form.elements.loginCode.required = loginWithCode;
+    codeToggle.textContent = loginWithCode
+      ? "Usar usuário e senha"
+      : "Usar código de login";
+    (loginWithCode ? form.elements.loginCode : form.elements.username).focus();
+  });
   guestButton.addEventListener("click", async () => {
     button.disabled = true;
     guestButton.disabled = true;
@@ -3297,10 +3375,12 @@ function showLogin(message = "") {
     try {
       const response = await apiRequest("/auth/login", {
         method: "POST",
-        body: JSON.stringify({
-          username: form.elements.username.value,
-          password: form.elements.password.value,
-        }),
+        body: JSON.stringify(loginWithCode
+          ? { loginCode: form.elements.loginCode.value }
+          : {
+              username: form.elements.username.value,
+              password: form.elements.password.value,
+            }),
       });
       const result = await response.json().catch(() => ({}));
 
@@ -3308,7 +3388,11 @@ function showLogin(message = "") {
         if (response.status === 429) {
           throw new Error("Muitas tentativas. Aguarde 15 minutos.");
         }
-        throw new Error("Usuário ou senha inválidos.");
+        throw new Error(
+          loginWithCode
+            ? "Código inválido, expirado ou já utilizado."
+            : "Usuário ou senha inválidos.",
+        );
       }
 
       localStorage.setItem(tokenStorageKey, result.token);

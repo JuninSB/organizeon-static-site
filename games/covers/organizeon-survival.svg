@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+  <title id="title">OrganizeOn Survival</title>
+  <desc id="desc">Uma base de madeira entre árvores e pedras</desc>
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#153f38"/><stop offset="1" stop-color="#79b96a"/></linearGradient>
+    <linearGradient id="glow"><stop stop-color="#6af2bb"/><stop offset="1" stop-color="#26a878"/></linearGradient>
+  </defs>
+  <rect width="640" height="360" rx="28" fill="url(#sky)"/>
+  <circle cx="505" cy="74" r="40" fill="#ffe39a" opacity=".9"/>
+  <path d="M0 252 130 174l91 62 111-102 129 101 82-64 97 68v121H0z" fill="#174d35"/>
+  <g fill="#123f2b"><circle cx="92" cy="196" r="54"/><circle cx="164" cy="184" r="45"/><circle cx="554" cy="187" r="58"/></g>
+  <g fill="#79502f" stroke="#b57b45" stroke-width="7"><path d="M248 242h156v88H248z"/><path d="m232 244 95-73 94 73z"/></g>
+  <path d="M310 268h36v62h-36z" fill="#1b2823"/>
+  <g fill="#a7b5b5"><path d="m67 303 28-57 43 18 8 46z"/><path d="m493 313 24-48 52 9 13 39z"/></g>
+  <rect x="24" y="22" width="388" height="62" rx="18" fill="#071511c9"/>
+  <text x="48" y="65" fill="url(#glow)" font-family="system-ui,sans-serif" font-size="35" font-weight="900">ORGANIZEON SURVIVAL</text>
+  <text x="49" y="104" fill="#e9fff7" font-family="system-ui,sans-serif" font-size="16" font-weight="700">COLETE · CONSTRUA · SOBREVIVA</text>
+</svg>

@@ -2,6 +2,33 @@
   "version": 1,
   "games": [
     {
+      "id": "organizeon-survival",
+      "name": "OrganizeOn Survival",
+      "description": "Mundo aberto multiplayer: colete madeira e pedra, fabrique ferramentas, construa bases, lute e saqueie inventários derrubados na morte.",
+      "category": "Sobrevivência",
+      "type": "remote",
+      "remoteUrl": "https://organizeon.com.br/ieudhe88eejje/nomedojogo/",
+      "platforms": [
+        "pc",
+        "mobile"
+      ],
+      "controls": [
+        "touch",
+        "keyboard",
+        "mouse"
+      ],
+      "instructions": "Escolha um nick. WASD/toque para mover e ação para coletar ou atacar. O mundo e as bases ficam salvos no servidor.",
+      "cover": "covers/organizeon-survival.svg",
+      "attribution": "Jogo original OrganizeOn",
+      "copyright": "Copyright das modificações e implementação OrganizeOn.",
+      "license": "Código-fonte do projeto",
+      "source": "https://github.com/JuninSB/organizeon-survival",
+      "sourceLabel": "Código-fonte no GitHub",
+      "size": 0,
+      "sha256": "remote",
+      "files": []
+    },
+    {
       "id": "neon-snake",
       "name": "Neon Snake",
       "description": "Pegue as frutas, cresça e não encoste nas paredes.",
