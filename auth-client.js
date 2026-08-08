@@ -187,29 +187,41 @@ async function startApplication(
       "Conectando ao servidor proxy…",
       "Abrindo WebSocket e realizando handshake autenticado.",
     );
-    try {
-      await connectControlSocket(token);
-      showConnectionStatus(
-        "Servidor proxy conectado",
-        "Handshake concluído. Baixando ativos essenciais…",
-        35,
-      );
-    } catch (error) {
-      console.warn("WebSocket de controle indisponível:", error);
-      showConnectionStatus(
-        "Servidor respondeu, mas o WebSocket falhou",
-        "O cliente continuará e tentará reconectar em segundo plano.",
-      );
-    }
+    // O handshake e o carregamento do aplicativo são independentes. Antes,
+    // um relay lento segurava o primeiro paint por até o timeout do socket.
+    // Inicie os dois ao mesmo tempo e mantenha o socket em segundo plano.
+    const controlPromise = connectControlSocket(token)
+      .then(() => {
+        showConnectionStatus(
+          "Servidor proxy conectado",
+          "Handshake concluído. Carregando ativos essenciais…",
+          35,
+        );
+        return true;
+      })
+      .catch((error) => {
+        console.warn("WebSocket de controle indisponível:", error);
+        showConnectionStatus(
+          "Servidor respondeu, mas o WebSocket falhou",
+          "O cliente continuará e tentará reconectar em segundo plano.",
+        );
+        return false;
+      });
 
+    // Não aguarde o socket aqui: a tela e as páginas podem carregar enquanto
+    // a conexão é estabelecida. A promessa sempre trata o erro acima.
     await import(config.appModule);
     installInternalNavigationGuard();
-    await initializeCloudBackup().catch((error) => {
+    // Backup é opcional e não deve bloquear a navegação inicial.
+    initializeCloudBackup().catch((error) => {
       console.warn("Backup em nuvem indisponível:", error);
     });
+    // O estado do socket pode mudar depois que a tela já está pronta; não
+    // segure a navegação aguardando o timeout do handshake.
+    const controlConnected = controlReady;
     showConnectionStatus(
       "Cliente pronto",
-      controlReady
+      controlConnected
         ? `${proxyServer.name} selecionado e ativos essenciais carregados.`
         : "Ativos carregados; reconectando o proxy em segundo plano.",
       100,

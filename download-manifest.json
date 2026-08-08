@@ -1,7 +1,7 @@
 {
-  "version": "v2-882abce20260808a",
-  "generatedAt": "2026-08-01T01:14:26.189Z",
-  "totalBytes": 11027698,
+  "version": "v2-4f5a8b20260808ab",
+  "generatedAt": "2026-08-08T19:12:00.000Z",
+  "totalBytes": 11028439,
   "files": [
     {
       "path": "404.html",
@@ -335,8 +335,8 @@
     },
     {
       "path": "auth-client.js",
-      "size": 151969,
-      "sha256": "815556f98129ebf4d3e2a460d566a520aee9e55a3ad9c7d167ce0652f852e331"
+      "size": 152710,
+      "sha256": "930eb2da837d8a468a125cf314a78b4e379d509cc0d3184b191b6c058462fc28"
     },
     {
       "path": "config.js",
