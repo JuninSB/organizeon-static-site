@@ -173,6 +173,7 @@ async function startApplication(
         30,
       );
       await import(config.appModule);
+      installInternalNavigationGuard();
       showConnectionStatus(
         "Modo convidado pronto",
         "Jogos usam o GitHub; pesquisas usam somente um relay público externo.",
@@ -202,6 +203,10 @@ async function startApplication(
     }
 
     await import(config.appModule);
+    installInternalNavigationGuard();
+    await initializeCloudBackup().catch((error) => {
+      console.warn("Backup em nuvem indisponível:", error);
+    });
     showConnectionStatus(
       "Cliente pronto",
       controlReady
@@ -592,6 +597,7 @@ function configureAccountNavigation(account) {
       <button class="item main" type="button">⌂ <span>Main</span></button>
       <button class="item games" type="button">◇ <span>Jogos</span></button>
       <button class="item settings" type="button">⚙ <span>Settings</span></button>
+      ${isGuest ? "" : '<button class="item data" type="button">▤ <span>Dados</span></button>'}
       <button class="item proxy-server" type="button">
         ⇄ <span>${isGuest ? "Proxy externo" : "Proxy Server"}</span>
         <small class="badge proxy-badge"></small>
@@ -637,6 +643,10 @@ function configureAccountNavigation(account) {
     navigation.classList.remove("open");
     navigateClientRoute("/settings");
   });
+  navigation.querySelector(".data")?.addEventListener("click", () => {
+    navigation.classList.remove("open");
+    showDataPanel();
+  });
   navigation
     .querySelector(".proxy-server")
     ?.addEventListener("click", () => {
@@ -662,6 +672,8 @@ function configureAccountNavigation(account) {
 }
 
 function navigateClientRoute(route) {
+  const routeUrl = new URL(route, "https://organizeon.invalid/");
+  const routePath = routeUrl.pathname;
   const target = new URL(window.location.href);
   const objectStorageHost =
     target.hostname === "storage.googleapis.com" ||
@@ -671,18 +683,472 @@ function navigateClientRoute(route) {
 
   if (objectStorageHost) {
     target.searchParams.delete("route");
-    if (route !== "/") target.searchParams.set("route", route);
+    if (routePath !== "/") target.searchParams.set("route", routePath);
   } else {
     const base = new URL("./", document.baseURI);
     target.pathname =
-      route === "/"
+      routePath === "/"
         ? base.pathname
-        : `${base.pathname.replace(/\/+$/, "")}${route}`;
+        : `${base.pathname.replace(/\/+$/, "")}${routePath}`;
     target.searchParams.delete("route");
   }
 
+  for (const [key, value] of routeUrl.searchParams) {
+    target.searchParams.set(key, value);
+  }
+  target.hash = routeUrl.hash;
+
   window.history.pushState({}, "", target);
   window.dispatchEvent(new PopStateEvent("popstate"));
+}
+
+function installInternalNavigationGuard() {
+  if (window.__organizeonInternalNavigationInstalled) return;
+  window.__organizeonInternalNavigationInstalled = true;
+  document.addEventListener("click", (event) => {
+    if (event.defaultPrevented || event.button > 0) return;
+    const anchor = event.target.closest?.("a[href]");
+    if (!anchor || anchor.hasAttribute("download")) return;
+    let url;
+    try { url = new URL(anchor.href, document.baseURI); } catch { return; }
+    if (!["http:", "https:"].includes(url.protocol)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    anchor.removeAttribute("target");
+    const canonical = new URL("https://juninsb.github.io/organizeon-static-site/");
+    if (
+      url.origin === canonical.origin &&
+      url.pathname.startsWith(canonical.pathname)
+    ) {
+      const relative = `/${url.pathname.slice(canonical.pathname.length)}`
+        .replace(/\/index\.html$/, "/");
+      navigateClientRoute(`${relative === "//" ? "/" : relative}${url.search}${url.hash}`);
+      return;
+    }
+    if (url.origin === location.origin) {
+      const base = new URL("./", document.baseURI);
+      const relative = url.pathname.startsWith(base.pathname)
+        ? `/${url.pathname.slice(base.pathname.length)}`
+        : url.pathname;
+      navigateClientRoute(`${relative || "/"}${url.search}${url.hash}`);
+      return;
+    }
+    navigateInternalSearch(url.href);
+  }, true);
+}
+
+function navigateInternalSearch(url) {
+  const target = new URL(window.location.href);
+  const encoded = window.btoa(unescape(encodeURIComponent(url)));
+  const objectStorageHost =
+    target.hostname === "storage.googleapis.com" ||
+    target.hostname === "s3.amazonaws.com" ||
+    /\.s3[.-][^.]*\.amazonaws\.com$/i.test(target.hostname) ||
+    /\.storage\.googleapis\.com$/i.test(target.hostname);
+  if (objectStorageHost) {
+    target.searchParams.set("route", "/search");
+  } else {
+    const base = new URL("./", document.baseURI);
+    target.pathname = `${base.pathname.replace(/\/+$/, "")}/search`;
+    target.searchParams.delete("route");
+  }
+  target.searchParams.set("query", encoded);
+  window.history.pushState({}, "", target);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+}
+
+const cloudBackupPreferenceKeys = new Set([
+  "star-theme",
+  proxyServerStorageKey,
+  wispBandwidthStorageKey,
+  browserIdentityStorageKey,
+  gameControlSettingsStorageKey,
+]);
+const cloudBackupExcludedKeys = new Set([
+  tokenStorageKey,
+  guestStorageKey,
+  "organizeon-update-version-v2",
+  "organizeon-update-manifest-v2",
+  "organizeon-update-files-v2",
+  "organizeon-cloud-backup-restored-at",
+]);
+let cloudBackupEnabled = false;
+let cloudBackupTimer = null;
+
+function isGameProgressStorageKey(key) {
+  const value = String(key || "").toLowerCase();
+  return value === "organizeon-tetris-progress" ||
+    value.startsWith("__uv$") ||
+    value.startsWith("ruffle") ||
+    value.includes("@worlds") ||
+    value.includes("eaglercraft");
+}
+
+async function initializeCloudBackup() {
+  if (guestMode) return;
+  const response = await apiRequest("/account/backup", { method: "GET" });
+  if (!response.ok) return;
+  const status = await response.json();
+  cloudBackupEnabled = status.enabled === true;
+  if (cloudBackupEnabled) {
+    const lastRestore = localStorage.getItem("organizeon-cloud-backup-restored-at") || "";
+    if (!lastRestore || String(status.updatedAt || "") > lastRestore) {
+      await restoreCloudBackup({ silent: true });
+      if (status.updatedAt) {
+        localStorage.setItem("organizeon-cloud-backup-restored-at", status.updatedAt);
+      }
+    }
+    scheduleCloudBackup();
+  }
+  if (!window.__organizeonBackupListenersInstalled) {
+    window.__organizeonBackupListenersInstalled = true;
+    window.addEventListener("storage", scheduleCloudBackup);
+    for (const method of ["setItem", "removeItem", "clear"]) {
+      const original = Storage.prototype[method];
+      Storage.prototype[method] = function (...args) {
+        const result = original.apply(this, args);
+        if (this === localStorage && (method === "clear" || !cloudBackupExcludedKeys.has(args[0]))) {
+          scheduleCloudBackup();
+        }
+        return result;
+      };
+    }
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") scheduleCloudBackup(0);
+    });
+  }
+}
+
+function scheduleCloudBackup(delay = 2500) {
+  if (!cloudBackupEnabled || guestMode) return;
+  window.clearTimeout(cloudBackupTimer);
+  cloudBackupTimer = window.setTimeout(() => {
+    saveCloudBackup().catch((error) => console.warn("Falha no backup:", error));
+  }, delay);
+}
+
+async function collectCloudBackup() {
+  const preferences = {};
+  const gameProgress = {};
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (!key || cloudBackupExcludedKeys.has(key)) continue;
+    const target = isGameProgressStorageKey(key)
+      ? gameProgress
+      : cloudBackupPreferenceKeys.has(key) || key.startsWith("organizeon-")
+        ? preferences
+        : gameProgress;
+    target[key] = localStorage.getItem(key);
+  }
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    preferences,
+    gameProgress,
+    indexedDB: await exportIndexedDatabases(),
+    cookies: document.cookie,
+  };
+}
+
+async function saveCloudBackup() {
+  if (!cloudBackupEnabled) throw new Error("cloud_backup_disabled");
+  const snapshot = await collectCloudBackup();
+  const payload = JSON.stringify(snapshot);
+  const response = await apiRequest("/account/backup", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: payload,
+  });
+  if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "backup_failed");
+  const status = await response.json();
+  localStorage.setItem(
+    "organizeon-cloud-backup-restored-at",
+    status.updatedAt || snapshot.savedAt,
+  );
+  return status;
+}
+
+async function restoreCloudBackup({ silent = false } = {}) {
+  const response = await apiRequest("/account/backup/data", { method: "GET" });
+  if (response.status === 404) return false;
+  if (!response.ok) throw new Error("restore_failed");
+  const backup = await response.json();
+  for (const [key, value] of Object.entries(backup.preferences || {})) {
+    if (!cloudBackupExcludedKeys.has(key)) localStorage.setItem(key, value);
+  }
+  for (const [key, value] of Object.entries(backup.gameProgress || {})) {
+    if (!cloudBackupExcludedKeys.has(key)) localStorage.setItem(key, value);
+  }
+  await importIndexedDatabases(backup.indexedDB || []);
+  if (backup.cookies) restoreCookies(backup.cookies);
+  localStorage.setItem(
+    "organizeon-cloud-backup-restored-at",
+    backup.savedAt || new Date().toISOString(),
+  );
+  if (!silent) showConnectionStatus("Backup restaurado", "Tema, preferências e progresso foram recuperados.", 100, 5000);
+  return true;
+}
+
+async function exportIndexedDatabases() {
+  if (!("indexedDB" in window) || typeof indexedDB.databases !== "function") return [];
+  const databases = await indexedDB.databases();
+  const exported = [];
+  for (const descriptor of databases) {
+    if (!descriptor.name) continue;
+    const db = await openIndexedDatabase(descriptor.name);
+    const stores = [];
+    for (const storeName of db.objectStoreNames) {
+      const transaction = db.transaction(storeName, "readonly");
+      const store = transaction.objectStore(storeName);
+      const [keys, values] = await Promise.all([
+        idbRequest(store.getAllKeys()),
+        idbRequest(store.getAll()),
+      ]);
+      stores.push({
+        name: storeName,
+        keyPath: store.keyPath,
+        autoIncrement: store.autoIncrement,
+        records: await Promise.all(values.map(async (value, index) => ({
+          key: await toPortable(keys[index]),
+          value: await toPortable(value),
+        }))),
+      });
+    }
+    exported.push({ name: descriptor.name, version: descriptor.version || db.version, stores });
+    db.close();
+  }
+  return exported;
+}
+
+async function importIndexedDatabases(databases) {
+  for (const backup of databases) {
+    if (!backup?.name || !Array.isArray(backup.stores)) continue;
+    const existing = await openIndexedDatabase(backup.name).catch(() => null);
+    const nextVersion = Math.max(Number(backup.version) || 1, existing?.version || 0) + 1;
+    existing?.close();
+    const db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open(backup.name, nextVersion);
+      request.onupgradeneeded = () => {
+        for (const definition of backup.stores) {
+          if (!request.result.objectStoreNames.contains(definition.name)) {
+            const options = { autoIncrement: definition.autoIncrement === true };
+            if (definition.keyPath != null) options.keyPath = definition.keyPath;
+            request.result.createObjectStore(definition.name, options);
+          }
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    for (const definition of backup.stores) {
+      if (!db.objectStoreNames.contains(definition.name)) continue;
+      const transaction = db.transaction(definition.name, "readwrite");
+      const store = transaction.objectStore(definition.name);
+      store.clear();
+      for (const record of definition.records || []) {
+        const value = fromPortable(record.value);
+        const key = fromPortable(record.key);
+        if (store.keyPath == null) store.put(value, key); else store.put(value);
+      }
+      await idbTransaction(transaction);
+    }
+    db.close();
+  }
+}
+
+function openIndexedDatabase(name) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(name);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function idbRequest(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function idbTransaction(transaction) {
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error);
+  });
+}
+
+async function toPortable(value) {
+  if (value instanceof Blob) return {
+    __organizeonType: "Blob",
+    type: value.type,
+    data: arrayBufferToBase64(await value.arrayBuffer()),
+  };
+  if (value instanceof ArrayBuffer) return {
+    __organizeonType: "ArrayBuffer",
+    data: arrayBufferToBase64(value),
+  };
+  if (ArrayBuffer.isView(value)) return {
+    __organizeonType: value.constructor.name,
+    data: arrayBufferToBase64(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)),
+  };
+  if (Array.isArray(value)) return Promise.all(value.map(toPortable));
+  if (value && typeof value === "object") {
+    const output = {};
+    for (const [key, item] of Object.entries(value)) output[key] = await toPortable(item);
+    return output;
+  }
+  return value;
+}
+
+function fromPortable(value) {
+  if (!value || typeof value !== "object") return value;
+  if (value.__organizeonType === "Blob") return new Blob([base64ToArrayBuffer(value.data)], { type: value.type });
+  if (value.__organizeonType === "ArrayBuffer") return base64ToArrayBuffer(value.data);
+  if (value.__organizeonType && globalThis[value.__organizeonType]?.BYTES_PER_ELEMENT) {
+    return new globalThis[value.__organizeonType](base64ToArrayBuffer(value.data));
+  }
+  if (Array.isArray(value)) return value.map(fromPortable);
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, fromPortable(item)]));
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  }
+  return btoa(binary);
+}
+
+function base64ToArrayBuffer(value) {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return bytes.buffer;
+}
+
+function restoreCookies(serialized) {
+  serialized.split(";").forEach((part) => {
+    const separator = part.indexOf("=");
+    if (separator < 1) return;
+    document.cookie = `${part.slice(0, separator).trim()}=${part.slice(separator + 1).trim()};path=/;SameSite=Lax`;
+  });
+}
+
+async function clearAllGameProgress() {
+  for (const key of Object.keys(localStorage)) {
+    if (isGameProgressStorageKey(key) ||
+      !cloudBackupExcludedKeys.has(key) && !cloudBackupPreferenceKeys.has(key) && !key.startsWith("organizeon-")) {
+      localStorage.removeItem(key);
+    }
+  }
+  if (typeof indexedDB.databases === "function") {
+    const databases = await indexedDB.databases();
+    await Promise.all(databases.filter((db) => db.name).map((db) => new Promise((resolve) => {
+      const request = indexedDB.deleteDatabase(db.name);
+      request.onsuccess = request.onerror = request.onblocked = resolve;
+    })));
+  }
+  scheduleCloudBackup(0);
+}
+
+function clearPreferences() {
+  for (const key of Object.keys(localStorage)) {
+    if (!isGameProgressStorageKey(key) &&
+      (cloudBackupPreferenceKeys.has(key) || key.startsWith("organizeon-") && !cloudBackupExcludedKeys.has(key))) {
+      localStorage.removeItem(key);
+    }
+  }
+  scheduleCloudBackup(0);
+}
+
+async function clearGameProgress(gameId) {
+  const needle = String(gameId || "").trim().toLowerCase();
+  if (!needle) return;
+  for (const key of Object.keys(localStorage)) {
+    if (key.toLowerCase().includes(needle)) localStorage.removeItem(key);
+  }
+  if (typeof indexedDB.databases === "function") {
+    const databases = await indexedDB.databases();
+    for (const descriptor of databases.filter((database) => database.name)) {
+      if (descriptor.name.toLowerCase().includes(needle)) {
+        await new Promise((resolve) => {
+          const request = indexedDB.deleteDatabase(descriptor.name);
+          request.onsuccess = request.onerror = request.onblocked = resolve;
+        });
+        continue;
+      }
+      const db = await openIndexedDatabase(descriptor.name).catch(() => null);
+      if (!db) continue;
+      for (const storeName of db.objectStoreNames) {
+        const transaction = db.transaction(storeName, "readwrite");
+        const cursorRequest = transaction.objectStore(storeName).openCursor();
+        cursorRequest.onsuccess = () => {
+          const cursor = cursorRequest.result;
+          if (!cursor) return;
+          let searchable = String(cursor.key).toLowerCase();
+          try { searchable += ` ${JSON.stringify(cursor.value).toLowerCase()}`; } catch {}
+          if (searchable.includes(needle)) cursor.delete();
+          cursor.continue();
+        };
+        await idbTransaction(transaction).catch(() => {});
+      }
+      db.close();
+    }
+  }
+  scheduleCloudBackup(0);
+}
+
+async function showDataPanel() {
+  document.getElementById("organizeon-data-panel")?.remove();
+  const wrapper = document.createElement("section");
+  wrapper.id = "organizeon-data-panel";
+  wrapper.innerHTML = `
+    <style>
+      #organizeon-data-panel{position:fixed;inset:0;z-index:2147483647;overflow:auto;padding:22px;color:#eafff8;background:#07100e;font-family:Inter,system-ui,sans-serif}
+      #organizeon-data-panel *{box-sizing:border-box}#organizeon-data-panel .shell{width:min(720px,100%);margin:auto}#organizeon-data-panel .top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+      #organizeon-data-panel .back,#organizeon-data-panel button{min-height:42px;border:1px solid #315249;border-radius:10px;color:#dffbf3;background:#13231e;cursor:pointer;font-weight:700}
+      #organizeon-data-panel .back{width:44px;font-size:20px}#organizeon-data-panel h1{margin:0}#organizeon-data-panel .card{margin:14px 0;padding:18px;border:1px solid #263c35;border-radius:16px;background:#0d1915}
+      #organizeon-data-panel .row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#organizeon-data-panel .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:14px}
+      #organizeon-data-panel button{padding:0 13px}#organizeon-data-panel button.primary{color:#062019;background:#63e4c4}#organizeon-data-panel button.danger{color:#ffd6da;border-color:#68383d;background:#32181b}
+      #organizeon-data-panel input{min-height:42px;padding:0 11px;border:1px solid #385148;border-radius:10px;color:#fff;background:#09110e}#organizeon-data-panel .status{color:#8eaaa2;font-size:13px}
+      @media(max-width:560px){#organizeon-data-panel{padding:14px}#organizeon-data-panel .actions{grid-template-columns:1fr}}
+    </style>
+    <div class="shell"><header class="top"><button class="back">←</button><div><h1>Dados</h1><div class="status">Conta ${window.organizeonAccount?.username || ""}</div></div></header>
+      <article class="card"><div class="row"><div><strong>Backup na nuvem</strong><div class="status backup-status">Consultando…</div></div><button class="toggle primary">Carregando…</button></div><div class="actions"><button class="save">Salvar agora</button><button class="restore">Restaurar</button></div></article>
+      <article class="card"><strong>Progresso dos jogos</strong><p class="status">Os arquivos dos jogos continuam no navegador. Estas ações apagam somente saves.</p><div class="actions"><button class="danger clear-all">Apagar todos os progressos</button><span class="row"><input class="game-id" placeholder="ID do jogo"><button class="danger clear-one">Apagar jogo</button></span></div></article>
+      <article class="card"><strong>Preferências</strong><p class="status">Tema, proxy, identidade do navegador, teclas e configurações persistentes.</p><button class="danger clear-preferences">Apagar preferências</button></article>
+    </div>`;
+  document.body.appendChild(wrapper);
+  wrapper.querySelector(".back").onclick = () => wrapper.remove();
+  const refreshStatus = async () => {
+    const response = await apiRequest("/account/backup", { method: "GET" });
+    const status = await response.json();
+    cloudBackupEnabled = status.enabled === true;
+    wrapper.querySelector(".backup-status").textContent = `${cloudBackupEnabled ? "ON" : "OFF"} · ${formatCloudBytes(status.size || 0)} / 500 MB`;
+    wrapper.querySelector(".toggle").textContent = cloudBackupEnabled ? "Desativar" : "Ativar";
+  };
+  wrapper.querySelector(".toggle").onclick = async () => {
+    const response = await apiRequest("/account/backup", { method: "PATCH", body: JSON.stringify({ enabled: !cloudBackupEnabled }) });
+    if (!response.ok) return;
+    cloudBackupEnabled = !cloudBackupEnabled;
+    if (cloudBackupEnabled) await saveCloudBackup();
+    await refreshStatus();
+  };
+  wrapper.querySelector(".save").onclick = async () => { await saveCloudBackup(); await refreshStatus(); };
+  wrapper.querySelector(".restore").onclick = () => restoreCloudBackup();
+  wrapper.querySelector(".clear-all").onclick = async () => { if (confirm("Apagar todos os progressos?")) await clearAllGameProgress(); };
+  wrapper.querySelector(".clear-one").onclick = async () => { const value = wrapper.querySelector(".game-id").value; if (value && confirm(`Apagar o progresso de ${value}?`)) await clearGameProgress(value); };
+  wrapper.querySelector(".clear-preferences").onclick = () => { if (confirm("Apagar todas as preferências?")) clearPreferences(); };
+  await refreshStatus();
+}
+
+function formatCloudBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function restartClientAtMain() {
@@ -1607,6 +2073,19 @@ async function showGameCatalog() {
         await installGame(game, card);
       }
     });
+    let relayButton = null;
+    if (game.relayUrl) {
+      relayButton = document.createElement("button");
+      relayButton.className = "credits";
+      relayButton.type = "button";
+      relayButton.textContent = "Copiar relay";
+      relayButton.title = game.relaySupport || "Relay multiplayer";
+      relayButton.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(game.relayUrl);
+        relayButton.textContent = "Relay copiado ✓";
+        window.setTimeout(() => { relayButton.textContent = "Copiar relay"; }, 1800);
+      });
+    }
     const remove = document.createElement("button");
     remove.className = "remove";
     remove.type = "button";
@@ -1632,6 +2111,7 @@ async function showGameCatalog() {
     progress.className = "progress";
     progress.innerHTML = "<span></span>";
     actions.append(action);
+    if (relayButton) actions.append(relayButton);
     if (creditsButton) actions.append(creditsButton);
     actions.append(remove);
     copy.append(
@@ -3293,6 +3773,10 @@ function showLogin(message = "") {
         margin-top: 10px; color: #d8eee7;
         border: 1px solid #40534c; background: #18211e;
       }
+      #organizeon-login .register {
+        margin-top: 10px; color: #9ee8d0;
+        border: 1px solid #355b4e; background: transparent;
+      }
       #organizeon-login .code-toggle {
         margin-top: 10px; color: #9ee8d0;
         border: 1px solid #355b4e; background: transparent;
@@ -3328,6 +3812,7 @@ function showLogin(message = "") {
                maxlength="6" pattern="[A-Za-z0-9]{6}" autocomplete="one-time-code">
       </div>
       <button type="submit">Entrar</button>
+      <button class="register" type="button">Registrar</button>
       <button class="code-toggle" type="button">Usar código de login</button>
       <button class="guest" type="button">Continuar como convidado</button>
       <p class="guest-note">Sem API/relay privado · jogos e WISP público disponíveis</p>
@@ -3341,10 +3826,32 @@ function showLogin(message = "") {
   const form = wrapper.querySelector("form");
   const button = wrapper.querySelector('button[type="submit"]');
   const guestButton = wrapper.querySelector(".guest");
+  const registerButton = wrapper.querySelector(".register");
   const codeToggle = wrapper.querySelector(".code-toggle");
   const passwordFields = wrapper.querySelector(".password-fields");
   const codeFields = wrapper.querySelector(".code-fields");
   let loginWithCode = false;
+  let registrationMode = false;
+  registerButton.addEventListener("click", () => {
+    registrationMode = !registrationMode;
+    loginWithCode = false;
+    passwordFields.hidden = false;
+    codeFields.hidden = true;
+    form.elements.username.required = true;
+    form.elements.password.required = true;
+    form.elements.loginCode.required = false;
+    wrapper.querySelector("h1").textContent = registrationMode
+      ? "Criar conta"
+      : "Acesso privado";
+    button.textContent = registrationMode ? "Criar conta" : "Entrar";
+    registerButton.textContent = registrationMode
+      ? "Já tenho uma conta"
+      : "Registrar";
+    codeToggle.hidden = registrationMode;
+    setMessage(registrationMode
+      ? "A conta começa sem permissões. Um administrador pode liberá-las depois."
+      : "");
+  });
   codeToggle.addEventListener("click", () => {
     loginWithCode = !loginWithCode;
     passwordFields.hidden = loginWithCode;
@@ -3375,15 +3882,23 @@ function showLogin(message = "") {
     );
 
     try {
-      const response = await apiRequest("/auth/login", {
+      const response = await apiRequest(
+        registrationMode ? "/auth/register" : "/auth/login",
+        {
         method: "POST",
-        body: JSON.stringify(loginWithCode
+        body: JSON.stringify(registrationMode
+          ? {
+              username: form.elements.username.value,
+              password: form.elements.password.value,
+            }
+          : loginWithCode
           ? { loginCode: form.elements.loginCode.value }
           : {
               username: form.elements.username.value,
               password: form.elements.password.value,
             }),
-      });
+        },
+      );
       const result = await response.json().catch(() => ({}));
 
       if (!response.ok || !result.token) {
@@ -3391,7 +3906,12 @@ function showLogin(message = "") {
           throw new Error("Muitas tentativas. Aguarde 15 minutos.");
         }
         throw new Error(
-          loginWithCode
+          registrationMode
+            ? ({
+                username_exists: "Esse usuário já existe.",
+                invalid_username: "Use de 3 a 32 letras, números, ponto, hífen ou sublinhado.",
+              })[result.error] || "Não foi possível criar a conta. Use uma senha com pelo menos 8 caracteres."
+            : loginWithCode
             ? "Código inválido, expirado ou já utilizado."
             : "Usuário ou senha inválidos.",
         );
@@ -3410,7 +3930,7 @@ function showLogin(message = "") {
       );
     } finally {
       button.disabled = false;
-      button.textContent = "Entrar";
+      button.textContent = registrationMode ? "Criar conta" : "Entrar";
     }
   });
 }

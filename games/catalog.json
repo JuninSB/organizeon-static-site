@@ -200,14 +200,13 @@
     {
       "id": "classic-tetris",
       "name": "Tetris",
-      "description": "Encaixe as peças, complete linhas e aumente a pontuação.",
+      "description": "Tetris moderno com SRS, wall kicks, lock delay, hold, peça fantasma e randomização 7-bag.",
       "category": "Arcade",
       "type": "html5",
       "platforms": [
         "pc",
         "mobile"
       ],
-      "mobileWarning": true,
       "controls": [
         "touch",
         "keyboard"
@@ -219,20 +218,20 @@
         "ArrowRight",
         "Space"
       ],
-      "instructions": "Setas movem/giram · Espaço derruba a peça.",
+      "instructions": "Setas movem · Z/X giram · Espaço derruba · C/Shift guarda a peça.",
       "entry": "library/classic-tetris.html",
       "cover": "covers/classic-tetris.svg",
-      "attribution": "iampavangandhi/JSGames",
-      "copyright": "Copyright dos autores e colaboradores de iampavangandhi/JSGames",
-      "license": "MIT",
-      "source": "https://github.com/iampavangandhi/JSGames",
-      "size": 8928,
-      "sha256": "452aa53dc08248359812bb781144280dbd4ee76a5c1db3ed7fa7fca5f8c64fee",
+      "attribution": "Implementação OrganizeOn baseada nas regras modernas do Tetris Guideline",
+      "copyright": "OrganizeOn",
+      "license": "Código do projeto",
+      "source": "https://github.com/JuninSB/organizeon-static-site",
+      "size": 9983,
+      "sha256": "fa0092b879b34b1bcff4119a6df93e52c5c7dd408797197d69bc2963d4438894",
       "files": [
         {
           "path": "library/classic-tetris.html",
-          "size": 8928,
-          "sha256": "452aa53dc08248359812bb781144280dbd4ee76a5c1db3ed7fa7fca5f8c64fee"
+          "size": 9983,
+          "sha256": "fa0092b879b34b1bcff4119a6df93e52c5c7dd408797197d69bc2963d4438894"
         }
       ]
     },
@@ -2515,7 +2514,7 @@
     {
       "id": "eaglercraft-1-5-2",
       "name": "Eaglercraft 1.5.2",
-      "description": "Baixe o cliente offline clássico 1.5.2 diretamente de uma revisão fixada no GitHub.",
+      "description": "Cliente offline clássico 1.5.2 com suporte ao relay de LAN Worlds / Shared Worlds do OrganizeOn.",
       "category": "Eaglercraft",
       "type": "external-download",
       "platforms": [
@@ -2528,6 +2527,8 @@
         "mouse"
       ],
       "instructions": "Baixe o HTML e abra o arquivo separadamente no navegador.",
+      "relayUrl": "wss://relay.organizeon.com.br/",
+      "relaySupport": "LAN Worlds / Shared Worlds",
       "cover": "covers/eaglercraft.svg",
       "attribution": "Eaglercraft 1.5.2 · download externo verificado",
       "copyright": "Copyright dos autores e proprietários originais. O OrganizeOn apenas aponta para o arquivo externo.",
@@ -2550,7 +2551,7 @@
     {
       "id": "eaglercraft-1-8-8",
       "name": "EaglercraftX 1.8.8 u53",
-      "description": "Baixe o cliente offline assinado 1.8.8 u53 diretamente de uma revisão fixada no GitHub.",
+      "description": "Cliente offline assinado 1.8.8 u53 com suporte confirmado a Shared Worlds pelo relay do OrganizeOn.",
       "category": "Eaglercraft",
       "type": "external-download",
       "platforms": [
@@ -2563,6 +2564,8 @@
         "mouse"
       ],
       "instructions": "Baixe o HTML e abra o arquivo separadamente no navegador.",
+      "relayUrl": "wss://relay.organizeon.com.br/",
+      "relaySupport": "Shared Worlds",
       "cover": "covers/eaglercraft.svg",
       "attribution": "EaglercraftX 1.8.8 u53 · download externo verificado",
       "copyright": "Copyright dos autores e proprietários originais. O OrganizeOn apenas aponta para o arquivo externo.",
@@ -2585,7 +2588,7 @@
     {
       "id": "eaglercraft-1-12-2",
       "name": "Eaglercraft 1.12.2",
-      "description": "Baixe o HTML offline 1.12.2 diretamente de uma revisão fixada no GitHub.",
+      "description": "Cliente offline 1.12.2. Multiplayer por servidor existe, mas este cliente não anuncia compatibilidade com o relay Shared Worlds de 1.5.2/1.8.8.",
       "category": "Eaglercraft",
       "type": "external-download",
       "platforms": [

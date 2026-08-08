@@ -997,7 +997,13 @@
           dashboardUrl.searchParams.delete("embedded");
           dashboardUrl.searchParams.delete("route");
           dashboardUrl.searchParams.set("dashboard", "1");
-          window.open(dashboardUrl.href, "_blank", "noopener");
+          window.history.pushState({}, "", dashboardUrl.href);
+          dashboardMode = true;
+          if (embeddedClientFrame) {
+            embeddedClientFrame.remove();
+            embeddedClientFrame = null;
+          }
+          if (!dashboardFrame) startDashboardShell();
         }
 
         function openMain() {
