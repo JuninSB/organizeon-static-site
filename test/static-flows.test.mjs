@@ -15,6 +15,12 @@ test("registration, Data controls and cloud backup are present", async () => {
   assert.match(source, /Apagar preferências/);
   assert.match(source, /exportIndexedDatabases/);
   assert.match(source, /restoreCookies/);
+  assert.match(source, /star-settings/);
+  assert.match(source, /isCloudPreferenceStorageKey/);
+  assert.match(source, /organizeonCloudBackup/);
+  const restoreIndex = source.indexOf("await initializeCloudBackup({ timeoutMs: 3500 })");
+  const appImportIndex = source.indexOf("await import(config.appModule)", restoreIndex);
+  assert.ok(restoreIndex >= 0 && appImportIndex > restoreIndex, "cloud preferences restore before app initialization");
 });
 
 test("internal links and dashboard remain inside the client", async () => {
@@ -71,6 +77,8 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(source, /impactLead:100/);
   assert.match(source, /lockedCells/);
   assert.match(source, /colorVariant/);
+  assert.match(source, /highscore-sync/);
+  assert.match(source, /syncHighscoreCloud/);
   assert.match(source, /hold-swap/);
 });
 

@@ -208,14 +208,15 @@ async function startApplication(
         return false;
       });
 
+    // Restaure as preferências antes de montar o app. Caso contrário o React
+    // inicializa com os valores locais e pode sobrescrever o backup restaurado.
+    await initializeCloudBackup({ timeoutMs: 3500 }).catch((error) => {
+      console.warn("Backup em nuvem indisponível:", error);
+    });
     // Não aguarde o socket aqui: a tela e as páginas podem carregar enquanto
     // a conexão é estabelecida. A promessa sempre trata o erro acima.
     await import(config.appModule);
     installInternalNavigationGuard();
-    // Backup é opcional e não deve bloquear a navegação inicial.
-    initializeCloudBackup().catch((error) => {
-      console.warn("Backup em nuvem indisponível:", error);
-    });
     // O estado do socket pode mudar depois que a tela já está pronta; não
     // segure a navegação aguardando o timeout do handshake.
     const controlConnected = controlReady;
@@ -779,7 +780,10 @@ function navigateInternalSearch(url) {
 }
 
 const cloudBackupPreferenceKeys = new Set([
+  "star-settings",
   "star-theme",
+  "quickApps",
+  "quickAppsVersion",
   proxyServerStorageKey,
   wispBandwidthStorageKey,
   browserIdentityStorageKey,
@@ -796,6 +800,14 @@ const cloudBackupExcludedKeys = new Set([
 let cloudBackupEnabled = false;
 let cloudBackupTimer = null;
 
+function isCloudPreferenceStorageKey(key) {
+  const value = String(key || "");
+  return cloudBackupPreferenceKeys.has(value) ||
+    value.startsWith("organizeon-") ||
+    value.startsWith("star-") ||
+    value.startsWith("fern-");
+}
+
 function isGameProgressStorageKey(key) {
   const value = String(key || "").toLowerCase();
   return value === "organizeon-tetris-progress" ||
@@ -805,38 +817,47 @@ function isGameProgressStorageKey(key) {
     value.includes("eaglercraft");
 }
 
-async function initializeCloudBackup() {
+async function initializeCloudBackup({ timeoutMs = 3500 } = {}) {
   if (guestMode) return;
-  const response = await apiRequest("/account/backup", { method: "GET" });
-  if (!response.ok) return;
-  const status = await response.json();
-  cloudBackupEnabled = status.enabled === true;
-  if (cloudBackupEnabled) {
-    const lastRestore = localStorage.getItem("organizeon-cloud-backup-restored-at") || "";
-    if (!lastRestore || String(status.updatedAt || "") > lastRestore) {
-      await restoreCloudBackup({ silent: true });
-      if (status.updatedAt) {
-        localStorage.setItem("organizeon-cloud-backup-restored-at", status.updatedAt);
-      }
-    }
-    scheduleCloudBackup();
-  }
-  if (!window.__organizeonBackupListenersInstalled) {
-    window.__organizeonBackupListenersInstalled = true;
-    window.addEventListener("storage", scheduleCloudBackup);
-    for (const method of ["setItem", "removeItem", "clear"]) {
-      const original = Storage.prototype[method];
-      Storage.prototype[method] = function (...args) {
-        const result = original.apply(this, args);
-        if (this === localStorage && (method === "clear" || !cloudBackupExcludedKeys.has(args[0]))) {
-          scheduleCloudBackup();
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await apiRequest("/account/backup", { method: "GET", signal: controller.signal });
+    if (!response.ok) return;
+    const status = await response.json();
+    cloudBackupEnabled = status.enabled === true;
+    if (cloudBackupEnabled) {
+      const account = String(window.organizeonAccount?.username || "");
+      let marker = null;
+      try { marker = JSON.parse(localStorage.getItem("organizeon-cloud-backup-restored-at") || "null"); } catch {}
+      const lastRestore = marker?.username === account ? String(marker.updatedAt || "") : "";
+      if (!lastRestore || String(status.updatedAt || "") > lastRestore) {
+        await restoreCloudBackup({ silent: true, signal: controller.signal });
+        if (status.updatedAt) {
+          localStorage.setItem("organizeon-cloud-backup-restored-at", JSON.stringify({ username: account, updatedAt: status.updatedAt }));
         }
-        return result;
-      };
+      }
+      scheduleCloudBackup();
     }
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") scheduleCloudBackup(0);
-    });
+    if (!window.__organizeonBackupListenersInstalled) {
+      window.__organizeonBackupListenersInstalled = true;
+      window.addEventListener("storage", scheduleCloudBackup);
+      for (const method of ["setItem", "removeItem", "clear"]) {
+        const original = Storage.prototype[method];
+        Storage.prototype[method] = function (...args) {
+          const result = original.apply(this, args);
+          if (this === localStorage && (method === "clear" || !cloudBackupExcludedKeys.has(args[0]))) {
+            scheduleCloudBackup();
+          }
+          return result;
+        };
+      }
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") scheduleCloudBackup(0);
+      });
+    }
+  } finally {
+    window.clearTimeout(timeout);
   }
 }
 
@@ -854,11 +875,7 @@ async function collectCloudBackup() {
   for (let index = 0; index < localStorage.length; index += 1) {
     const key = localStorage.key(index);
     if (!key || cloudBackupExcludedKeys.has(key)) continue;
-    const target = isGameProgressStorageKey(key)
-      ? gameProgress
-      : cloudBackupPreferenceKeys.has(key) || key.startsWith("organizeon-")
-        ? preferences
-      : gameProgress;
+    const target = isGameProgressStorageKey(key) ? gameProgress : isCloudPreferenceStorageKey(key) ? preferences : gameProgress;
     target[key] = localStorage.getItem(key);
   }
   let indexedDB = [];
@@ -911,8 +928,8 @@ async function flushCloudBackup() {
   if (cloudBackupEnabled) await saveCloudBackup();
 }
 
-async function restoreCloudBackup({ silent = false } = {}) {
-  const response = await apiRequest("/account/backup/data", { method: "GET" });
+async function restoreCloudBackup({ silent = false, signal } = {}) {
+  const response = await apiRequest("/account/backup/data", { method: "GET", signal });
   if (response.status === 404) return false;
   if (!response.ok) throw new Error("restore_failed");
   const backup = await response.json();
@@ -1120,7 +1137,7 @@ async function clearAllGameProgress() {
 function clearPreferences() {
   for (const key of Object.keys(localStorage)) {
     if (!isGameProgressStorageKey(key) &&
-      (cloudBackupPreferenceKeys.has(key) || key.startsWith("organizeon-") && !cloudBackupExcludedKeys.has(key))) {
+      isCloudPreferenceStorageKey(key) && !cloudBackupExcludedKeys.has(key)) {
       localStorage.removeItem(key);
     }
   }
@@ -4099,5 +4116,17 @@ window.organizeonAuth = Object.freeze({
       localStorage.removeItem(guestStorageKey);
       restartClientAtMain();
     }
+  },
+});
+
+// Jogos carregados em iframes no mesmo domínio podem confirmar um salvamento
+// sem duplicar a lógica de autenticação ou expor o token ao jogo.
+window.organizeonCloudBackup = Object.freeze({
+  get enabled() {
+    return cloudBackupEnabled && !guestMode;
+  },
+  async save() {
+    if (!cloudBackupEnabled || guestMode) throw new Error("cloud_backup_disabled");
+    return saveCloudBackup();
   },
 });
