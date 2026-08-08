@@ -25,6 +25,22 @@ test("internal links and dashboard remain inside the client", async () => {
   assert.match(index, /startDashboardShell\(\)/);
 });
 
+test("kernel version and index downloader point to the published index", async () => {
+  const [index, kernelVersion, clientVersion, manifestText] = await Promise.all([
+    text("index.html"),
+    text("index-version.txt"),
+    text("version.txt"),
+    text("download-manifest.json"),
+  ]);
+  const embedded = index.match(/var loaderVersion = "([0-9.]+)";/)?.[1];
+  assert.equal(embedded, kernelVersion.trim());
+  assert.match(index, /new URL\("index\.html", baseUrl\)/);
+  assert.match(index, /download\.download = "index\.html"/);
+  assert.doesNotMatch(index, /download\.href = "https:\/\/organizeon\.com\.br\/d1"/);
+  assert.equal(JSON.parse(manifestText).version, clientVersion.trim());
+  assert.match(clientVersion.trim(), /^v[0-9]+-[0-9a-f]{16}$/);
+});
+
 test("only verified shared-world versions advertise this relay", async () => {
   const catalog = JSON.parse(await text("games/catalog.json"));
   const withRelay = catalog.games.filter((game) => game.relayUrl).map((game) => game.id).sort();

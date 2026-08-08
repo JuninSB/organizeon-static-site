@@ -309,7 +309,7 @@
         var versionStorageKey = "organizeon-update-version-v2";
         var manifestStorageKey = "organizeon-update-manifest-v2";
         var fileHashesStorageKey = "organizeon-update-files-v2";
-        var loaderVersion = "2.5.0";
+        var loaderVersion = "2.6.0";
         window.__ORGANIZEON_LOADER_VERSION__ = loaderVersion;
         var latestLoaderVersion = "";
         var indexUpdateRequired = false;
@@ -645,19 +645,53 @@
 
         async function beginDownload() {
           if (indexUpdateRequired) {
-            var download = document.createElement("a");
-            download.href = "https://organizeon.com.br/d1";
-            download.target = "_blank";
-            download.rel = "noopener";
-            document.body.appendChild(download);
-            download.click();
-            download.remove();
-            confirmationTitle.textContent = "Download iniciado";
+            confirmButton.disabled = true;
+            confirmationTitle.textContent = "Baixando kernel novo…";
             confirmationText.textContent =
-              "Substitua o index antigo pelo arquivo novo. Você também pode continuar nesta versão temporariamente.";
-            confirmButton.textContent = "Baixar novamente";
-            cancelButton.textContent =
-              "Continuar nesta versão";
+              "Obtendo e validando o index " + latestLoaderVersion + ".";
+            try {
+              var indexUrl = new URL("index.html", baseUrl);
+              indexUrl.searchParams.set("kernel", latestLoaderVersion);
+              indexUrl.searchParams.set("_", Date.now().toString());
+              var indexResponse = await fetch(indexUrl, { cache: "no-store" });
+              if (!indexResponse.ok) {
+                throw new Error("O novo index falhou (HTTP " + indexResponse.status + ").");
+              }
+              var indexSource = await indexResponse.text();
+              var embeddedVersion = indexSource.match(
+                /var loaderVersion = "([0-9]+\.[0-9]+\.[0-9]+)";/,
+              );
+              if (
+                !embeddedVersion ||
+                compareVersions(embeddedVersion[1], latestLoaderVersion) < 0
+              ) {
+                throw new Error(
+                  "O servidor ainda não entregou o kernel " + latestLoaderVersion + ".",
+                );
+              }
+              var blobUrl = URL.createObjectURL(
+                new Blob([indexSource], { type: "text/html;charset=utf-8" }),
+              );
+              var download = document.createElement("a");
+              download.href = blobUrl;
+              download.download = "index.html";
+              document.body.appendChild(download);
+              download.click();
+              download.remove();
+              window.setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 1000);
+              confirmationTitle.textContent = "Index 2.6.0 baixado";
+              confirmationText.textContent =
+                "O arquivo index.html novo foi validado. Substitua o antigo por este download.";
+              confirmButton.textContent = "Baixar novamente";
+              cancelButton.textContent = "Continuar nesta versão";
+            } catch (error) {
+              confirmationTitle.textContent = "Falha ao baixar o index";
+              confirmationText.textContent =
+                error instanceof Error ? error.message : "Falha desconhecida.";
+              confirmButton.textContent = "Tentar novamente";
+            } finally {
+              confirmButton.disabled = false;
+            }
             return;
           }
           if (running) return;
