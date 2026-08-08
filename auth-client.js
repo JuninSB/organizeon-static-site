@@ -858,15 +858,23 @@ async function collectCloudBackup() {
       ? gameProgress
       : cloudBackupPreferenceKeys.has(key) || key.startsWith("organizeon-")
         ? preferences
-        : gameProgress;
+      : gameProgress;
     target[key] = localStorage.getItem(key);
+  }
+  let indexedDB = [];
+  try {
+    indexedDB = await exportIndexedDatabases();
+  } catch (error) {
+    // Um banco de jogo incompatível não pode impedir o backup de tema e
+    // preferências. O banco problemático será ignorado nesta rodada.
+    console.warn("Não foi possível exportar todos os bancos locais:", error);
   }
   return {
     version: 1,
     savedAt: new Date().toISOString(),
     preferences,
     gameProgress,
-    indexedDB: await exportIndexedDatabases(),
+    indexedDB,
     cookies: document.cookie,
   };
 }
@@ -916,27 +924,33 @@ async function exportIndexedDatabases() {
   const exported = [];
   for (const descriptor of databases) {
     if (!descriptor.name) continue;
-    const db = await openIndexedDatabase(descriptor.name);
-    const stores = [];
-    for (const storeName of db.objectStoreNames) {
-      const transaction = db.transaction(storeName, "readonly");
-      const store = transaction.objectStore(storeName);
-      const [keys, values] = await Promise.all([
-        idbRequest(store.getAllKeys()),
-        idbRequest(store.getAll()),
-      ]);
-      stores.push({
-        name: storeName,
-        keyPath: store.keyPath,
-        autoIncrement: store.autoIncrement,
-        records: await Promise.all(values.map(async (value, index) => ({
-          key: await toPortable(keys[index]),
-          value: await toPortable(value),
-        }))),
-      });
+    let db = null;
+    try {
+      db = await openIndexedDatabase(descriptor.name);
+      const stores = [];
+      for (const storeName of db.objectStoreNames) {
+        const transaction = db.transaction(storeName, "readonly");
+        const store = transaction.objectStore(storeName);
+        const [keys, values] = await Promise.all([
+          idbRequest(store.getAllKeys()),
+          idbRequest(store.getAll()),
+        ]);
+        stores.push({
+          name: storeName,
+          keyPath: store.keyPath,
+          autoIncrement: store.autoIncrement,
+          records: await Promise.all(values.map(async (value, index) => ({
+            key: await toPortable(keys[index]),
+            value: await toPortable(value),
+          }))),
+        });
+      }
+      exported.push({ name: descriptor.name, version: descriptor.version || db.version, stores });
+    } catch (error) {
+      console.warn(`Banco local ignorado no backup (${descriptor.name}):`, error);
+    } finally {
+      db?.close();
     }
-    exported.push({ name: descriptor.name, version: descriptor.version || db.version, stores });
-    db.close();
   }
   return exported;
 }
@@ -1000,11 +1014,15 @@ function idbTransaction(transaction) {
   });
 }
 
-async function toPortable(value) {
+async function toPortable(value, seen = new WeakSet()) {
   if (value instanceof Blob) return {
     __organizeonType: "Blob",
     type: value.type,
     data: arrayBufferToBase64(await value.arrayBuffer()),
+  };
+  if (typeof value === "bigint") return {
+    __organizeonType: "BigInt",
+    data: String(value),
   };
   if (value instanceof ArrayBuffer) return {
     __organizeonType: "ArrayBuffer",
@@ -1014,10 +1032,19 @@ async function toPortable(value) {
     __organizeonType: value.constructor.name,
     data: arrayBufferToBase64(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)),
   };
-  if (Array.isArray(value)) return Promise.all(value.map(toPortable));
+  if (Array.isArray(value)) {
+    if (seen.has(value)) return "[Circular]";
+    seen.add(value);
+    const result = await Promise.all(value.map((item) => toPortable(item, seen)));
+    seen.delete(value);
+    return result;
+  }
   if (value && typeof value === "object") {
+    if (seen.has(value)) return "[Circular]";
+    seen.add(value);
     const output = {};
-    for (const [key, item] of Object.entries(value)) output[key] = await toPortable(item);
+    for (const [key, item] of Object.entries(value)) output[key] = await toPortable(item, seen);
+    seen.delete(value);
     return output;
   }
   return value;
@@ -1025,6 +1052,7 @@ async function toPortable(value) {
 
 function fromPortable(value) {
   if (!value || typeof value !== "object") return value;
+  if (value.__organizeonType === "BigInt") return BigInt(value.data);
   if (value.__organizeonType === "Blob") return new Blob([base64ToArrayBuffer(value.data)], { type: value.type });
   if (value.__organizeonType === "ArrayBuffer") return base64ToArrayBuffer(value.data);
   if (value.__organizeonType && globalThis[value.__organizeonType]?.BYTES_PER_ELEMENT) {
@@ -1152,14 +1180,36 @@ async function showDataPanel() {
     wrapper.querySelector(".toggle").textContent = cloudBackupEnabled ? "Desativar" : "Ativar";
   };
   wrapper.querySelector(".toggle").onclick = async () => {
-    const response = await apiRequest("/account/backup", { method: "PATCH", body: JSON.stringify({ enabled: !cloudBackupEnabled }) });
-    if (!response.ok) return;
-    cloudBackupEnabled = !cloudBackupEnabled;
-    if (cloudBackupEnabled) await saveCloudBackup();
-    await refreshStatus();
+    try {
+      const response = await apiRequest("/account/backup", { method: "PATCH", body: JSON.stringify({ enabled: !cloudBackupEnabled }) });
+      if (!response.ok) throw new Error("Não foi possível alterar o backup.");
+      cloudBackupEnabled = !cloudBackupEnabled;
+      if (cloudBackupEnabled) await saveCloudBackup();
+      await refreshStatus();
+    } catch (error) {
+      console.warn("Falha ao atualizar backup na nuvem:", error);
+      wrapper.querySelector(".backup-status").textContent = `Erro: ${error.message || "não foi possível salvar"}`;
+      await refreshStatus().catch(() => {});
+    }
   };
-  wrapper.querySelector(".save").onclick = async () => { await saveCloudBackup(); await refreshStatus(); };
-  wrapper.querySelector(".restore").onclick = () => restoreCloudBackup();
+  wrapper.querySelector(".save").onclick = async () => {
+    try {
+      await saveCloudBackup();
+      await refreshStatus();
+    } catch (error) {
+      console.warn("Falha ao salvar backup na nuvem:", error);
+      wrapper.querySelector(".backup-status").textContent = `Erro: ${error.message || "não foi possível salvar"}`;
+    }
+  };
+  wrapper.querySelector(".restore").onclick = async () => {
+    try {
+      await restoreCloudBackup();
+      await refreshStatus();
+    } catch (error) {
+      console.warn("Falha ao restaurar backup na nuvem:", error);
+      wrapper.querySelector(".backup-status").textContent = `Erro: ${error.message || "não foi possível restaurar"}`;
+    }
+  };
   wrapper.querySelector(".clear-all").onclick = async () => { if (confirm("Apagar todos os progressos?")) await clearAllGameProgress(); };
   wrapper.querySelector(".clear-one").onclick = async () => { const value = wrapper.querySelector(".game-id").value; if (value && confirm(`Apagar o progresso de ${value}?`)) await clearGameProgress(value); };
   wrapper.querySelector(".clear-preferences").onclick = () => { if (confirm("Apagar todas as preferências?")) clearPreferences(); };
