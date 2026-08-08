@@ -583,6 +583,9 @@ function configureAccountNavigation(account) {
         border-radius: 11px; cursor: pointer; color: #cfe1dc;
         background: transparent; text-align: left; font-weight: 650;
       }
+      #organizeon-account-navigation .item-icon {
+        width: 18px; height: 18px; flex: 0 0 18px;
+      }
       #organizeon-account-navigation .item:hover {
         color: #75f2d2; background: rgba(79,235,199,.1);
       }
@@ -607,7 +610,13 @@ function configureAccountNavigation(account) {
         <span></span>
       </div>
       <button class="item main" type="button">⌂ <span>Main</span></button>
-      <button class="item games" type="button">◇ <span>Jogos</span></button>
+      <button class="item games" type="button">
+        <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 8h10a4 4 0 0 1 3.9 4.9l-.7 3.2a2.4 2.4 0 0 1-4.4.7L14.7 14H9.3l-1.1 2.8a2.4 2.4 0 0 1-4.4-.7l-.7-3.2A4 4 0 0 1 7 8Z"></path>
+          <path d="M8 11v4M6 13h4M16 12h.01M18 14h.01"></path>
+        </svg>
+        <span>Jogos</span>
+      </button>
       <button class="item settings" type="button">⚙ <span>Settings</span></button>
       ${isGuest ? "" : '<button class="item data" type="button">▤ <span>Dados</span></button>'}
       <button class="item proxy-server" type="button">
