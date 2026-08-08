@@ -63,6 +63,9 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(source, /playNoise/);
   assert.match(source, /name===\"fill\"/);
   assert.match(source, /hardDropFx/);
+  assert.match(source, /drawDropFx/);
+  assert.match(source, /drawFxPiece/);
+  assert.match(source, /triggerClearFx/);
   assert.match(source, /hold-swap/);
 });
 
