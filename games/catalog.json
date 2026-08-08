@@ -221,17 +221,17 @@
       "instructions": "Setas movem · Z/X giram · Espaço derruba · C/Shift guarda a peça.",
       "entry": "library/classic-tetris.html",
       "cover": "covers/classic-tetris.svg",
-      "attribution": "Implementação OrganizeOn baseada nas regras modernas do Tetris Guideline; impacto CC0 de Iwan Gabovitch/qubodup",
+      "attribution": "Implementação OrganizeOn baseada nas regras modernas do Tetris Guideline",
       "copyright": "OrganizeOn",
       "license": "Código do projeto",
       "source": "https://github.com/JuninSB/organizeon-static-site",
-      "size": 32379,
-      "sha256": "efbf64ef13912c55ab32af13e0e64176005cc9debf8ae558ab13ea109ab0f2e5",
+      "size": 22538,
+      "sha256": "4dc7983ce3bde0f66e1608e70083ef150de6d0ff63cb150053e419fdbdd05a15",
       "files": [
         {
           "path": "library/classic-tetris.html",
-          "size": 32379,
-          "sha256": "efbf64ef13912c55ab32af13e0e64176005cc9debf8ae558ab13ea109ab0f2e5"
+          "size": 22538,
+          "sha256": "4dc7983ce3bde0f66e1608e70083ef150de6d0ff63cb150053e419fdbdd05a15"
         }
       ]
     },
