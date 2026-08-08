@@ -897,6 +897,20 @@ async function saveCloudBackup() {
   return status;
 }
 
+async function flushCloudBackup() {
+  if (guestMode) return;
+  window.clearTimeout(cloudBackupTimer);
+  // O usuário pode sair logo depois de ativar o recurso, antes da consulta
+  // inicial terminar. Confirme o estado no servidor antes de apagar o token.
+  if (!cloudBackupEnabled) {
+    const response = await apiRequest("/account/backup", { method: "GET" });
+    if (!response.ok) return;
+    const status = await response.json();
+    cloudBackupEnabled = status.enabled === true;
+  }
+  if (cloudBackupEnabled) await saveCloudBackup();
+}
+
 async function restoreCloudBackup({ silent = false } = {}) {
   const response = await apiRequest("/account/backup/data", { method: "GET" });
   if (response.status === 404) return false;
@@ -4049,6 +4063,11 @@ function scheduleExpiration(expiresAt) {
 async function resetAuthenticationForDataWipe() {
   try {
     if (guestMode) return;
+    try {
+      await flushCloudBackup();
+    } catch (error) {
+      console.warn("Não foi possível concluir o backup antes da limpeza:", error);
+    }
     await apiRequest("/auth/logout", { method: "POST" });
   } catch (error) {
     console.warn("Não foi possível invalidar o cookie da API:", error);
@@ -4065,6 +4084,11 @@ window.organizeonAuth = Object.freeze({
   async logout() {
     try {
       if (!guestMode) {
+        try {
+          await flushCloudBackup();
+        } catch (error) {
+          console.warn("Não foi possível concluir o backup antes do logout:", error);
+        }
         await apiRequest("/auth/logout", { method: "POST" });
       }
     } finally {
