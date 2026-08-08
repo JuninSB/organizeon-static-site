@@ -57,7 +57,10 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(source, /organizeon-tetris-progress/);
   assert.match(source, /organizeon-tetris-binds/);
   assert.match(source, /binds-dialog/);
+  assert.match(source, /settings-dialog/);
+  assert.match(source, /organizeon-tetris-left-handed/);
   assert.match(source, /playSound/);
+  assert.match(source, /dropSampleBase64/);
   assert.match(source, /hardDropFx/);
   assert.match(source, /hold-swap/);
 });
