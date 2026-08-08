@@ -55,6 +55,11 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
     assert.match(source, new RegExp(`\\b${feature}\\b`));
   }
   assert.match(source, /organizeon-tetris-progress/);
+  assert.match(source, /organizeon-tetris-binds/);
+  assert.match(source, /binds-dialog/);
+  assert.match(source, /playSound/);
+  assert.match(source, /hardDropFx/);
+  assert.match(source, /hold-swap/);
 });
 
 test("download manifest hashes match every listed file", async () => {
