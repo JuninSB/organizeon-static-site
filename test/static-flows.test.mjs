@@ -77,6 +77,7 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(source, /impactLead:100/);
   assert.match(source, /lockedCells/);
   assert.match(source, /colorVariant/);
+  assert.match(source, /drawSkyBeam/);
   assert.match(source, /highscore-sync/);
   assert.match(source, /syncHighscoreCloud/);
   assert.match(source, /hold-swap/);
