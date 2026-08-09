@@ -225,13 +225,13 @@
       "copyright": "OrganizeOn",
       "license": "Código do projeto",
       "source": "https://github.com/JuninSB/organizeon-static-site",
-      "size": 33101,
-      "sha256": "8484095273a256184fdaba0fa3962a60762e9cdecbcb9d230c69d3f47b724670",
+      "size": 37380,
+      "sha256": "870025c3442670a68980d11b70788a9a777596255287914fa6b9b435736a45bd",
       "files": [
         {
           "path": "library/classic-tetris.html",
-          "size": 33101,
-          "sha256": "8484095273a256184fdaba0fa3962a60762e9cdecbcb9d230c69d3f47b724670"
+          "size": 37380,
+          "sha256": "870025c3442670a68980d11b70788a9a777596255287914fa6b9b435736a45bd"
         }
       ]
     },
