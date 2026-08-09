@@ -2759,8 +2759,11 @@ async function showGameCatalog() {
       games: payload.games && typeof payload.games === "object"
         ? payload.games
         : {},
-      trending: Array.isArray(payload.trending) ? payload.trending : [],
+      trending: [],
     };
+    // Recompute locally so an older API response cannot mark every played game
+    // as trending while the server is being updated.
+    rebuildTrendingGames();
     if (wrapper.isConnected) await renderCatalog(search.value);
   }
 
@@ -2791,12 +2794,13 @@ async function showGameCatalog() {
 
   function rebuildTrendingGames() {
     gameStats.trending = Object.entries(gameStats.games)
-      .filter(([, statistics]) => Number(statistics.plays7d || 0) > 0)
       .sort((left, right) =>
+        (Number(right[1].downloads || 0) + Number(right[1].plays || 0)) -
+          (Number(left[1].downloads || 0) + Number(left[1].plays || 0)) ||
         Number(right[1].plays7d || 0) - Number(left[1].plays7d || 0) ||
         Number(right[1].plays || 0) - Number(left[1].plays || 0)
       )
-      .slice(0, 12)
+      .slice(0, 3)
       .map(([gameId]) => gameId);
   }
 

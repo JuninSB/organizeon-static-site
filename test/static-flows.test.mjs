@@ -57,6 +57,12 @@ test("only verified shared-world versions advertise this relay", async () => {
   assert.equal(catalog.games.find((game) => game.id === "eaglercraft-1-12-2").relayUrl, undefined);
 });
 
+test("trending UI is limited to the three highest download-plus-play scores", async () => {
+  const source = await text("auth-client.js");
+  assert.match(source, /Number\(right\[1\]\.downloads \|\| 0\) \+ Number\(right\[1\]\.plays \|\| 0\)/);
+  assert.match(source, /\.slice\(0, 3\)/);
+});
+
 test("game catalog integrity metadata matches distributed files", async () => {
   const catalog = JSON.parse(await text("games/catalog.json"));
   for (const game of catalog.games) {
