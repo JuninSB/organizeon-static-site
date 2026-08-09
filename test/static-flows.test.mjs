@@ -63,6 +63,15 @@ test("trending UI is limited to the three highest download-plus-play scores", as
   assert.match(source, /\.slice\(0, 3\)/);
 });
 
+test("frequently used quick-app tabs move to the front", async () => {
+  const [quickApps, homepageNav] = await Promise.all([
+    text("assets/jdht-c-B5kF6u_m.js"),
+    text("assets/jdht-c-BElH72MW.js"),
+  ]);
+  assert.match(quickApps, /await sA\(r,A\),o\(B=>\[r,\.\.\.B\.filter\(f=>f\.id!==r\.id\)\]\)/);
+  assert.match(homepageNav, /await re\(t,n\),j\(c=>\[t,\.\.\.c\.filter\(v=>v\.id!==t\.id\)\]\)/);
+});
+
 test("game catalog integrity metadata matches distributed files", async () => {
   const catalog = JSON.parse(await text("games/catalog.json"));
   for (const game of catalog.games) {
