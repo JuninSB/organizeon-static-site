@@ -94,7 +94,7 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(source, /binds-dialog/);
   assert.match(source, /organizeon-tetris-left-handed/);
   assert.doesNotMatch(source, /tetris-menu|<dialog class="settings-dialog"/);
-  assert.match(client, /game\.id === "classic-tetris"/);
+  assert.match(client, /classic-tetris\.html/);
   assert.match(client, /organizeon-tetris-settings/);
   assert.match(client, /Sou canhoto \(ações à esquerda\)/);
   assert.match(client, /⛶ Tela cheia/);

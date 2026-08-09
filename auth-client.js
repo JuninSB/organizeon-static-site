@@ -2355,7 +2355,11 @@ async function showGameCatalog() {
       grid.appendChild(choice);
     });
     let tetrisLeftHandedInput = null;
-    if (game.id === "classic-tetris") {
+    const tetrisSettingsNodes = [];
+    const isClassicTetris = String(game.id || "").toLowerCase() === "classic-tetris" ||
+      String(game.entry || "").toLowerCase().endsWith("classic-tetris.html") ||
+      String(game.name || "").trim().toLowerCase() === "tetris";
+    if (isClassicTetris) {
       const optionsTitle = document.createElement("p");
       optionsTitle.textContent = "Opções do Tetris";
       optionsTitle.style.cssText = "margin:16px 0 8px;color:#d9f5ed;font-weight:800";
@@ -2367,7 +2371,6 @@ async function showGameCatalog() {
       const label = document.createElement("span");
       label.textContent = "Sou canhoto (ações à esquerda)";
       choice.append(tetrisLeftHandedInput, label);
-      dialog.append(optionsTitle, choice);
       const fullscreen = document.createElement("button");
       fullscreen.className = "settings-action";
       fullscreen.type = "button";
@@ -2381,7 +2384,7 @@ async function showGameCatalog() {
           console.warn("Tela cheia indisponível:", error);
         }
       });
-      dialog.appendChild(fullscreen);
+      tetrisSettingsNodes.push(optionsTitle, choice, fullscreen);
     }
     const actions = document.createElement("div");
     actions.className = "key-settings-actions";
@@ -2427,7 +2430,7 @@ async function showGameCatalog() {
       backdrop.remove();
     });
     actions.append(reset, save);
-    dialog.append(title, description, grid, actions);
+    dialog.append(title, description, grid, ...tetrisSettingsNodes, actions);
     backdrop.appendChild(dialog);
     backdrop.addEventListener("click", (event) => {
       if (event.target === backdrop) backdrop.remove();
