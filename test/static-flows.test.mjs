@@ -85,14 +85,19 @@ test("game catalog integrity metadata matches distributed files", async () => {
 
 test("Tetris includes guideline mechanics and persistent high score", async () => {
   const source = await text("games/library/classic-tetris.html");
+  const client = await text("auth-client.js");
   for (const feature of ["jlKicks", "iKicks", "LOCK_DELAY", "LOCK_RESETS", "refill", "ghostY", "hardDrop", "hold"]) {
     assert.match(source, new RegExp(`\\b${feature}\\b`));
   }
   assert.match(source, /organizeon-tetris-progress/);
   assert.match(source, /organizeon-tetris-binds/);
   assert.match(source, /binds-dialog/);
-  assert.match(source, /settings-dialog/);
   assert.match(source, /organizeon-tetris-left-handed/);
+  assert.doesNotMatch(source, /tetris-menu|<dialog class="settings-dialog"/);
+  assert.match(client, /game\.id === "classic-tetris"/);
+  assert.match(client, /organizeon-tetris-settings/);
+  assert.match(client, /Sou canhoto \(ações à esquerda\)/);
+  assert.match(client, /⛶ Tela cheia/);
   assert.match(source, /playSound/);
   assert.match(source, /playNoise/);
   assert.match(source, /name===\"fill\"/);
@@ -109,8 +114,6 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(source, /highscore-sync/);
   assert.match(source, /syncHighscoreCloud/);
   assert.match(source, /hold-swap/);
-  assert.match(source, /tetris-fullscreen/);
-  assert.match(source, /organizeon-tetris-menu-position/);
   assert.doesNotMatch(source, /beamParticles/);
   assert.match(source, /beamSparkles/);
   assert.doesNotMatch(source, /airParticles|drawBeamAtmosphere/);

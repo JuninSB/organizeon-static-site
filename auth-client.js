@@ -2354,6 +2354,35 @@ async function showGameCatalog() {
       choice.append(checkbox, label);
       grid.appendChild(choice);
     });
+    let tetrisLeftHandedInput = null;
+    if (game.id === "classic-tetris") {
+      const optionsTitle = document.createElement("p");
+      optionsTitle.textContent = "Opções do Tetris";
+      optionsTitle.style.cssText = "margin:16px 0 8px;color:#d9f5ed;font-weight:800";
+      const choice = document.createElement("label");
+      choice.className = "key-choice";
+      tetrisLeftHandedInput = document.createElement("input");
+      tetrisLeftHandedInput.type = "checkbox";
+      tetrisLeftHandedInput.checked = localStorage.getItem("organizeon-tetris-left-handed") === "1";
+      const label = document.createElement("span");
+      label.textContent = "Sou canhoto (ações à esquerda)";
+      choice.append(tetrisLeftHandedInput, label);
+      dialog.append(optionsTitle, choice);
+      const fullscreen = document.createElement("button");
+      fullscreen.className = "settings-action";
+      fullscreen.type = "button";
+      fullscreen.textContent = "⛶ Tela cheia";
+      fullscreen.style.cssText = "width:100%;min-height:42px;margin-top:9px;border:1px solid rgba(99,228,196,.25);border-radius:10px;color:#78e8cd;background:rgba(99,228,196,.08);font-weight:800;cursor:pointer";
+      fullscreen.addEventListener("click", async () => {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else await (frame.requestFullscreen?.() || frame.contentDocument?.documentElement?.requestFullscreen?.());
+        } catch (error) {
+          console.warn("Tela cheia indisponível:", error);
+        }
+      });
+      dialog.appendChild(fullscreen);
+    }
     const actions = document.createElement("div");
     actions.className = "key-settings-actions";
     const reset = document.createElement("button");
@@ -2370,6 +2399,7 @@ async function showGameCatalog() {
           game.keys || [],
         );
       });
+      if (tetrisLeftHandedInput) tetrisLeftHandedInput.checked = false;
     });
     const save = document.createElement("button");
     save.className = "keys-save";
@@ -2385,6 +2415,14 @@ async function showGameCatalog() {
         gameControlSettingsStorageKey,
         JSON.stringify(settings),
       );
+      if (tetrisLeftHandedInput) {
+        const leftHanded = tetrisLeftHandedInput.checked;
+        localStorage.setItem("organizeon-tetris-left-handed", leftHanded ? "1" : "0");
+        frame.contentWindow?.postMessage({
+          type: "organizeon-tetris-settings",
+          leftHanded,
+        }, "*");
+      }
       buildVirtualControls(game);
       backdrop.remove();
     });
