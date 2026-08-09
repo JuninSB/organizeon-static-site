@@ -57,6 +57,17 @@ test("only verified shared-world versions advertise this relay", async () => {
   assert.equal(catalog.games.find((game) => game.id === "eaglercraft-1-12-2").relayUrl, undefined);
 });
 
+test("game catalog integrity metadata matches distributed files", async () => {
+  const catalog = JSON.parse(await text("games/catalog.json"));
+  for (const game of catalog.games) {
+    for (const file of game.files || [{ path: game.entry, size: game.size, sha256: game.sha256 }]) {
+      const data = await readFile(new URL(`games/${file.path}`, root));
+      assert.equal(data.length, file.size, `${game.id} size`);
+      assert.equal(createHash("sha256").update(data).digest("hex"), file.sha256, `${game.id} hash`);
+    }
+  }
+});
+
 test("Tetris includes guideline mechanics and persistent high score", async () => {
   const source = await text("games/library/classic-tetris.html");
   for (const feature of ["jlKicks", "iKicks", "LOCK_DELAY", "LOCK_RESETS", "refill", "ghostY", "hardDrop", "hold"]) {

@@ -1,6 +1,6 @@
 {
-  "version": "v2-4f5a8b2026080e40",
-  "generatedAt": "2026-08-09T00:50:00.000Z",
+  "version": "v2-4f5a8b2026080e50",
+  "generatedAt": "2026-08-09T00:58:00.000Z",
   "totalBytes": 11057753,
   "files": [
     {
@@ -356,7 +356,7 @@
     {
       "path": "games/catalog.json",
       "size": 96105,
-      "sha256": "27b973c8ad4faef56311efd735400bfed169d0dfe520bf4e8246ca55902434d6"
+      "sha256": "3ae59c21d9db30f96cd2addb08af17bed3a56fcb4d97263649e58c173eb4dcf1"
     },
     {
       "path": "games/covers/age-of-war.svg",
