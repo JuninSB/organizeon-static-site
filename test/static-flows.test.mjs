@@ -123,9 +123,14 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.doesNotMatch(source, /trailAnchorY|trailEndY/);
   assert.match(source, /lightningCharges/);
   assert.match(source, /earthquakeCharges/);
-  assert.match(source, /Math\.floor\(lines\/5\)/);
-  assert.match(source, /Math\.floor\(lines\/30\)/);
-  assert.match(source, /gravity=Math\.min\(2200,1000\+lines\*25\)/);
+  assert.match(source, /Math\.floor\(lines\/10\)/);
+  assert.match(source, /Math\.floor\(lines\/35\)/);
+  assert.match(source, /speedMultiplier=1\+Math\.floor\(Math\.max\(0,finiteNumber\(score\)\)\/1000\)\*\.01/);
+  assert.match(source, /baseGravity=1000\+Math\.floor\(lines\/3\)\*100/);
+  assert.match(source, /gravity=Math\.max\(80,Math\.min\(2200,Math\.round\(baseGravity\/speedMultiplier\)\)\)/);
+  assert.match(source, /function finiteNumber/);
+  assert.match(source, /base=\[0,100,300,500,800\]\[Math\.min\(4,clearCount\)\]/);
+  assert.match(source, /JSON\.parse\(localStorage\.getItem\("organizeon-tetris-progress"\)\|\|"\{\}"\)/);
   assert.match(source, /useLightning/);
   assert.match(source, /useEarthquake/);
   assert.match(source, /resolveLightning/);
