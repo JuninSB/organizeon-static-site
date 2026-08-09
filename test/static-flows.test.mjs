@@ -111,12 +111,9 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(source, /hold-swap/);
   assert.match(source, /tetris-fullscreen/);
   assert.match(source, /organizeon-tetris-menu-position/);
-  assert.match(source, /beamParticles/);
+  assert.doesNotMatch(source, /beamParticles/);
   assert.doesNotMatch(source, /airParticles|drawBeamAtmosphere/);
-  assert.match(source, /startY:-Math\.random\(\)\*140/);
-  assert.match(source, /py=particle\.startY\+\(headY\+particle\.endOffset-particle\.startY\)\*ease/);
   assert.match(source, /fillRect\(Math\.round\(\(center-3\)\/2\)\*2,0,6,Math\.round\(headY\)\)/);
-  assert.match(source, /particle\.tail/);
   assert.match(source, /vy:-Math\.abs\(Math\.sin\(angle\)\)\*speed\/18-.5/);
   assert.match(source, /angle:index\/18\*Math\.PI\+Math\.PI/);
   assert.doesNotMatch(source, /trailAnchorY|trailEndY/);
