@@ -132,6 +132,13 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(source, /lightning-count/);
   assert.match(source, /earthquake-count/);
   assert.match(source, /playFillSfx/);
+  assert.match(source, /function ensureAudio/);
+  assert.match(source, /function playTone/);
+  assert.match(source, /function playNoise/);
+  assert.match(source, /ability-buttons/);
+  assert.match(source, /data-key="earthquake"[^>]*>🫨/);
+  assert.match(source, /hold-idle/);
+  assert.match(source, /c\.classList\.toggle\("hold-idle"/);
 });
 
 test("download manifest hashes match every listed file", async () => {
