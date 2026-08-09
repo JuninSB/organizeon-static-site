@@ -1193,16 +1193,41 @@ async function showDataPanel() {
       #organizeon-data-panel .back{width:44px;font-size:20px}#organizeon-data-panel h1{margin:0}#organizeon-data-panel .card{margin:14px 0;padding:18px;border:1px solid #263c35;border-radius:16px;background:#0d1915}
       #organizeon-data-panel .row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#organizeon-data-panel .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:14px}
       #organizeon-data-panel button{padding:0 13px}#organizeon-data-panel button.primary{color:#062019;background:#63e4c4}#organizeon-data-panel button.danger{color:#ffd6da;border-color:#68383d;background:#32181b}
-      #organizeon-data-panel input{min-height:42px;padding:0 11px;border:1px solid #385148;border-radius:10px;color:#fff;background:#09110e}#organizeon-data-panel .status{color:#8eaaa2;font-size:13px}
+      #organizeon-data-panel input,#organizeon-data-panel select{min-height:42px;padding:0 11px;border:1px solid #385148;border-radius:10px;color:#fff;background:#09110e}#organizeon-data-panel .status{color:#8eaaa2;font-size:13px}
       @media(max-width:560px){#organizeon-data-panel{padding:14px}#organizeon-data-panel .actions{grid-template-columns:1fr}}
     </style>
     <div class="shell"><header class="top"><button class="back">←</button><div><h1>Dados</h1><div class="status">Conta ${window.organizeonAccount?.username || ""}</div></div></header>
       <article class="card"><div class="row"><div><strong>Backup na nuvem</strong><div class="status backup-status">Consultando…</div></div><button class="toggle primary">Carregando…</button></div><div class="actions"><button class="save">Salvar agora</button><button class="restore">Restaurar</button></div></article>
-      <article class="card"><strong>Progresso dos jogos</strong><p class="status">Os arquivos dos jogos continuam no navegador. Estas ações apagam somente saves.</p><div class="actions"><button class="danger clear-all">Apagar todos os progressos</button><span class="row"><input class="game-id" placeholder="ID do jogo"><button class="danger clear-one">Apagar jogo</button></span></div></article>
+      <article class="card"><strong>Progresso dos jogos</strong><p class="status">Os arquivos dos jogos continuam no navegador. Estas ações apagam somente saves.</p><div class="actions"><button class="danger clear-all">Apagar todos os progressos</button><span class="row"><select class="game-id" aria-label="Escolher jogo"><option value="">Carregando jogos…</option></select><button class="danger clear-one" disabled>Apagar jogo</button></span></div></article>
       <article class="card"><strong>Preferências</strong><p class="status">Tema, proxy, identidade do navegador, teclas e configurações persistentes.</p><button class="danger clear-preferences">Apagar preferências</button></article>
     </div>`;
   document.body.appendChild(wrapper);
   wrapper.querySelector(".back").onclick = () => wrapper.remove();
+  const gameSelect = wrapper.querySelector(".game-id");
+  const clearOneButton = wrapper.querySelector(".clear-one");
+  try {
+    const basePath = window.__groveBase || new URL("./", document.baseURI).pathname;
+    const catalogUrl = new URL("games/catalog.json", new URL(basePath, location.origin));
+    const catalogResponse = await fetch(catalogUrl, { cache: "no-cache" });
+    if (!catalogResponse.ok) throw new Error(`HTTP ${catalogResponse.status}`);
+    const catalogPayload = await catalogResponse.json();
+    const games = Array.isArray(catalogPayload.games) ? catalogPayload.games : [];
+    gameSelect.replaceChildren(
+      new Option("Escolha um jogo…", ""),
+      ...games
+        .filter((game) => game && game.id)
+        .sort((left, right) => String(left.name || left.id).localeCompare(String(right.name || right.id), "pt-BR"))
+        .map((game) => new Option(`${game.name || game.id} — ${game.id}`, game.id)),
+    );
+    gameSelect.title = "O texto depois do travessão é o ID usado para apagar o save.";
+  } catch (error) {
+    gameSelect.replaceChildren(new Option("Não foi possível carregar os jogos", ""));
+    gameSelect.title = "Falha ao carregar games/catalog.json";
+    console.warn("Falha ao carregar IDs dos jogos:", error);
+  }
+  gameSelect.addEventListener("change", () => {
+    clearOneButton.disabled = !gameSelect.value;
+  });
   const refreshStatus = async () => {
     const response = await apiRequest("/account/backup", { method: "GET" });
     const status = await response.json();
@@ -1242,7 +1267,7 @@ async function showDataPanel() {
     }
   };
   wrapper.querySelector(".clear-all").onclick = async () => { if (confirm("Apagar todos os progressos?")) await clearAllGameProgress(); };
-  wrapper.querySelector(".clear-one").onclick = async () => { const value = wrapper.querySelector(".game-id").value; if (value && confirm(`Apagar o progresso de ${value}?`)) await clearGameProgress(value); };
+  clearOneButton.onclick = async () => { const value = gameSelect.value; if (value && confirm(`Apagar o progresso de ${value}?`)) await clearGameProgress(value); };
   wrapper.querySelector(".clear-preferences").onclick = () => { if (confirm("Apagar todas as preferências?")) clearPreferences(); };
   await refreshStatus();
 }
@@ -1868,7 +1893,7 @@ async function showGameCatalog() {
       </header>
       <iframe title="Jogo"
         sandbox="allow-scripts allow-modals allow-same-origin allow-pointer-lock allow-forms allow-downloads"
-        allow="fullscreen; gamepad; clipboard-read; clipboard-write"></iframe>
+        allow="fullscreen; gamepad; clipboard-read; clipboard-write" allowfullscreen></iframe>
       <div class="controls" aria-label="Controles virtuais"></div>
     </div>
   `;

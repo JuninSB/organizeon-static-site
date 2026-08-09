@@ -18,6 +18,8 @@ test("registration, Data controls and cloud backup are present", async () => {
   assert.match(source, /star-settings/);
   assert.match(source, /isCloudPreferenceStorageKey/);
   assert.match(source, /organizeonCloudBackup/);
+  assert.match(source, /games\/catalog\.json/);
+  assert.match(source, /Escolha um jogo/);
   const restoreIndex = source.indexOf("await initializeCloudBackup({ timeoutMs: 3500 })");
   const appImportIndex = source.indexOf("await import(config.appModule)", restoreIndex);
   assert.ok(restoreIndex >= 0 && appImportIndex > restoreIndex, "cloud preferences restore before app initialization");
@@ -81,6 +83,10 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(source, /highscore-sync/);
   assert.match(source, /syncHighscoreCloud/);
   assert.match(source, /hold-swap/);
+  assert.match(source, /tetris-fullscreen/);
+  assert.match(source, /organizeon-tetris-menu-position/);
+  assert.match(source, /beamParticles/);
+  assert.match(source, /playFillSfx/);
 });
 
 test("download manifest hashes match every listed file", async () => {
