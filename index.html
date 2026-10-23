@@ -42,10 +42,6 @@
       content="black-translucent"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="profiton-domain-verification"
-      content="8b10ea6b61ff95062f470cfdb0023563c6705946fa8db3d0f144124af65bfcfb"
-    />
     <style>
       #organizeon-download {
         position: fixed;
@@ -987,13 +983,6 @@
           window.gtag("js", new Date());
           window.gtag("config", "G-KNFSWJTJ9C");
 
-          try {
-            await loadScript("./lib.js");
-            window.aclib?.runPop({ zoneId: "10602038" });
-          } catch (error) {
-            console.warn("Anúncio externo indisponível:", error);
-          }
-
           await loadScript(
             "./auth-client.js?v=" + bootstrapVersion,
             true,
@@ -1157,3 +1146,4 @@
     </script>
   </body>
 </html>
+
