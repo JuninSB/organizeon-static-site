@@ -1,7 +1,7 @@
 {
-  "version": "v2-74efbd7672e6762b",
-  "generatedAt": "2026-11-15T02:16:43.087Z",
-  "totalBytes": 10439825,
+  "version": "v2-c220a71edcb5349a",
+  "generatedAt": "2026-11-15T02:25:17.431Z",
+  "totalBytes": 10441791,
   "files": [
     {
       "path": "404.html",
@@ -330,8 +330,8 @@
     },
     {
       "path": "assets/jdht-s-SOkYHzV0.css",
-      "size": 90451,
-      "sha256": "b9de04b7f98bfd8ed2e194a33db9b479fb3990c4f5d03909e031498be700a882"
+      "size": 92417,
+      "sha256": "681f3d8573ba22471177db85058b18949fd02bbaaa3e8ff1625d3138d558b33a"
     },
     {
       "path": "auth-client.js",
