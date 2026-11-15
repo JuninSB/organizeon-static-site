@@ -7,7 +7,7 @@ import {
   L as F,
   E as H,
   d as G,
-} from "./jdht-c-CyPArwUk.js";
+} from "./client-runtime-paths.js";
 const q = globalThis.fetch,
   _ = globalThis.SharedWorker,
   E = globalThis.localStorage,
