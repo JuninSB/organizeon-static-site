@@ -1161,6 +1161,15 @@ async function showDataPanel() {
       #organizeon-data-panel .status { color:#a1a1aa; }
       #organizeon-data-panel :focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
       @media(prefers-reduced-motion:reduce){#organizeon-data-panel *{transition:none!important}}
+
+      #organizeon-data-panel { width:100vw; max-width:100vw; overflow-x:hidden; }
+      #organizeon-data-panel .shell, #organizeon-data-panel .card, #organizeon-data-panel .actions, #organizeon-data-panel .row { min-width:0; max-width:100%; }
+      #organizeon-data-panel .actions { grid-template-columns:minmax(0,1fr); }
+      #organizeon-data-panel .actions > *, #organizeon-data-panel .row > * { min-width:0; width:100%; }
+      #organizeon-data-panel button { min-height:44px; height:auto; padding:10px 12px; font-size:14px; line-height:1.35; white-space:normal; overflow-wrap:anywhere; }
+      #organizeon-data-panel select { width:100%; max-width:100%; font-size:14px; }
+      #organizeon-data-panel .row { display:grid; grid-template-columns:minmax(0,1fr); }
+      @media (min-width:640px) { #organizeon-data-panel .actions { grid-template-columns:repeat(2,minmax(0,1fr)); } #organizeon-data-panel .actions > .row { grid-column:1/-1; grid-template-columns:minmax(0,1fr) auto; align-items:center; } #organizeon-data-panel .actions > .row > button { width:auto; } }
 </style>
     <div class="shell"><header class="top"><button class="back">←</button><div><h1>Dados</h1><div class="status">Conta ${window.organizeonAccount?.username || ""}</div></div></header>
       <article class="card"><div class="row"><div><strong>Backup na nuvem</strong><div class="status backup-status">Consultando…</div></div><button class="toggle primary">Carregando…</button></div><div class="actions"><button class="save">Salvar agora</button><button class="restore">Restaurar</button></div></article>
@@ -1198,7 +1207,7 @@ async function showDataPanel() {
     const response = await apiRequest("/account/backup", { method: "GET" });
     const status = await response.json();
     cloudBackupEnabled = status.enabled === true;
-    wrapper.querySelector(".backup-status").textContent = `${cloudBackupEnabled ? "ON" : "OFF"} · ${formatCloudBytes(status.size || 0)} / 500 MB`;
+    wrapper.querySelector(".backup-status").textContent = `${cloudBackupEnabled ? "ON" : "OFF"} · ${formatCloudBytes(status.size || 0)} / ${formatCloudBytes(status.limit || (256 * 1024 * 1024))}`;
     wrapper.querySelector(".toggle").textContent = cloudBackupEnabled ? "Desativar" : "Ativar";
   };
   wrapper.querySelector(".toggle").onclick = async () => {

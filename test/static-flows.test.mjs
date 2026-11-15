@@ -25,6 +25,26 @@ test("registration, Data controls and cloud backup are present", async () => {
   assert.ok(restoreIndex >= 0 && appImportIndex > restoreIndex, "cloud preferences restore before app initialization");
 });
 
+test("mobile data panel uses the server-reported 256 MiB cap without horizontal overflow", async () => {
+  const source = await text("auth-client.js");
+  assert.match(source, /status\.limit \|\| \(256 \* 1024 \* 1024\)/);
+  assert.match(source, /#organizeon-data-panel \{ width:100vw; max-width:100vw; overflow-x:hidden; \}/);
+  assert.match(source, /grid-template-columns:minmax\(0,1fr\)/);
+  assert.doesNotMatch(source, /\/ 500 MB/);
+});
+
+test("admin dashboard uses D3-aligned dark tokens and accessible compact navigation", async () => {
+  const source = await text("admin.html");
+  assert.match(source, /--bg: #09090b/);
+  assert.match(source, /--panel: #111113/);
+  assert.match(source, /@media\(max-width:390px\)/);
+  assert.match(source, /prefers-reduced-motion:reduce/);
+  assert.match(source, /aria-label="Visão geral"/);
+  assert.match(source, /aria-label="Eventos"/);
+  assert.match(source, /<svg class="nav-icon"/);
+  assert.doesNotMatch(source, /◫ <span|≡ <span|♙ <span/);
+});
+
 test("internal links and dashboard remain inside the client", async () => {
   const [auth, index] = await Promise.all([text("auth-client.js"), text("index.html")]);
   assert.match(auth, /installInternalNavigationGuard/);

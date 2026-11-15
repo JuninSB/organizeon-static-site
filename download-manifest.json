@@ -1,7 +1,7 @@
 {
-  "version": "v2-c220a71edcb5349a",
-  "generatedAt": "2026-11-15T02:25:17.431Z",
-  "totalBytes": 10441791,
+  "version": "v2-e2df22995e63c63f",
+  "generatedAt": "2026-11-15T02:41:55.401Z",
+  "totalBytes": 10447676,
   "files": [
     {
       "path": "404.html",
@@ -10,8 +10,8 @@
     },
     {
       "path": "admin.html",
-      "size": 29999,
-      "sha256": "233ea93a5b63bbaa9a7a1a182835fcb6607da804e086463fbd9186748fb19b18"
+      "size": 34762,
+      "sha256": "9ed80e31ad068fe5d0ab7d762411cccc97c731445c9b74a0e41c4f5398aaa5b5"
     },
     {
       "path": "admin.js",
@@ -335,8 +335,8 @@
     },
     {
       "path": "auth-client.js",
-      "size": 164306,
-      "sha256": "78769cecd00c86ea05379f24b2a6cee342065a3594e343dbb7c3b3b18c2116f6"
+      "size": 165428,
+      "sha256": "90cf7a58a1404fe265ebc304b2eecbb97513cab86e10de54438ca64ee2ce0975"
     },
     {
       "path": "config.js",
