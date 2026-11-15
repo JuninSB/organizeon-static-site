@@ -3869,44 +3869,41 @@ function showLogin(message = "") {
       #organizeon-login {
         position: fixed; inset: 0; z-index: 2147483647;
         display: grid; place-items: center; padding: 24px;
-        color: #f5f7f6; background:
-          radial-gradient(circle at 50% 20%, rgba(56, 130, 96, .22), transparent 38%),
-          #0b0e0d;
+        color: #fafafa; background: #09090b;
         font-family: Inter, ui-sans-serif, system-ui, sans-serif;
       }
       #organizeon-login * { box-sizing: border-box; }
       #organizeon-login form {
-        width: min(100%, 390px); padding: 30px;
-        border: 1px solid rgba(255,255,255,.12); border-radius: 18px;
-        background: rgba(22, 27, 25, .94);
-        box-shadow: 0 24px 70px rgba(0,0,0,.45);
+        width: min(100%, 390px); padding: 26px;
+        border: 1px solid #27272a; border-radius: 10px;
+        background: #111113;
       }
-      #organizeon-login h1 { margin: 0 0 8px; font-size: 28px; }
-      #organizeon-login p { margin: 0 0 22px; color: #aab4b0; font-size: 14px; }
+      #organizeon-login h1 { margin: 0 0 8px; font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+      #organizeon-login p { margin: 0 0 22px; color: #a1a1aa; font-size: 14px; }
       #organizeon-login label { display: block; margin: 14px 0 6px; font-size: 13px; }
       #organizeon-login input {
         width: 100%; height: 44px; padding: 0 12px;
-        border: 1px solid #39423e; border-radius: 10px;
-        color: #fff; background: #111614; outline: none;
+        border: 1px solid #3f3f46; border-radius: 7px;
+        color: #fafafa; background: #09090b; outline: none;
       }
-      #organizeon-login input:focus { border-color: #76d6a8; }
+      #organizeon-login input:focus { border-color: #a1a1aa; }
       #organizeon-login button {
         width: 100%; height: 44px; margin-top: 20px;
-        border: 0; border-radius: 10px; cursor: pointer;
-        color: #08120d; background: #86e7b8; font-weight: 700;
+        border: 1px solid #e4e4e7; border-radius: 7px; cursor: pointer;
+        color: #18181b; background: #e4e4e7; font-weight: 600;
       }
       #organizeon-login button:disabled { cursor: wait; opacity: .65; }
       #organizeon-login .guest {
-        margin-top: 10px; color: #d8eee7;
-        border: 1px solid #40534c; background: #18211e;
+        margin-top: 10px; color: #d4d4d8;
+        border: 1px solid #3f3f46; background: #18181b;
       }
       #organizeon-login .register {
-        margin-top: 10px; color: #9ee8d0;
-        border: 1px solid #355b4e; background: transparent;
+        margin-top: 10px; color: #d4d4d8;
+        border: 1px solid #3f3f46; background: transparent;
       }
       #organizeon-login .code-toggle {
-        margin-top: 10px; color: #9ee8d0;
-        border: 1px solid #355b4e; background: transparent;
+        margin-top: 10px; color: #d4d4d8;
+        border: 1px solid #3f3f46; background: transparent;
       }
       #organizeon-login .code-fields[hidden],
       #organizeon-login .password-fields[hidden] { display: none; }
@@ -3914,18 +3911,18 @@ function showLogin(message = "") {
         text-transform: uppercase; letter-spacing: .28em;
         text-align: center; font-size: 19px; font-weight: 800;
       }
-      #organizeon-login .guest:hover { border-color: #76d6a8; }
+      #organizeon-login .guest:hover { border-color: #a1a1aa; }
       #organizeon-login .guest-note {
-        margin: 9px 0 0; color: #82938d; text-align: center; font-size: 12px;
+        margin: 9px 0 0; color: #71717a; text-align: center; font-size: 12px;
       }
       #organizeon-login .message {
         min-height: 19px; margin: 14px 0 0;
-        color: #ff9c9c; font-size: 13px;
+        color: #fca5a5; font-size: 13px;
       }
     </style>
     <form autocomplete="on">
       <h1>Acesso privado</h1>
-      <p>A sessão permanece ativa por até 14 dias neste dispositivo.</p>
+      <p>Entre no OrganizeOn para continuar.</p>
       <div class="password-fields">
         <label for="organizeon-username">Usuário</label>
         <input id="organizeon-username" name="username" autocomplete="username" required>
@@ -3942,7 +3939,7 @@ function showLogin(message = "") {
       <button class="register" type="button">Registrar</button>
       <button class="code-toggle" type="button">Usar código de login</button>
       <button class="guest" type="button">Continuar como convidado</button>
-      <p class="guest-note">Sem API/relay privado · jogos e WISP público disponíveis</p>
+      <p class="guest-note">Acesso convidado com recursos limitados</p>
       <div class="message" role="status" aria-live="polite"></div>
     </form>
   `;
