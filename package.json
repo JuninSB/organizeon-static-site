@@ -3,9 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test test/*.test.mjs",
-    "build:ui": "npm --prefix ui run build",
-    "typecheck:ui": "npm --prefix ui run typecheck",
-    "test:ui": "npm --prefix ui test"
+    "test": "node --test test/*.test.mjs"
   }
 }

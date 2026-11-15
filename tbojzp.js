@@ -2,11 +2,11 @@
 
 const swBase = self.location.pathname.replace(/tbojzp\.js$/, '')
 
-importScripts(swBase + 'vendor/ultraviolet/uv.bundle.js')
-importScripts(swBase + 'vendor/ultraviolet/uv.config.js')
-importScripts(__uv$config.sw || swBase + 'vendor/ultraviolet/uv.sw.js')
+importScripts(swBase + 'rlr/obmw.bundle.js')
+importScripts(swBase + 'rlr/obmw.config.js')
+importScripts(__uv$config.sw || swBase + 'rlr/obmw.sw.js')
 
-importScripts(swBase + 'vendor/scramjet/scramjet.all.js')
+importScripts(swBase + 'xzmo/grhp.all.js')
 
 const uv = new UVServiceWorker()
 
