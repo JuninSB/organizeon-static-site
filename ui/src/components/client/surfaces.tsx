@@ -84,14 +84,14 @@ function LoginSurface({ initialMessage = "", onSubmit, onGuest }: LoginProps) {
   };
 
   return (
-    <main className="fixed inset-0 z-[2147483647] grid min-h-svh place-items-center overflow-y-auto bg-background px-4 py-8">
-      <Card className="w-full max-w-[420px] animate-ui-enter border-border/80 bg-card shadow-none">
-        <CardHeader className="gap-2 px-6 pt-7">
-          <div className="mb-3 flex items-center gap-3"><Shield className="size-8" /><div><p className="text-sm font-semibold">OrganizeOn</p><p className="text-xs text-muted-foreground">Cliente</p></div></div>
-          <CardTitle className="text-xl font-semibold tracking-tight">{mode === "register" ? "Criar conta" : mode === "code" ? "Entrar com código" : "Entrar no OrganizeOn"}</CardTitle>
-          <CardDescription>Autentique-se para acessar seus jogos e configurações.</CardDescription>
+    <main className="fixed inset-0 z-[2147483647] grid min-h-svh place-items-center overflow-y-auto bg-background px-4 py-10">
+      <Card className="w-full max-w-[380px] animate-ui-enter border-border bg-card shadow-none">
+        <CardHeader className="space-y-5">
+          <div className="flex items-center gap-3"><img className="size-10 object-contain" src="https://organizeon.com.br/d3/assets/organizeon-icon.png" alt="" /><div><p className="text-sm font-semibold">OrganizeOn</p><p className="text-xs text-muted-foreground">Cliente</p></div></div>
+          <div className="space-y-1.5"><CardTitle className="text-xl">{mode === "register" ? "Criar conta" : mode === "code" ? "Entrar com código" : "Entrar no OrganizeOn"}</CardTitle>
+          <CardDescription>Autentique-se para acessar seus jogos e configurações.</CardDescription></div>
         </CardHeader>
-        <CardContent className="px-6 pb-6">
+        <CardContent>
           <Tabs value={mode} onValueChange={(value) => { setMode(value as typeof mode); setMessage(""); }}>
             <TabsList className="grid h-9 w-full grid-cols-3 bg-muted/70">
               <TabsTrigger value="login">Entrar</TabsTrigger>
@@ -112,7 +112,7 @@ function LoginSurface({ initialMessage = "", onSubmit, onGuest }: LoginProps) {
                 </label>}
                 {mode === "register" && <p className="text-xs leading-relaxed text-muted-foreground">Contas novas começam sem permissões administrativas.</p>}
                 {message && <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">{message}</p>}
-                <Button type="submit" className="mt-1 w-full" disabled={pending} aria-busy={pending}>{pending ? "Autenticando…" : mode === "register" ? "Criar conta" : "Entrar"}</Button>
+                <Button type="submit" className="mt-1 h-10 w-full" disabled={pending || (mode === "code" ? !loginCode : !username || !password)} aria-busy={pending}>{pending ? "Autenticando…" : mode === "register" ? "Criar conta" : "Entrar"}</Button>
               </form>
             </TabsContent>
           </Tabs>

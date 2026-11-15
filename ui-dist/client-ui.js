@@ -19166,147 +19166,147 @@ function Rm({ className: e, ...t }) {
 function zm({ initialMessage: e = "", onSubmit: t, onGuest: n }) {
 	let [r, i] = (0, _.useState)("login"), [a, o] = (0, _.useState)(""), [s, c] = (0, _.useState)(""), [l, u] = (0, _.useState)(""), [d, f] = (0, _.useState)(e), [p, m] = (0, _.useState)(!1);
 	return (0, _.useEffect)(() => f(e), [e]), /* @__PURE__ */ (0, Z.jsx)("main", {
-		className: "fixed inset-0 z-[2147483647] grid min-h-svh place-items-center overflow-y-auto bg-background px-4 py-8",
+		className: "fixed inset-0 z-[2147483647] grid min-h-svh place-items-center overflow-y-auto bg-background px-4 py-10",
 		children: /* @__PURE__ */ (0, Z.jsxs)(Ai, {
-			className: "w-full max-w-[420px] animate-ui-enter border-border/80 bg-card shadow-none",
+			className: "w-full max-w-[380px] animate-ui-enter border-border bg-card shadow-none",
 			children: [/* @__PURE__ */ (0, Z.jsxs)(ji, {
-				className: "gap-2 px-6 pt-7",
-				children: [
-					/* @__PURE__ */ (0, Z.jsxs)("div", {
-						className: "mb-3 flex items-center gap-3",
-						children: [/* @__PURE__ */ (0, Z.jsx)(at, { className: "size-8" }), /* @__PURE__ */ (0, Z.jsxs)("div", { children: [/* @__PURE__ */ (0, Z.jsx)("p", {
-							className: "text-sm font-semibold",
-							children: "OrganizeOn"
-						}), /* @__PURE__ */ (0, Z.jsx)("p", {
-							className: "text-xs text-muted-foreground",
-							children: "Cliente"
-						})] })]
-					}),
-					/* @__PURE__ */ (0, Z.jsx)(Mi, {
-						className: "text-xl font-semibold tracking-tight",
+				className: "space-y-5",
+				children: [/* @__PURE__ */ (0, Z.jsxs)("div", {
+					className: "flex items-center gap-3",
+					children: [/* @__PURE__ */ (0, Z.jsx)("img", {
+						className: "size-10 object-contain",
+						src: "https://organizeon.com.br/d3/assets/organizeon-icon.png",
+						alt: ""
+					}), /* @__PURE__ */ (0, Z.jsxs)("div", { children: [/* @__PURE__ */ (0, Z.jsx)("p", {
+						className: "text-sm font-semibold",
+						children: "OrganizeOn"
+					}), /* @__PURE__ */ (0, Z.jsx)("p", {
+						className: "text-xs text-muted-foreground",
+						children: "Cliente"
+					})] })]
+				}), /* @__PURE__ */ (0, Z.jsxs)("div", {
+					className: "space-y-1.5",
+					children: [/* @__PURE__ */ (0, Z.jsx)(Mi, {
+						className: "text-xl",
 						children: r === "register" ? "Criar conta" : r === "code" ? "Entrar com código" : "Entrar no OrganizeOn"
-					}),
-					/* @__PURE__ */ (0, Z.jsx)(Ni, { children: "Autentique-se para acessar seus jogos e configurações." })
-				]
-			}), /* @__PURE__ */ (0, Z.jsxs)(Pi, {
-				className: "px-6 pb-6",
-				children: [/* @__PURE__ */ (0, Z.jsxs)(Pm, {
+					}), /* @__PURE__ */ (0, Z.jsx)(Ni, { children: "Autentique-se para acessar seus jogos e configurações." })]
+				})]
+			}), /* @__PURE__ */ (0, Z.jsxs)(Pi, { children: [/* @__PURE__ */ (0, Z.jsxs)(Pm, {
+				value: r,
+				onValueChange: (e) => {
+					i(e), f("");
+				},
+				children: [/* @__PURE__ */ (0, Z.jsxs)(Im, {
+					className: "grid h-9 w-full grid-cols-3 bg-muted/70",
+					children: [
+						/* @__PURE__ */ (0, Z.jsx)(Lm, {
+							value: "login",
+							children: "Entrar"
+						}),
+						/* @__PURE__ */ (0, Z.jsx)(Lm, {
+							value: "register",
+							children: "Criar conta"
+						}),
+						/* @__PURE__ */ (0, Z.jsx)(Lm, {
+							value: "code",
+							children: "Código"
+						})
+					]
+				}), /* @__PURE__ */ (0, Z.jsx)(Rm, {
 					value: r,
-					onValueChange: (e) => {
-						i(e), f("");
-					},
-					children: [/* @__PURE__ */ (0, Z.jsxs)(Im, {
-						className: "grid h-9 w-full grid-cols-3 bg-muted/70",
+					className: "mt-4",
+					children: /* @__PURE__ */ (0, Z.jsxs)("form", {
+						className: "grid gap-3",
+						onSubmit: async (e) => {
+							e.preventDefault(), m(!0), f("");
+							try {
+								await t({
+									mode: r,
+									username: a,
+									password: s,
+									loginCode: l
+								});
+							} catch (e) {
+								f(e instanceof Error ? e.message : "Não foi possível conectar ao servidor.");
+							} finally {
+								m(!1);
+							}
+						},
+						autoComplete: "on",
 						children: [
-							/* @__PURE__ */ (0, Z.jsx)(Lm, {
-								value: "login",
-								children: "Entrar"
+							r === "code" ? /* @__PURE__ */ (0, Z.jsxs)("label", {
+								className: "grid gap-1.5 text-sm font-medium",
+								htmlFor: "organizeon-code",
+								children: ["Código de login", /* @__PURE__ */ (0, Z.jsx)(Jd, {
+									id: "organizeon-code",
+									className: "text-center font-mono tracking-[.3em]",
+									name: "loginCode",
+									autoComplete: "one-time-code",
+									maxLength: 6,
+									pattern: "[A-Za-z0-9]{6}",
+									required: !0,
+									value: l,
+									onChange: (e) => u(e.target.value.toUpperCase())
+								})]
+							}) : /* @__PURE__ */ (0, Z.jsxs)(Z.Fragment, { children: [/* @__PURE__ */ (0, Z.jsxs)("label", {
+								className: "grid gap-1.5 text-sm font-medium",
+								htmlFor: "organizeon-username",
+								children: ["Usuário", /* @__PURE__ */ (0, Z.jsx)(Jd, {
+									id: "organizeon-username",
+									name: "username",
+									autoComplete: "username",
+									minLength: 3,
+									maxLength: 32,
+									required: !0,
+									value: a,
+									onChange: (e) => o(e.target.value)
+								})]
+							}), /* @__PURE__ */ (0, Z.jsxs)("label", {
+								className: "grid gap-1.5 text-sm font-medium",
+								htmlFor: "organizeon-password",
+								children: ["Senha", /* @__PURE__ */ (0, Z.jsx)(Jd, {
+									id: "organizeon-password",
+									name: "password",
+									type: "password",
+									autoComplete: r === "register" ? "new-password" : "current-password",
+									minLength: r === "register" ? 8 : void 0,
+									required: !0,
+									value: s,
+									onChange: (e) => c(e.target.value)
+								})]
+							})] }),
+							r === "register" && /* @__PURE__ */ (0, Z.jsx)("p", {
+								className: "text-xs leading-relaxed text-muted-foreground",
+								children: "Contas novas começam sem permissões administrativas."
 							}),
-							/* @__PURE__ */ (0, Z.jsx)(Lm, {
-								value: "register",
-								children: "Criar conta"
+							d && /* @__PURE__ */ (0, Z.jsx)("p", {
+								className: "rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive",
+								role: "alert",
+								children: d
 							}),
-							/* @__PURE__ */ (0, Z.jsx)(Lm, {
-								value: "code",
-								children: "Código"
+							/* @__PURE__ */ (0, Z.jsx)(Q, {
+								type: "submit",
+								className: "mt-1 h-10 w-full",
+								disabled: p || (r === "code" ? !l : !a || !s),
+								"aria-busy": p,
+								children: p ? "Autenticando…" : r === "register" ? "Criar conta" : "Entrar"
 							})
 						]
-					}), /* @__PURE__ */ (0, Z.jsx)(Rm, {
-						value: r,
-						className: "mt-4",
-						children: /* @__PURE__ */ (0, Z.jsxs)("form", {
-							className: "grid gap-3",
-							onSubmit: async (e) => {
-								e.preventDefault(), m(!0), f("");
-								try {
-									await t({
-										mode: r,
-										username: a,
-										password: s,
-										loginCode: l
-									});
-								} catch (e) {
-									f(e instanceof Error ? e.message : "Não foi possível conectar ao servidor.");
-								} finally {
-									m(!1);
-								}
-							},
-							autoComplete: "on",
-							children: [
-								r === "code" ? /* @__PURE__ */ (0, Z.jsxs)("label", {
-									className: "grid gap-1.5 text-sm font-medium",
-									htmlFor: "organizeon-code",
-									children: ["Código de login", /* @__PURE__ */ (0, Z.jsx)(Jd, {
-										id: "organizeon-code",
-										className: "text-center font-mono tracking-[.3em]",
-										name: "loginCode",
-										autoComplete: "one-time-code",
-										maxLength: 6,
-										pattern: "[A-Za-z0-9]{6}",
-										required: !0,
-										value: l,
-										onChange: (e) => u(e.target.value.toUpperCase())
-									})]
-								}) : /* @__PURE__ */ (0, Z.jsxs)(Z.Fragment, { children: [/* @__PURE__ */ (0, Z.jsxs)("label", {
-									className: "grid gap-1.5 text-sm font-medium",
-									htmlFor: "organizeon-username",
-									children: ["Usuário", /* @__PURE__ */ (0, Z.jsx)(Jd, {
-										id: "organizeon-username",
-										name: "username",
-										autoComplete: "username",
-										minLength: 3,
-										maxLength: 32,
-										required: !0,
-										value: a,
-										onChange: (e) => o(e.target.value)
-									})]
-								}), /* @__PURE__ */ (0, Z.jsxs)("label", {
-									className: "grid gap-1.5 text-sm font-medium",
-									htmlFor: "organizeon-password",
-									children: ["Senha", /* @__PURE__ */ (0, Z.jsx)(Jd, {
-										id: "organizeon-password",
-										name: "password",
-										type: "password",
-										autoComplete: r === "register" ? "new-password" : "current-password",
-										minLength: r === "register" ? 8 : void 0,
-										required: !0,
-										value: s,
-										onChange: (e) => c(e.target.value)
-									})]
-								})] }),
-								r === "register" && /* @__PURE__ */ (0, Z.jsx)("p", {
-									className: "text-xs leading-relaxed text-muted-foreground",
-									children: "Contas novas começam sem permissões administrativas."
-								}),
-								d && /* @__PURE__ */ (0, Z.jsx)("p", {
-									className: "rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive",
-									role: "alert",
-									children: d
-								}),
-								/* @__PURE__ */ (0, Z.jsx)(Q, {
-									type: "submit",
-									className: "mt-1 w-full",
-									disabled: p,
-									"aria-busy": p,
-									children: p ? "Autenticando…" : r === "register" ? "Criar conta" : "Entrar"
-								})
-							]
-						})
-					})]
-				}), /* @__PURE__ */ (0, Z.jsxs)("div", {
-					className: "mt-4 border-t pt-4",
-					children: [/* @__PURE__ */ (0, Z.jsx)(Q, {
-						variant: "outline",
-						className: "w-full",
-						onClick: () => void n(),
-						disabled: p,
-						children: "Continuar como convidado"
-					}), /* @__PURE__ */ (0, Z.jsx)("p", {
-						className: "mt-2 text-center text-xs text-muted-foreground",
-						children: "Acesso convidado com recursos limitados"
-					})]
+					})
 				})]
-			})]
+			}), /* @__PURE__ */ (0, Z.jsxs)("div", {
+				className: "mt-4 border-t pt-4",
+				children: [/* @__PURE__ */ (0, Z.jsx)(Q, {
+					variant: "outline",
+					className: "w-full",
+					onClick: () => void n(),
+					disabled: p,
+					children: "Continuar como convidado"
+				}), /* @__PURE__ */ (0, Z.jsx)("p", {
+					className: "mt-2 text-center text-xs text-muted-foreground",
+					children: "Acesso convidado com recursos limitados"
+				})]
+			})] })]
 		})
 	});
 }
@@ -20123,7 +20123,7 @@ function th({ onSubmit: e }) {
 			className: "w-full max-w-[380px] border-border bg-card shadow-none animate-ui-enter",
 			children: [
 				/* @__PURE__ */ (0, Z.jsxs)(ji, {
-					className: "gap-5",
+					className: "space-y-5",
 					children: [/* @__PURE__ */ (0, Z.jsxs)("div", {
 						className: "flex items-center gap-3",
 						children: [/* @__PURE__ */ (0, Z.jsx)("img", {
@@ -20140,13 +20140,13 @@ function th({ onSubmit: e }) {
 							className: "text-xs text-muted-foreground",
 							children: "Painel de arquivos"
 						})] })]
-					}), /* @__PURE__ */ (0, Z.jsxs)("div", { children: [/* @__PURE__ */ (0, Z.jsx)(Mi, {
-						className: "text-xl",
-						children: "Entrar no painel"
-					}), /* @__PURE__ */ (0, Z.jsx)(Ni, {
-						className: "mt-2",
-						children: "Autentique-se para acessar o conteúdo do Endpoint 2."
-					})] })]
+					}), /* @__PURE__ */ (0, Z.jsxs)("div", {
+						className: "space-y-1.5",
+						children: [/* @__PURE__ */ (0, Z.jsx)(Mi, {
+							className: "text-xl",
+							children: "Entrar no painel"
+						}), /* @__PURE__ */ (0, Z.jsx)(Ni, { children: "Autentique-se para acessar o conteúdo do Endpoint 2." })]
+					})]
 				}),
 				/* @__PURE__ */ (0, Z.jsx)(Pi, { children: /* @__PURE__ */ (0, Z.jsxs)("form", {
 					className: "grid gap-4",

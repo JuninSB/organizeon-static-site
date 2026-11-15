@@ -46,6 +46,9 @@
 .organizeon-overlay-root { min-width: 0; min-height: 0; background: transparent; }
 .organizeon-ui *, .organizeon-ui *::before, .organizeon-ui *::after { box-sizing: border-box; }
 .organizeon-ui button { border: 0 solid; background: transparent; color: inherit; cursor: pointer; }
+.organizeon-ui input { border: 1px solid rgb(var(--input)); background: transparent; color: inherit; }
+.organizeon-ui [data-slot="card"] { border: 1px solid rgb(var(--border)); }
+.organizeon-ui svg, .organizeon-ui img { display: block; vertical-align: middle; }
 .organizeon-ui h1, .organizeon-ui h2, .organizeon-ui p { margin: 0; }
 .organizeon-ui button,.organizeon-ui input,.organizeon-ui select { font: inherit; }
 .organizeon-ui button { -webkit-tap-highlight-color: transparent; }
