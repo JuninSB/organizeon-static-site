@@ -33350,7 +33350,7 @@ var $m = {
 	guest: "Convidado"
 };
 function eh(e) {
-	let [t, n] = (0, x.useState)(!1), r = [
+	let [t, n] = (0, x.useState)(!1), [r, i] = (0, x.useState)(!1), a = [
 		{
 			id: "home",
 			label: "Início",
@@ -33382,76 +33382,82 @@ function eh(e) {
 			icon: rt
 		}] : []
 	];
-	return /* @__PURE__ */ (0, Y.jsxs)(_m, { children: [
-		/* @__PURE__ */ (0, Y.jsx)(vm, {
-			render: /* @__PURE__ */ (0, Y.jsx)(Ii, {
-				variant: "outline",
-				size: "icon",
-				className: "fixed left-3 top-3 z-40",
-				"aria-label": "Abrir perfil e navegação"
-			}),
-			children: /* @__PURE__ */ (0, Y.jsx)(pt, {})
-		}),
-		/* @__PURE__ */ (0, Y.jsxs)(xm, {
-			side: "left",
-			className: "w-[min(88vw,320px)] border-border bg-popover p-3",
-			children: [
-				/* @__PURE__ */ (0, Y.jsxs)(Sm, {
-					className: "px-2 pb-4 text-left",
-					children: [/* @__PURE__ */ (0, Y.jsx)(Cm, { children: "OrganizeOn" }), /* @__PURE__ */ (0, Y.jsxs)(wm, {
-						className: "flex flex-col gap-1",
-						children: [/* @__PURE__ */ (0, Y.jsx)("span", {
-							className: "font-medium text-foreground",
-							children: e.username
-						}), /* @__PURE__ */ (0, Y.jsx)("span", { children: $m[e.role] || "Usuário" })]
-					})]
-				}),
-				/* @__PURE__ */ (0, Y.jsx)("nav", {
-					className: "grid gap-1",
-					"aria-label": "Navegação da conta",
-					children: r.map(({ id: t, label: n, icon: r }) => /* @__PURE__ */ (0, Y.jsxs)(Ii, {
-						variant: "ghost",
-						className: "justify-start",
-						onClick: () => e.onNavigate(t),
-						children: [
-							/* @__PURE__ */ (0, Y.jsx)(r, { className: "size-4 text-muted-foreground" }),
-							n,
-							t === "proxy" && /* @__PURE__ */ (0, Y.jsx)(Wr, {
-								variant: "secondary",
-								className: "ml-auto",
-								children: e.proxyLabel
-							})
-						]
-					}, t))
-				}),
-				/* @__PURE__ */ (0, Y.jsx)("div", {
-					className: "mt-4 border-t pt-3",
-					children: /* @__PURE__ */ (0, Y.jsxs)(Ii, {
-						variant: "ghost",
-						className: "w-full justify-start text-destructive hover:text-destructive",
-						onClick: () => n(!0),
-						children: [/* @__PURE__ */ (0, Y.jsx)(Ue, { className: "size-4" }), "Sair"]
-					})
-				})
-			]
-		}),
-		/* @__PURE__ */ (0, Y.jsx)(Nd, {
-			open: t,
-			onOpenChange: n,
-			children: /* @__PURE__ */ (0, Y.jsxs)(Id, {
-				className: "sm:max-w-sm",
-				children: [/* @__PURE__ */ (0, Y.jsxs)(Ld, { children: [/* @__PURE__ */ (0, Y.jsx)(zd, { children: "Encerrar sessão?" }), /* @__PURE__ */ (0, Y.jsx)(Bd, { children: e.guest ? "Deseja sair do modo convidado?" : "Deseja realmente sair desta conta?" })] }), /* @__PURE__ */ (0, Y.jsxs)(Rd, { children: [/* @__PURE__ */ (0, Y.jsx)(Ii, {
+	return /* @__PURE__ */ (0, Y.jsxs)(_m, {
+		open: r,
+		onOpenChange: i,
+		children: [
+			/* @__PURE__ */ (0, Y.jsx)(vm, {
+				render: /* @__PURE__ */ (0, Y.jsx)(Ii, {
 					variant: "outline",
-					onClick: () => n(!1),
-					children: "Cancelar"
-				}), /* @__PURE__ */ (0, Y.jsx)(Ii, {
-					variant: "destructive",
-					onClick: () => e.onNavigate("logout"),
-					children: "Sair"
-				})] })]
+					size: "icon",
+					className: "pointer-events-auto fixed left-3 top-3 z-40",
+					"aria-label": "Abrir perfil e navegação"
+				}),
+				children: /* @__PURE__ */ (0, Y.jsx)(pt, {})
+			}),
+			/* @__PURE__ */ (0, Y.jsxs)(xm, {
+				side: "left",
+				className: "w-[min(88vw,320px)] border-border bg-popover p-3",
+				children: [
+					/* @__PURE__ */ (0, Y.jsxs)(Sm, {
+						className: "px-2 pb-4 text-left",
+						children: [/* @__PURE__ */ (0, Y.jsx)(Cm, { children: "OrganizeOn" }), /* @__PURE__ */ (0, Y.jsxs)(wm, {
+							className: "flex flex-col gap-1",
+							children: [/* @__PURE__ */ (0, Y.jsx)("span", {
+								className: "font-medium text-foreground",
+								children: e.username
+							}), /* @__PURE__ */ (0, Y.jsx)("span", { children: $m[e.role] || "Usuário" })]
+						})]
+					}),
+					/* @__PURE__ */ (0, Y.jsx)("nav", {
+						className: "grid gap-1",
+						"aria-label": "Navegação da conta",
+						children: a.map(({ id: t, label: n, icon: r }) => /* @__PURE__ */ (0, Y.jsxs)(Ii, {
+							variant: "ghost",
+							className: "justify-start",
+							onClick: () => {
+								i(!1), e.onNavigate(t);
+							},
+							children: [
+								/* @__PURE__ */ (0, Y.jsx)(r, { className: "size-4 text-muted-foreground" }),
+								n,
+								t === "proxy" && /* @__PURE__ */ (0, Y.jsx)(Wr, {
+									variant: "secondary",
+									className: "ml-auto",
+									children: e.proxyLabel
+								})
+							]
+						}, t))
+					}),
+					/* @__PURE__ */ (0, Y.jsx)("div", {
+						className: "mt-4 border-t pt-3",
+						children: /* @__PURE__ */ (0, Y.jsxs)(Ii, {
+							variant: "ghost",
+							className: "w-full justify-start text-destructive hover:text-destructive",
+							onClick: () => n(!0),
+							children: [/* @__PURE__ */ (0, Y.jsx)(Ue, { className: "size-4" }), "Sair"]
+						})
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, Y.jsx)(Nd, {
+				open: t,
+				onOpenChange: n,
+				children: /* @__PURE__ */ (0, Y.jsxs)(Id, {
+					className: "sm:max-w-sm",
+					children: [/* @__PURE__ */ (0, Y.jsxs)(Ld, { children: [/* @__PURE__ */ (0, Y.jsx)(zd, { children: "Encerrar sessão?" }), /* @__PURE__ */ (0, Y.jsx)(Bd, { children: e.guest ? "Deseja sair do modo convidado?" : "Deseja realmente sair desta conta?" })] }), /* @__PURE__ */ (0, Y.jsxs)(Rd, { children: [/* @__PURE__ */ (0, Y.jsx)(Ii, {
+						variant: "outline",
+						onClick: () => n(!1),
+						children: "Cancelar"
+					}), /* @__PURE__ */ (0, Y.jsx)(Ii, {
+						variant: "destructive",
+						onClick: () => e.onNavigate("logout"),
+						children: "Sair"
+					})] })]
+				})
 			})
-		})
-	] });
+		]
+	});
 }
 function th(e) {
 	let { type: t, ...n } = e, r = (0, x.useMemo)(() => t === "login" ? /* @__PURE__ */ (0, Y.jsx)(Ym, { ...n }) : t === "data" ? /* @__PURE__ */ (0, Y.jsx)(Zm, { ...n }) : t === "proxy" ? /* @__PURE__ */ (0, Y.jsx)(Qm, { ...n }) : /* @__PURE__ */ (0, Y.jsx)(eh, { ...n }), [t, n]);

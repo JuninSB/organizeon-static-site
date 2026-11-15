@@ -87,11 +87,12 @@
 .organizeon-admin-root .view[data-starting-style] { opacity: 0; transform: translateY(.25rem); }
 .organizeon-admin-root .view { transition: opacity 160ms ease, transform 160ms ease; }
 .organizeon-ui [data-slot="dialog-overlay"],
-.organizeon-ui [data-slot="sheet-overlay"] { background: rgb(0 0 0 / .68); }
+.organizeon-ui [data-slot="sheet-overlay"] { background: rgb(0 0 0 / .68); pointer-events: auto; }
 .organizeon-ui [data-slot="dialog-content"],
 .organizeon-ui [data-slot="sheet-content"],
 .organizeon-ui [data-slot="select-content"],
 .organizeon-ui [data-slot="dropdown-menu-content"] {
+  pointer-events: auto;
   border: 1px solid rgb(var(--border));
   box-shadow: 0 24px 64px rgb(0 0 0 / .32);
 }

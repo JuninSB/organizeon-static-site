@@ -240,6 +240,7 @@ function ProxySurface(props: ProxyProps) {
 const roleLabels: Record<string, string> = { owner: "Owner", ultra_admin: "Ultra Admin", admin: "Administrador", user: "Usuário", guest: "Convidado" };
 function AccountSurface(props: AccountProps) {
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const actions: { id: AccountProps["onNavigate"] extends (v: infer T) => void ? T : never; label: string; icon: typeof UserRound }[] = [
     { id: "home", label: "Início", icon: UserRound }, { id: "games", label: "Jogos", icon: Gamepad2 },
     { id: "settings", label: "Configurações", icon: Settings2 },
@@ -247,10 +248,10 @@ function AccountSurface(props: AccountProps) {
     { id: "proxy", label: "Servidor proxy", icon: Signal },
     ...(props.canOpenDashboard ? [{ id: "dashboard" as const, label: "Dashboard", icon: Shield }] : []),
   ];
-  return <Sheet><SheetTrigger render={<Button variant="outline" size="icon" className="fixed left-3 top-3 z-40" aria-label="Abrir perfil e navegação" />}><UserRound /></SheetTrigger>
+  return <Sheet open={open} onOpenChange={setOpen}><SheetTrigger render={<Button variant="outline" size="icon" className="pointer-events-auto fixed left-3 top-3 z-40" aria-label="Abrir perfil e navegação" />}><UserRound /></SheetTrigger>
     <SheetContent side="left" className="w-[min(88vw,320px)] border-border bg-popover p-3">
       <SheetHeader className="px-2 pb-4 text-left"><SheetTitle>OrganizeOn</SheetTitle><SheetDescription className="flex flex-col gap-1"><span className="font-medium text-foreground">{props.username}</span><span>{roleLabels[props.role] || "Usuário"}</span></SheetDescription></SheetHeader>
-      <nav className="grid gap-1" aria-label="Navegação da conta">{actions.map(({ id, label, icon: Icon }) => <Button key={id} variant="ghost" className="justify-start" onClick={() => props.onNavigate(id)}><Icon className="size-4 text-muted-foreground" />{label}{id === "proxy" && <Badge variant="secondary" className="ml-auto">{props.proxyLabel}</Badge>}</Button>)}</nav>
+      <nav className="grid gap-1" aria-label="Navegação da conta">{actions.map(({ id, label, icon: Icon }) => <Button key={id} variant="ghost" className="justify-start" onClick={() => { setOpen(false); props.onNavigate(id); }}><Icon className="size-4 text-muted-foreground" />{label}{id === "proxy" && <Badge variant="secondary" className="ml-auto">{props.proxyLabel}</Badge>}</Button>)}</nav>
       <div className="mt-4 border-t pt-3"><Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => setLogoutOpen(true)}><LogOut className="size-4" />Sair</Button></div>
     </SheetContent>
     <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}><DialogContent className="sm:max-w-sm"><DialogHeader><DialogTitle>Encerrar sessão?</DialogTitle><DialogDescription>{props.guest ? "Deseja sair do modo convidado?" : "Deseja realmente sair desta conta?"}</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setLogoutOpen(false)}>Cancelar</Button><Button variant="destructive" onClick={() => props.onNavigate("logout")}>Sair</Button></DialogFooter></DialogContent></Dialog>

@@ -508,7 +508,6 @@ function configureAccountNavigation(account) {
     canOpenDashboard: normalized.permissions.includes("admin.dashboard"),
     proxyLabel: selectedProxy.beta ? "BETA" : "ATIVO",
     onNavigate: (action) => {
-      if (action !== "logout") disposeClientSurface(host);
       if (action === "home") navigateClientRoute("/");
       if (action === "games") showGameCatalog();
       if (action === "settings") navigateClientRoute("/settings");
