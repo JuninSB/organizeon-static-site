@@ -266,5 +266,5 @@ export function ClientSurface(props: SurfaceProps) {
     if (type === "proxy") return <ProxySurface {...rest as ProxyProps} />;
     return <AccountSurface {...rest as AccountProps} />;
   }, [type, rest]);
-  return <div className="organizeon-ui dark min-h-svh bg-background text-foreground">{content}</div>;
+  return <div className={type === "account" ? "organizeon-ui organizeon-overlay-root dark text-foreground" : "organizeon-ui dark min-h-svh bg-background text-foreground"}>{content}</div>;
 }

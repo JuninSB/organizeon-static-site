@@ -19643,7 +19643,7 @@ function Fm(e) {
 function Im(e) {
 	let { type: t, ...n } = e, r = (0, _.useMemo)(() => t === "login" ? /* @__PURE__ */ (0, X.jsx)(Am, { ...n }) : t === "data" ? /* @__PURE__ */ (0, X.jsx)(Mm, { ...n }) : t === "proxy" ? /* @__PURE__ */ (0, X.jsx)(Nm, { ...n }) : /* @__PURE__ */ (0, X.jsx)(Fm, { ...n }), [t, n]);
 	return /* @__PURE__ */ (0, X.jsx)("div", {
-		className: "organizeon-ui dark min-h-svh bg-background text-foreground",
+		className: t === "account" ? "organizeon-ui organizeon-overlay-root dark text-foreground" : "organizeon-ui dark min-h-svh bg-background text-foreground",
 		children: r
 	});
 }
@@ -20121,7 +20121,7 @@ function ah(e, t, n) {
 	let i = document.createElement("link");
 	i.rel = "stylesheet", i.href = n, r.append(i);
 	let a = document.createElement("div");
-	a.className = "organizeon-ui dark", r.append(a);
+	a.className = t.type === "account" ? "organizeon-ui organizeon-overlay-root dark" : "organizeon-ui dark", r.append(a);
 	let o = (0, g.createRoot)(a);
 	return o.render(/* @__PURE__ */ (0, X.jsx)(fd, {
 		container: r,
@@ -20142,7 +20142,7 @@ function oh(e, t) {
 	let r = document.createElement("link");
 	r.rel = "stylesheet", r.href = t, n.append(r);
 	let i = document.createElement("div");
-	i.className = "organizeon-ui dark", n.append(i);
+	i.className = "organizeon-ui organizeon-overlay-root dark", n.append(i);
 	let a = (0, g.createRoot)(i);
 	return a.render(/* @__PURE__ */ (0, X.jsx)(fd, {
 		container: n,

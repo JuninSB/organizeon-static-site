@@ -116,7 +116,7 @@ export function mountClientSurface(host: HTMLElement, props: SurfaceProps, style
   stylesheet.href = stylesheetHref;
   shadow.append(stylesheet);
   const container = document.createElement("div");
-  container.className = "organizeon-ui dark";
+  container.className = props.type === "account" ? "organizeon-ui organizeon-overlay-root dark" : "organizeon-ui dark";
   shadow.append(container);
   const root = createRoot(container);
   root.render(
@@ -145,7 +145,7 @@ export function mountClientToaster(host: HTMLElement, stylesheetHref: string) {
   stylesheet.href = stylesheetHref;
   shadow.append(stylesheet);
   const container = document.createElement("div");
-  container.className = "organizeon-ui dark";
+  container.className = "organizeon-ui organizeon-overlay-root dark";
   shadow.append(container);
   const root = createRoot(container);
   root.render(<PortalContextProvider container={shadow}><Toaster position="bottom-right" theme="dark" closeButton /></PortalContextProvider>);
