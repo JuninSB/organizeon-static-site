@@ -16,4 +16,4 @@ A reformulação das demais páginas, a reorganização dos chunks e a validaç�
 - Navegação de conta: menu com superfícies neutras e botão reposicionado para não cobrir as abas móveis.
 - Dados, proxy e catálogo de jogos: controles e superfícies harmonizados, com foco visível e ajustes de grade para telas estreitas.
 - As telas compiladas do cliente foram mantidas sem mudanças.
-- Manifesto e versão atualizados para a entrega do cliente: `v2-85ae4536913e5312`.
+- Manifesto e versão atualizados para a entrega do cliente: `v2-74efbd7672e6762b`.
