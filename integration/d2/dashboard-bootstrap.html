@@ -1,0 +1,38 @@
+<script type="module">
+const dashboardOrigin = "https://juninsb.github.io/organizeon-static-site/ui-dist/";
+const panel = document.getElementById("app");
+let dashboardHost = null, dashboardCleanup = null, mounting = false;
+async function updateDashboard() {
+  if (panel.classList.contains("hidden")) {
+    if (dashboardCleanup) dashboardCleanup();
+    dashboardCleanup = null;
+    dashboardHost?.remove(); dashboardHost = null;
+    panel.classList.remove("enhanced");
+    return;
+  }
+  if (dashboardHost || mounting) return;
+  mounting = true;
+  const host = document.createElement("div"); host.id = "d2-dashboard-ui"; panel.appendChild(host); dashboardHost = host;
+  try {
+    const [module, session] = await Promise.all([import(dashboardOrigin + "client-ui.js?v=d2-dashboard-20261115-1"), api("/auth/session")]);
+    if (panel.classList.contains("hidden") || dashboardHost !== host) { host.remove(); return; }
+    const upload = (file, progress) => new Promise((resolve, reject) => {
+      if (!canUploadLarge && file.size > MAX_UPLOAD_SIZE) return reject(new Error("Arquivo excede o limite de 100 MB."));
+      const xhr = new XMLHttpRequest(); xhr.open("POST", API + "/files");
+      if (token) xhr.setRequestHeader("Authorization", "Bearer " + token);
+      xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+      xhr.setRequestHeader("X-File-Name", encodeURIComponent(file.name));
+      xhr.upload.addEventListener("progress", (event) => { if (event.lengthComputable) progress(Math.min(100, event.loaded / event.total * 100)); });
+      xhr.onload = () => { if (xhr.status === 401) { logout(); reject(new Error("Sessão expirada.")); return; } if (xhr.status < 200 || xhr.status >= 300) { let error = "Falha no envio."; try { error = JSON.parse(xhr.responseText).error || error; } catch {} reject(new Error(error)); return; } resolve(); };
+      xhr.onerror = () => reject(new Error("Falha de rede.")); xhr.onabort = () => reject(new Error("Upload cancelado.")); xhr.send(file);
+    });
+    dashboardCleanup = module.mountD2Dashboard(host, { username: session.username, role: session.role, request: api, upload, logout }, dashboardOrigin + "client-ui.css?v=d2-dashboard-20261115-1");
+    const link = host.shadowRoot.querySelector('link[rel="stylesheet"]');
+    link.addEventListener("load", () => panel.classList.add("enhanced"), { once: true });
+    link.addEventListener("error", () => { dashboardCleanup?.(); dashboardCleanup = null; host.remove(); dashboardHost = null; }, { once: true });
+  } catch (error) { host.remove(); dashboardHost = null; console.error("Falha ao carregar o painel D2:", error); }
+  finally { mounting = false; }
+}
+new MutationObserver(updateDashboard).observe(panel, { attributes: true, attributeFilter: ["class"] });
+void updateDashboard();
+</script>

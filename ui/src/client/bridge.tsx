@@ -1,6 +1,6 @@
 import { createRoot, type Root } from "react-dom/client";
 import { flushSync } from "react-dom";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Toaster, toast } from "sonner";
 import { ClientSurface, type SurfaceProps } from "@/components/client/surfaces";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,7 @@ import { CatalogToolbar, type CatalogToolbarProps } from "@/components/client/ca
 import { ConfirmActionDialog, GameControlSettingsDialog, GameCreditsDialog } from "@/components/client/game-dialogs";
 import { PreferenceCard, type PreferenceCardProps } from "@/components/client/preference-card";
 import { D2Login } from "@/components/client/d2-login";
+import { D2Dashboard } from "@/components/client/d2-dashboard";
 
 type ClientMount = { root: Root; shadow: ShadowRoot; container: HTMLDivElement };
 const mounts = new WeakMap<HTMLElement, ClientMount>();
@@ -160,6 +161,16 @@ export function mountD2Login(host: HTMLElement, onSubmit: (username: string, pas
   shadow.append(stylesheet, container);
   const root = createRoot(container);
   flushSync(() => root.render(<D2Login onSubmit={onSubmit} />));
+  return () => { root.unmount(); shadow.replaceChildren(); };
+}
+
+export function mountD2Dashboard(host: HTMLElement, props: ComponentProps<typeof D2Dashboard>, stylesheetHref: string) {
+  const shadow = host.attachShadow({ mode: "open" });
+  const stylesheet = document.createElement("link"); stylesheet.rel = "stylesheet"; stylesheet.href = stylesheetHref;
+  const container = document.createElement("div"); container.className = "organizeon-ui dark";
+  shadow.append(stylesheet, container);
+  const root = createRoot(container);
+  flushSync(() => root.render(<PortalContextProvider container={container}><D2Dashboard {...props} /></PortalContextProvider>));
   return () => { root.unmount(); shadow.replaceChildren(); };
 }
 
