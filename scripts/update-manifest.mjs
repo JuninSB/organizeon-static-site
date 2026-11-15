@@ -1,0 +1,15 @@
+import { createHash } from 'node:crypto';
+import { readFile, writeFile } from 'node:fs/promises';
+
+// Preserve the published list: clients depend on existing paths remaining available.
+const manifest = JSON.parse(await readFile(new URL('../download-manifest.json', import.meta.url), 'utf8'));
+for (const file of manifest.files) {
+  const bytes = await readFile(new URL(`../${file.path}`, import.meta.url));
+  file.size = bytes.length;
+  file.sha256 = createHash('sha256').update(bytes).digest('hex');
+}
+manifest.totalBytes = manifest.files.reduce((total, file) => total + file.size, 0);
+manifest.version = 'v2-' + createHash('sha256').update(JSON.stringify(manifest.files)).digest('hex').slice(0, 16);
+manifest.generatedAt = new Date().toISOString();
+await writeFile(new URL('../download-manifest.json', import.meta.url), JSON.stringify(manifest, null, 2) + '\n');
+await writeFile(new URL('../version.txt', import.meta.url), manifest.version + '\n');
