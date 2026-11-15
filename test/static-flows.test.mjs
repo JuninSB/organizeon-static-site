@@ -157,3 +157,16 @@ test("download manifest hashes match every listed file", async () => {
     assert.equal(createHash("sha256").update(data).digest("hex"), file.sha256, `${file.path} hash`);
   }
 });
+
+test("kernel 2.7.0 download artifact matches the served index", async () => {
+  const [index, artifact, version] = await Promise.all([
+    text("index.html"),
+    text("releases/organizeon-kernel-2.7.0.html"),
+    text("index-version.txt"),
+  ]);
+  assert.equal(version.trim(), "2.7.0");
+  assert.match(index, /var loaderVersion = "2\.7\.0"/);
+  assert.equal(artifact, index);
+  assert.match(index, /kernel-enter/);
+  assert.match(index, /prefers-reduced-motion/);
+});

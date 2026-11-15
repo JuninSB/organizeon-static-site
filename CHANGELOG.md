@@ -17,3 +17,10 @@ A reformulação das demais páginas, a reorganização dos chunks e a validaç�
 - Dados, proxy e catálogo de jogos: controles e superfícies harmonizados, com foco visível e ajustes de grade para telas estreitas.
 - As telas compiladas do cliente foram mantidas sem mudanças.
 - Manifesto e versão atualizados para a entrega do cliente: `v2-74efbd7672e6762b`.
+
+## Kernel 2.7.0 e motion
+
+- Atualizador com entrada animada, spinner de verificação, feedback de pressionamento e progresso mais refinado.
+- Texto e metadados do kernel alinhados ao OrganizeOn; versão do kernel elevada para 2.7.0 para que instalações antigas ofereçam o download novo.
+- Estados de motion compartilhados para tabs, painéis, overlays, campos e botões do cliente shadcn, com suporte a `prefers-reduced-motion`.
+- Artefato do kernel pronto em `releases/organizeon-kernel-2.7.0.html`.

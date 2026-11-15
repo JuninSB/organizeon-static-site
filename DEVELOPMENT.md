@@ -47,3 +47,9 @@ Essas identificações são baseadas no código da revisão `a547108` e devem se
 ## Escopo do rework visual
 
 O rework atual mira somente os componentes manuais injetados pelo cliente: kernel em `index.html` e overlays/telas de conta em `auth-client.js` (login, sidebar, dados, proxy e catálogo). A aplicação principal compilada em `assets/jdht-e-*.js` e seus chunks foi preservada por já apresentar o estilo aprovado. Ao alterar arquivos distribuídos, gere novamente hashes e versão com `node scripts/update-manifest.mjs` e valide com `npm test`.
+
+## Kernel 2.7.0
+
+`index.html` é o kernel distribuído pelo endpoint `/d2` e usado como entrada do cliente. O endpoint do servidor Android lê `~/organizeon/backend/downloads/index.html`; essa cópia de produção é separada do repositório. A versão do kernel fica em `index-version.txt` e também no `loaderVersion` dentro do index. Kernels antigos consultam a versão, oferecem o download do index novo e podem baixá-lo do GitHub Pages quando a origem configurada é canônica. O artefato para revisão e distribuição está em `releases/organizeon-kernel-2.7.0.html`.
+
+Para preparar a publicação no servidor, faça backup da cópia servida, instale o novo index e valide `/d2` antes de encerrar. O backend atende a rota por leitura do arquivo, portanto não exige reinício; valide HTTP e conteúdo após a cópia. O artefato deve ser copiado somente após aprovação da publicação.

@@ -1,0 +1,1058 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <script>
+      window.__groveBase = new URL("./", document.baseURI).pathname;
+      window.__groveCDN = window.__groveBase;
+    </script>
+    <script>
+      try {
+        var t = JSON.parse(localStorage.getItem("star-theme") || "{}"),
+          m = t.mode || "dark",
+          r =
+            m === "system"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : m;
+        document.documentElement.classList.add(r);
+        document.documentElement.setAttribute(
+          "data-" + "theme",
+          t.themeId || "maple",
+        );
+      } catch (e) {
+        document.documentElement.classList.add("dark");
+        document.documentElement.setAttribute("data-" + "theme", "maple");
+      }
+    </script>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>OrganizeOn — Cliente Web</title>
+    <meta name="robots" content="index,follow" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="UTF-8" />
+    <meta name="theme-color" content="#2b2b2b" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#0b0b0b"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      #organizeon-download { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; padding: 20px; color: #fafafa; background: #09090b; }
+      #organizeon-download * { box-sizing: border-box; }
+      #organizeon-download .card { width: min(100%, 440px); padding: 24px; border: 1px solid #27272a; border-radius: 10px; background: #111113; animation: kernel-enter .24s cubic-bezier(.2,.8,.2,1) both; }
+      #organizeon-download h1 { margin: 0 0 8px; font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+      #organizeon-download p { margin: 0 0 20px; color: #a1a1aa; line-height: 1.5; }
+      #organizeon-download .actions { display: grid; gap: 8px; }
+      #organizeon-download button { min-height: 42px; padding: 0 14px; border: 1px solid #27272a; border-radius: 7px; color: #fafafa; background: #18181b; font: inherit; font-weight: 550; cursor: pointer; transition: background .15s ease, border-color .15s ease, transform .15s ease; }
+      #organizeon-download button:hover:not(:disabled) { background: #27272a; }
+      #organizeon-download button:active:not(:disabled) { transform: translateY(1px) scale(.99); }
+      #organizeon-download .confirm { border-color: #e4e4e7; color: #18181b; background: #e4e4e7; }
+      #organizeon-download .confirm:hover:not(:disabled) { background: #d4d4d8; }
+      #organizeon-download .continue, #organizeon-download .reset { color: #a1a1aa; background: transparent; }
+      #organizeon-download button:disabled { cursor: wait; opacity: .5; }
+      #organizeon-download .progress-area { display: none; }
+      #organizeon-download progress { width: 100%; height: 8px; overflow: hidden; accent-color: #fafafa; }
+      #organizeon-download .status { min-height: 40px; margin: 12px 0 4px; color: #d4d4d8; font-size: 13px; overflow-wrap: anywhere; }
+      #organizeon-download .numbers { color: #71717a; font-size: 12px; }
+      #organizeon-download .error { color: #fca5a5; }
+      #organizeon-download.background { inset: auto 14px 14px auto; display: block; width: min(400px, calc(100% - 28px)); padding: 0; background: transparent; pointer-events: none; }
+      #organizeon-download.background .card { width: 100%; padding: 16px; box-shadow: 0 12px 40px #0008; pointer-events: auto; }
+      #organizeon-download.background h1 { font-size: 15px; }
+      #organizeon-download.background .status { min-height: 0; margin: 8px 0 3px; }
+      @keyframes kernel-enter { from { opacity:0; transform:translateY(8px) scale(.99); } to { opacity:1; transform:translateY(0) scale(1); } }
+      @keyframes kernel-spin { to { transform:rotate(360deg); } }
+      #organizeon-download .confirm:disabled { position:relative; }
+      #organizeon-download .confirm:disabled::before { content:""; display:inline-block; width:13px; height:13px; margin-right:8px; vertical-align:-2px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:kernel-spin .8s linear infinite; }
+      #organizeon-download progress { border:0; border-radius:999px; background:#27272a; }
+      #organizeon-download progress::-webkit-progress-bar { background:#27272a; border-radius:999px; }
+      #organizeon-download progress::-webkit-progress-value { background:#a1a1aa; border-radius:999px; transition:width .16s ease; }
+      @media (prefers-reduced-motion: reduce) { #organizeon-download button, #organizeon-download .card, #organizeon-download progress::-webkit-progress-value { transition:none; animation:none; } }
+    </style>
+    <meta
+      name="keywords"
+      content="science, biology, chemistry, physics, earth science, environmental science, science labs, K-12 science, NGSS, AP biology, AP chemistry, AP physics, science worksheets, STEM"
+    />
+    <meta
+      name="description"
+      content="OrganizeOn — seu espaço para jogos, apps e navegação."
+    />
+  </head>
+  <body>
+    <div id="organizeon-download">
+      <div class="card">
+        <div class="confirmation">
+          <h1>Procurando atualizações…</h1>
+          <p>Consultando a versão mais recente do cliente.</p>
+          <div class="actions">
+            <button class="cancel" type="button" disabled>Cancelar</button>
+            <button class="confirm" type="button" disabled>
+              Verificando…
+            </button>
+            <button class="continue" type="button" disabled>
+              Continuar sem atualizar
+            </button>
+            <button class="reset" type="button">
+              Limpar dados e cache
+            </button>
+          </div>
+        </div>
+        <div class="progress-area" aria-live="polite">
+          <h1>Preparando arquivos</h1>
+          <progress value="0" max="100"></progress>
+          <div class="status">Lendo manifesto…</div>
+          <div class="numbers">0%</div>
+        </div>
+      </div>
+    </div>
+    <div id="root"></div>
+    <div
+      id="khovma"
+      style="
+        position: absolute;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+      "
+    >
+      <h1 id="joajjh">ScienceLab Lessons</h1>
+      <button id="pftncj">Open a Virtual Lab</button>
+      <p id="arclzu">Science Resources for Curious Minds</p>
+    </div>
+    <div style="display: none" aria-hidden="true">
+      <h1>
+        ScienceLab — Hands-On Science from Elementary to Advanced Placement
+      </h1>
+      <p>
+        ScienceLab is a free K-12 science platform combining short concept
+        videos, browser-based virtual labs, and printable worksheets aligned to
+        the Next Generation Science Standards.
+      </p>
+      <section>
+        <h2>Subjects We Cover</h2>
+        <p>
+          Course paths span life science, biology, human anatomy and physiology,
+          ecology, environmental science, earth and space science, geology,
+          meteorology, astronomy, physical science, chemistry, organic chemistry
+          basics, and physics including mechanics, waves, electricity, and
+          modern physics.
+        </p>
+      </section>
+      <section>
+        <h2>Grade Levels</h2>
+        <p>
+          Content is organized by NGSS grade bands: K-2 observation and
+          patterns, 3-5 systems and energy, 6-8 middle school integrated
+          science, and 9-12 high school sequences in biology, chemistry, and
+          physics with honors and AP options.
+        </p>
+      </section>
+      <section>
+        <h2>Test Prep</h2>
+        <p>
+          Focused review supports AP Biology, AP Chemistry, AP Physics 1 and 2,
+          AP Physics C, AP Environmental Science, the science sections of the
+          SAT and ACT, MCAT introductory science, and state assessments such as
+          the New York Living Environment Regents.
+        </p>
+      </section>
+      <section>
+        <h2>Virtual Labs</h2>
+        <p>
+          Browser-based simulations let students titrate acids and bases,
+          dissect virtual frogs, build electrical circuits, model projectile
+          motion, run Punnett squares, and observe chemical reactions safely
+          without physical equipment. Each lab includes a worksheet and post-lab
+          analysis questions.
+        </p>
+      </section>
+      <section>
+        <h2>For Teachers and Parents</h2>
+        <p>
+          Educators get free printable lab sheets, vocabulary lists,
+          claim-evidence-reasoning templates, and standards alignment to NGSS,
+          TEKS, and state frameworks. Class dashboards show lab completion, quiz
+          scores, and time spent on each unit.
+        </p>
+      </section>
+    </div>
+    <script>
+      (function () {
+        var overlay = document.getElementById("organizeon-download");
+        var confirmation = overlay.querySelector(".confirmation");
+        var confirmationTitle = confirmation.querySelector("h1");
+        var confirmationText = confirmation.querySelector("p");
+        var progressArea = overlay.querySelector(".progress-area");
+        var confirmButton = overlay.querySelector(".confirm");
+        var cancelButton = overlay.querySelector(".cancel");
+        var continueButton = overlay.querySelector(".continue");
+        var resetButton = overlay.querySelector(".reset");
+        var progress = overlay.querySelector("progress");
+        var status = overlay.querySelector(".status");
+        var numbers = overlay.querySelector(".numbers");
+        var canonicalBase = new URL(
+          "https://juninsb.github.io/organizeon-static-site/",
+        );
+        var onCanonicalHost =
+          location.origin === canonicalBase.origin &&
+          location.pathname.startsWith(canonicalBase.pathname);
+        var embedded =
+          onCanonicalHost &&
+          new URLSearchParams(location.search).get("embedded") === "1";
+        var dashboardMode =
+          new URLSearchParams(location.search).get("dashboard") === "1";
+        var baseUrl = onCanonicalHost
+          ? new URL("./", document.baseURI)
+          : canonicalBase;
+        var versionStorageKey = "organizeon-update-version-v2";
+        var manifestStorageKey = "organizeon-update-manifest-v2";
+        var fileHashesStorageKey = "organizeon-update-files-v2";
+        var loaderVersion = "2.7.0";
+        window.__ORGANIZEON_LOADER_VERSION__ = loaderVersion;
+        var latestLoaderVersion = "";
+        var indexUpdateRequired = false;
+        var ignoreIndexUpdate = false;
+        var pendingManifest = null;
+        var pendingFiles = [];
+        var pendingBytes = 0;
+        var latestVersion = "";
+        var installedHashes = new Map();
+        var clientStarted = false;
+        var running = false;
+        var embeddedClientFrame = null;
+        var dashboardFrame = null;
+
+        window.addEventListener("message", function (event) {
+          var message = event.data;
+          if (!message || typeof message.type !== "string") return;
+          var knownSource =
+            event.source === window ||
+            event.source === embeddedClientFrame?.contentWindow ||
+            event.source === dashboardFrame?.contentWindow;
+          if (!knownSource) return;
+
+          if (message.type === "organizeon:open-dashboard") {
+            openDashboard();
+          } else if (message.type === "organizeon:open-main") {
+            openMain();
+          } else if (message.type === "organizeon:reset-client") {
+            resetOuterClient();
+          }
+        });
+
+        cancelButton.addEventListener("click", function () {
+          if (indexUpdateRequired) {
+            indexUpdateRequired = false;
+            ignoreIndexUpdate = true;
+            prepareUpdate();
+            return;
+          }
+          status.textContent =
+            "Download cancelado. Você pode iniciar quando estiver pronto.";
+          status.classList.remove("error");
+          confirmation.style.display = "none";
+          progressArea.style.display = "block";
+          progressArea.querySelector("h1").textContent = "Download pausado";
+          progress.style.display = "none";
+          numbers.textContent = "";
+
+          var actions = document.createElement("div");
+          actions.className = "actions";
+          var retry = document.createElement("button");
+          retry.type = "button";
+          retry.className = "confirm";
+          retry.textContent = "Baixar agora";
+          retry.addEventListener("click", beginDownload);
+          actions.appendChild(retry);
+          progressArea.appendChild(actions);
+        });
+
+        confirmButton.addEventListener("click", beginDownload);
+        continueButton.addEventListener("click", continueWithoutUpdate);
+
+        resetButton.addEventListener("click", function () {
+          if (running) return;
+          var accepted = window.confirm(
+            "Isso apagará login, configurações, histórico, jogos em cache " +
+              "e todos os arquivos baixados pelo cliente. Continuar?",
+          );
+          if (!accepted) return;
+          confirmButton.disabled = true;
+          cancelButton.disabled = true;
+          continueButton.disabled = true;
+          resetButton.disabled = true;
+          confirmationTitle.textContent = "Limpando o cliente…";
+          confirmationText.textContent =
+            "Removendo armazenamento, bancos de dados, caches e service workers.";
+          resetOuterClient();
+        });
+
+        if (dashboardMode) {
+          confirmation.style.display = "none";
+          progressArea.style.display = "block";
+          progress.style.display = "none";
+          status.textContent = "Abrindo Dashboard…";
+          numbers.textContent = "";
+          startDashboardShell();
+          overlay.remove();
+        } else if (embedded) {
+          confirmation.style.display = "none";
+          progressArea.style.display = "block";
+          progress.style.display = "none";
+          status.textContent = "Iniciando cliente…";
+          numbers.textContent = "";
+          startClient()
+            .then(function () {
+              overlay.remove();
+            })
+            .catch(function (error) {
+              status.textContent =
+                error instanceof Error
+                  ? error.message
+                  : "Não foi possível iniciar o cliente.";
+              status.classList.add("error");
+            });
+        } else {
+          prepareUpdate();
+        }
+
+        async function prepareUpdate() {
+          confirmButton.disabled = true;
+          cancelButton.disabled = true;
+          continueButton.disabled = true;
+          confirmButton.textContent = "Verificando…";
+          cancelButton.textContent = "Cancelar";
+          confirmationTitle.textContent = "Procurando atualizações…";
+          confirmationText.textContent =
+            "Consultando a versão mais recente do cliente.";
+
+          try {
+            if (!ignoreIndexUpdate) {
+              var loaderVersionUrl = new URL(
+                "index-version.txt",
+                baseUrl,
+              );
+              loaderVersionUrl.searchParams.set(
+                "_",
+                Date.now().toString(),
+              );
+              var loaderVersionResponse = await fetch(
+                loaderVersionUrl,
+                { cache: "no-store" },
+              );
+              if (!loaderVersionResponse.ok) {
+                throw new Error(
+                  "Versão do index indisponível (HTTP " +
+                    loaderVersionResponse.status +
+                    ").",
+                );
+              }
+              latestLoaderVersion = (
+                await loaderVersionResponse.text()
+              ).trim();
+              if (
+                !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(
+                  latestLoaderVersion,
+                )
+              ) {
+                throw new Error(
+                  "O servidor retornou uma versão de index inválida.",
+                );
+              }
+              if (
+                compareVersions(
+                  latestLoaderVersion,
+                  loaderVersion,
+                ) > 0
+              ) {
+                indexUpdateRequired = true;
+                confirmationTitle.textContent =
+                  "Kernel do cliente desatualizado";
+                confirmationText.textContent =
+                  "Este cliente usa o kernel " +
+                  loaderVersion +
+                  ", mas o servidor já está no " +
+                  latestLoaderVersion +
+                  ". Baixe o novo kernel para receber melhorias no atualizador.";
+                confirmButton.textContent = "Baixar kernel atualizado";
+                cancelButton.textContent =
+                  "Continuar temporariamente";
+                confirmButton.disabled = false;
+                cancelButton.disabled = false;
+                continueButton.disabled = false;
+                return;
+              }
+            }
+
+            var versionUrl = new URL("version.txt", baseUrl);
+            versionUrl.searchParams.set("_", Date.now().toString());
+            var versionResponse = await fetch(versionUrl, {
+              cache: "no-store",
+            });
+            if (!versionResponse.ok) {
+              throw new Error(
+                "Versão indisponível (HTTP " +
+                  versionResponse.status +
+                  ").",
+              );
+            }
+
+            latestVersion = (await versionResponse.text()).trim();
+            if (!/^v[0-9]+-[0-9a-f]{16}$/.test(latestVersion)) {
+              throw new Error("O servidor retornou uma versão inválida.");
+            }
+
+            if (readStorage(versionStorageKey) === latestVersion) {
+              await openClient("Cliente atualizado. Abrindo o login…");
+              return;
+            }
+
+            var manifestUrl = new URL("download-manifest.json", baseUrl);
+            manifestUrl.searchParams.set("version", latestVersion);
+            var manifestResponse = await fetch(manifestUrl, {
+              cache: "no-store",
+            });
+            if (!manifestResponse.ok) {
+              throw new Error(
+                "Manifesto indisponível (HTTP " +
+                  manifestResponse.status +
+                  ").",
+              );
+            }
+
+            pendingManifest = await manifestResponse.json();
+            if (
+              pendingManifest.version !== latestVersion ||
+              !Array.isArray(pendingManifest.files)
+            ) {
+              throw new Error("A versão e o manifesto não correspondem.");
+            }
+
+            var previousManifest = readManifest();
+            installedHashes = new Map(
+              previousManifest && Array.isArray(previousManifest.files)
+                ? previousManifest.files.map(function (file) {
+                    return [file.path, file.sha256];
+                  })
+                : [],
+            );
+            var partialHashes = readPartialHashes();
+            Object.keys(partialHashes).forEach(function (path) {
+              installedHashes.set(path, partialHashes[path]);
+            });
+
+            pendingFiles = pendingManifest.files.filter(function (file) {
+              return (
+                typeof file.path === "string" &&
+                typeof file.size === "number" &&
+                /^[0-9a-f]{64}$/.test(file.sha256) &&
+                installedHashes.get(file.path) !== file.sha256
+              );
+            });
+            pendingBytes = pendingFiles.reduce(function (total, file) {
+              return total + file.size;
+            }, 0);
+
+            if (pendingFiles.length === 0) {
+              saveUpdateState();
+              await openClient("Atualização verificada. Abrindo o login…");
+              return;
+            }
+
+            confirmationTitle.textContent = previousManifest
+              ? "Atualização disponível"
+              : "Preparar o cliente?";
+            confirmationText.textContent =
+              pendingFiles.length +
+              " arquivos novos ou modificados · " +
+              formatBytes(pendingBytes) +
+              " para baixar. Seus dados locais serão preservados.";
+            confirmButton.textContent =
+              "Baixar " + formatBytes(pendingBytes);
+            confirmButton.disabled = false;
+            cancelButton.disabled = false;
+            continueButton.disabled = false;
+          } catch (error) {
+            confirmationTitle.textContent =
+              "Não foi possível verificar atualizações";
+            confirmationText.textContent =
+              error instanceof Error
+                ? error.message
+                : "Erro desconhecido ao consultar a versão.";
+            confirmButton.textContent = "Tentar novamente";
+            confirmButton.disabled = false;
+            cancelButton.disabled = true;
+            continueButton.disabled = false;
+            confirmButton.removeEventListener("click", beginDownload);
+            confirmButton.addEventListener("click", function retryCheck() {
+              confirmButton.removeEventListener("click", retryCheck);
+              confirmButton.addEventListener("click", beginDownload);
+              prepareUpdate();
+            });
+          }
+        }
+
+        async function continueWithoutUpdate() {
+          if (running) return;
+          var installedManifest = readManifest();
+          var installedVersion = readStorage(versionStorageKey);
+          if (!hasInstalledBase(installedManifest, installedVersion)) {
+            confirmationTitle.textContent = "Base do cliente ausente";
+            confirmationText.textContent =
+              "Você ainda não tem a base para funcionar, instale pelo menos isso.";
+            confirmButton.textContent = pendingBytes
+              ? "Instalar " + formatBytes(pendingBytes)
+              : "Instalar base";
+            return;
+          }
+
+          latestVersion = installedVersion;
+          pendingManifest = installedManifest;
+          continueButton.disabled = true;
+          confirmButton.disabled = true;
+          cancelButton.disabled = true;
+          await openClient(
+            "Continuando sem atualizar. Algumas funções novas podem não estar disponíveis.",
+          );
+        }
+
+        function hasInstalledBase(manifest, version) {
+          if (
+            !manifest ||
+            !Array.isArray(manifest.files) ||
+            typeof version !== "string" ||
+            manifest.version !== version
+          ) {
+            return false;
+          }
+          var requiredPaths = [
+            "config.js",
+            "auth-client.js",
+            "assets/jdht-e-DdM4s9z4.js",
+            "assets/jdht-s-SOkYHzV0.css",
+          ];
+          var installedPaths = new Set(
+            manifest.files.map(function (file) {
+              return file.path;
+            }),
+          );
+          return requiredPaths.every(function (path) {
+            return installedPaths.has(path);
+          });
+        }
+
+        async function beginDownload() {
+          if (indexUpdateRequired) {
+            confirmButton.disabled = true;
+            confirmationTitle.textContent = "Baixando kernel novo…";
+            confirmationText.textContent =
+              "Obtendo e validando o index " + latestLoaderVersion + ".";
+            try {
+              var indexUrl = new URL("index.html", baseUrl);
+              indexUrl.searchParams.set("kernel", latestLoaderVersion);
+              indexUrl.searchParams.set("_", Date.now().toString());
+              var indexResponse = await fetch(indexUrl, { cache: "no-store" });
+              if (!indexResponse.ok) {
+                throw new Error("O novo index falhou (HTTP " + indexResponse.status + ").");
+              }
+              var indexSource = await indexResponse.text();
+              var embeddedVersion = indexSource.match(
+                /var loaderVersion = "([0-9]+\.[0-9]+\.[0-9]+)";/,
+              );
+              if (
+                !embeddedVersion ||
+                compareVersions(embeddedVersion[1], latestLoaderVersion) < 0
+              ) {
+                throw new Error(
+                  "O servidor ainda não entregou o kernel " + latestLoaderVersion + ".",
+                );
+              }
+              var blobUrl = URL.createObjectURL(
+                new Blob([indexSource], { type: "text/html;charset=utf-8" }),
+              );
+              var download = document.createElement("a");
+              download.href = blobUrl;
+              download.download = "index.html";
+              document.body.appendChild(download);
+              download.click();
+              download.remove();
+              window.setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 1000);
+              confirmationTitle.textContent = "Index 2.6.0 baixado";
+              confirmationText.textContent =
+                "O arquivo index.html novo foi validado. Substitua o antigo por este download.";
+              confirmButton.textContent = "Baixar novamente";
+              cancelButton.textContent = "Continuar nesta versão";
+            } catch (error) {
+              confirmationTitle.textContent = "Falha ao baixar o index";
+              confirmationText.textContent =
+                error instanceof Error ? error.message : "Falha desconhecida.";
+              confirmButton.textContent = "Tentar novamente";
+            } finally {
+              confirmButton.disabled = false;
+            }
+            return;
+          }
+          if (running) return;
+          if (!pendingManifest || pendingFiles.length === 0) {
+            await prepareUpdate();
+            return;
+          }
+          running = true;
+          continueButton.disabled = true;
+          confirmation.style.display = "none";
+          progressArea.style.display = "block";
+          progress.style.display = "";
+          progressArea.querySelector("h1").textContent =
+            "Preparando arquivos";
+          progressArea.querySelector(".actions")?.remove();
+          status.classList.remove("error");
+          status.textContent = "Iniciando atualização…";
+          numbers.textContent = "0%";
+          progress.value = 0;
+
+          try {
+            var files = pendingFiles;
+            var totalBytes = pendingBytes || 1;
+            var loadedBytes = 0;
+            var completedFiles = 0;
+            var criticalPaths = new Set([
+              "config.js",
+              "auth-client.js",
+              "assets/jdht-e-DdM4s9z4.js",
+              "assets/jdht-c-ChjuTX8m.js",
+            ]);
+            var criticalFiles = files.filter(function (file) {
+              return criticalPaths.has(file.path);
+            });
+            var backgroundFiles = files.filter(function (file) {
+              return !criticalPaths.has(file.path);
+            });
+
+            if (criticalFiles.length > 0) {
+              progressArea.querySelector("h1").textContent =
+                "Baixando ativos essenciais";
+              status.textContent =
+                "Preparando os arquivos necessários para abrir…";
+              await downloadBatch(criticalFiles, 4);
+            }
+
+            status.textContent = "Abrindo o cliente…";
+            await launchClient();
+            overlay.classList.add("background");
+
+            if (backgroundFiles.length > 0) {
+              progressArea.querySelector("h1").textContent =
+                "Atualizando em segundo plano";
+              await downloadBatch(backgroundFiles, 3);
+            }
+
+            async function downloadBatch(batch, concurrency) {
+              var nextFile = 0;
+              var workers = Array.from(
+                { length: Math.min(concurrency, batch.length) },
+                async function () {
+                  while (nextFile < batch.length) {
+                    var file = batch[nextFile++];
+                    await downloadFile(file);
+                    installedHashes.set(file.path, file.sha256);
+                    completedFiles += 1;
+                    if (completedFiles % 8 === 0) savePartialHashes();
+                    updateProgress(file.path);
+                  }
+                },
+              );
+              await Promise.all(workers);
+            }
+            progress.value = 100;
+            numbers.textContent =
+              files.length +
+              " arquivos · " +
+              formatBytes(pendingBytes) +
+              " · 100%";
+            saveUpdateState();
+            progressArea.querySelector("h1").textContent =
+              "Atualização concluída";
+            status.textContent =
+              "Ativos verificados. O cliente está pronto.";
+            window.setTimeout(function () {
+              overlay.remove();
+            }, 2500);
+
+            async function downloadFile(file) {
+              var response = await fetch(new URL(file.path, baseUrl), {
+                cache: "no-cache",
+              });
+              if (!response.ok) {
+                throw new Error(
+                  file.path + " falhou (HTTP " + response.status + ").",
+                );
+              }
+
+              if (!response.body) {
+                var fallbackBuffer = await response.arrayBuffer();
+                loadedBytes += fallbackBuffer.byteLength;
+                await verifyFile(file, fallbackBuffer);
+                return;
+              }
+
+              var reader = response.body.getReader();
+              var chunks = [];
+              var receivedBytes = 0;
+              while (true) {
+                var result = await reader.read();
+                if (result.done) break;
+                chunks.push(result.value);
+                receivedBytes += result.value.byteLength;
+                loadedBytes += result.value.byteLength;
+                updateProgress(file.path);
+              }
+
+              var contents = new Uint8Array(receivedBytes);
+              var offset = 0;
+              chunks.forEach(function (chunk) {
+                contents.set(chunk, offset);
+                offset += chunk.byteLength;
+              });
+              await verifyFile(file, contents.buffer);
+            }
+
+            function updateProgress(fileName) {
+              var percent = Math.min(
+                100,
+                Math.round((loadedBytes / totalBytes) * 100),
+              );
+              progress.value = percent;
+              status.textContent =
+                "Baixando: " +
+                fileName +
+                " (" +
+                Math.min(files.length, completedFiles + 1) +
+                "/" +
+                files.length +
+                ")";
+              numbers.textContent =
+                formatBytes(Math.min(loadedBytes, totalBytes)) +
+                " de " +
+                formatBytes(totalBytes) +
+                " · " +
+                percent +
+                "%";
+            }
+
+            async function verifyFile(file, contents) {
+              if (!window.crypto?.subtle) return;
+              var digest = await window.crypto.subtle.digest(
+                "SHA-256",
+                contents,
+              );
+              var actualHash = Array.from(new Uint8Array(digest))
+                .map(function (byte) {
+                  return byte.toString(16).padStart(2, "0");
+                })
+                .join("");
+              if (actualHash !== file.sha256) {
+                throw new Error(
+                  file.path + " falhou na verificação de integridade.",
+                );
+              }
+            }
+          } catch (error) {
+            running = false;
+            savePartialHashes();
+            progressArea.querySelector("h1").textContent =
+              "Não foi possível concluir";
+            status.textContent =
+              error instanceof Error
+                ? error.message
+                : "Erro desconhecido durante o download.";
+            status.classList.add("error");
+
+            var actions = document.createElement("div");
+            actions.className = "actions";
+            var retry = document.createElement("button");
+            retry.type = "button";
+            retry.className = "confirm";
+            retry.textContent = "Tentar novamente";
+            retry.addEventListener("click", beginDownload);
+            actions.appendChild(retry);
+            progressArea.appendChild(actions);
+          }
+        }
+
+        async function openClient(message) {
+          confirmation.style.display = "none";
+          progressArea.style.display = "block";
+          progress.style.display = "none";
+          progressArea.querySelector("h1").textContent = "Cliente pronto";
+          status.classList.remove("error");
+          status.textContent = message;
+          numbers.textContent = latestVersion;
+
+          if (onCanonicalHost) {
+            await launchClient();
+          } else {
+            await launchClient();
+          }
+          overlay.remove();
+        }
+
+        async function launchClient() {
+          if (clientStarted) return;
+          clientStarted = true;
+          window.__ORGANIZEON_CLIENT_VERSION__ = latestVersion;
+          try {
+            if (onCanonicalHost) {
+              await startClient();
+            } else {
+              startEmbeddedClient();
+            }
+          } catch (error) {
+            clientStarted = false;
+            throw error;
+          }
+        }
+
+        function readManifest() {
+          try {
+            var saved = readStorage(manifestStorageKey);
+            return saved ? JSON.parse(saved) : null;
+          } catch (error) {
+            return null;
+          }
+        }
+
+        function readStorage(key) {
+          try {
+            return localStorage.getItem(key);
+          } catch (error) {
+            return null;
+          }
+        }
+
+        function readPartialHashes() {
+          try {
+            return JSON.parse(readStorage(fileHashesStorageKey) || "{}");
+          } catch (error) {
+            return {};
+          }
+        }
+
+        function savePartialHashes() {
+          try {
+            localStorage.setItem(
+              fileHashesStorageKey,
+              JSON.stringify(Object.fromEntries(installedHashes)),
+            );
+          } catch (error) {
+            console.warn("Não foi possível salvar o progresso parcial.");
+          }
+        }
+
+        function saveUpdateState() {
+          try {
+            localStorage.setItem(versionStorageKey, latestVersion);
+            localStorage.setItem(
+              manifestStorageKey,
+              JSON.stringify(pendingManifest),
+            );
+            localStorage.removeItem(fileHashesStorageKey);
+          } catch (error) {
+            console.warn("Não foi possível salvar o estado da atualização.");
+          }
+        }
+
+        async function startClient() {
+          var bootstrapVersion = encodeURIComponent(
+            window.__ORGANIZEON_CLIENT_VERSION__ ||
+              Date.now().toString(),
+          );
+          addLink("stylesheet", "./assets/jdht-s-SOkYHzV0.css");
+          addLink("icon", "./fernleaf-192.png", "image/png");
+          addLink("manifest", "./manifest.webmanifest");
+          addLink("apple-touch-icon", "./fernleaf-192.png");
+
+          await loadScript("./config.js?v=" + bootstrapVersion);
+          loadScript("./vendor/lumin.min.js", false, true);
+          loadScript(
+            "https://www.googletagmanager.com/gtag/js?id=G-KNFSWJTJ9C",
+            false,
+            true,
+          );
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+          window.gtag("js", new Date());
+          window.gtag("config", "G-KNFSWJTJ9C");
+
+          await loadScript(
+            "./auth-client.js?v=" + bootstrapVersion,
+            true,
+          );
+        }
+
+        function startEmbeddedClient() {
+          var frame = document.createElement("iframe");
+          embeddedClientFrame = frame;
+          frame.title = "OrganizeOn";
+          frame.src = new URL("?embedded=1", canonicalBase).href;
+          frame.allow = "clipboard-read; clipboard-write; fullscreen";
+          frame.style.cssText =
+            "position:fixed;inset:0;width:100%;height:100%;" +
+            "height:100dvh;max-width:100dvw;" +
+            "border:0;background:#090d0b;z-index:1";
+          document.body.appendChild(frame);
+        }
+
+        function startDashboardShell() {
+          var frame = document.createElement("iframe");
+          dashboardFrame = frame;
+          frame.title = "OrganizeOn Dashboard";
+          frame.src = new URL("admin.html", canonicalBase).href;
+          frame.allow = "clipboard-read; clipboard-write";
+          frame.style.cssText =
+            "position:fixed;inset:0;width:100%;height:100%;" +
+            "height:100dvh;max-width:100dvw;" +
+            "border:0;background:#07100e;z-index:1";
+          document.body.appendChild(frame);
+        }
+
+        function openDashboard() {
+          var dashboardUrl = new URL(location.href);
+          dashboardUrl.searchParams.delete("embedded");
+          dashboardUrl.searchParams.delete("route");
+          dashboardUrl.searchParams.set("dashboard", "1");
+          window.history.pushState({}, "", dashboardUrl.href);
+          dashboardMode = true;
+          if (embeddedClientFrame) {
+            embeddedClientFrame.remove();
+            embeddedClientFrame = null;
+          }
+          if (!dashboardFrame) startDashboardShell();
+        }
+
+        function openMain() {
+          var mainUrl = new URL(location.href);
+          mainUrl.searchParams.delete("dashboard");
+          mainUrl.searchParams.delete("embedded");
+          mainUrl.searchParams.delete("route");
+          window.history.replaceState({}, "", mainUrl.href);
+          dashboardMode = false;
+          if (dashboardFrame) {
+            dashboardFrame.remove();
+            dashboardFrame = null;
+          }
+          if (!embeddedClientFrame) startEmbeddedClient();
+        }
+
+        async function resetOuterClient() {
+          try {
+            localStorage.clear();
+            sessionStorage.clear();
+
+            if (
+              "indexedDB" in window &&
+              "databases" in indexedDB
+            ) {
+              var databases = await indexedDB.databases();
+              await Promise.all(
+                databases
+                  .filter(function (database) {
+                    return Boolean(database.name);
+                  })
+                  .map(function (database) {
+                    return new Promise(function (resolve) {
+                      var request = indexedDB.deleteDatabase(database.name);
+                      request.onsuccess = resolve;
+                      request.onerror = resolve;
+                      request.onblocked = resolve;
+                    });
+                  }),
+              );
+            }
+
+            if ("caches" in window) {
+              var cacheNames = await caches.keys();
+              await Promise.all(
+                cacheNames.map(function (cacheName) {
+                  return caches.delete(cacheName);
+                }),
+              );
+            }
+
+            if ("serviceWorker" in navigator) {
+              var registrations =
+                await navigator.serviceWorker.getRegistrations();
+              await Promise.all(
+                registrations.map(function (registration) {
+                  return registration.unregister();
+                }),
+              );
+            }
+
+            document.cookie.split(";").forEach(function (cookie) {
+              var name = cookie.split("=")[0].trim();
+              if (!name) return;
+              document.cookie =
+                name +
+                "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            });
+          } finally {
+            var freshUrl = new URL(location.href);
+            freshUrl.search = "";
+            freshUrl.hash = "";
+            window.location.replace(freshUrl.href);
+          }
+        }
+
+        function loadScript(source, module, asynchronous) {
+          return new Promise(function (resolve, reject) {
+            var script = document.createElement("script");
+            if (module) script.type = "module";
+            script.async = Boolean(asynchronous);
+            script.src = source;
+            script.onload = resolve;
+            script.onerror = function () {
+              reject(new Error("Falha ao iniciar " + source + "."));
+            };
+            document.head.appendChild(script);
+          });
+        }
+
+        function addLink(relation, href, type) {
+          var link = document.createElement("link");
+          link.rel = relation;
+          link.href = href;
+          if (type) link.type = type;
+          document.head.appendChild(link);
+        }
+
+        function formatBytes(bytes) {
+          if (bytes < 1024 * 1024) {
+            return (bytes / 1024).toFixed(1) + " KB";
+          }
+          return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        }
+
+        function compareVersions(left, right) {
+          var leftParts = left.split(".").map(Number);
+          var rightParts = right.split(".").map(Number);
+          for (var index = 0; index < 3; index += 1) {
+            if (leftParts[index] !== rightParts[index]) {
+              return leftParts[index] - rightParts[index];
+            }
+          }
+          return 0;
+        }
+      })();
+    </script>
+  </body>
+</html>
+
