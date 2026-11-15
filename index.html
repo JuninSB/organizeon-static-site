@@ -43,128 +43,29 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-      #organizeon-download {
-        position: fixed;
-        inset: 0;
-        z-index: 2147483647;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        color: #f2f7f4;
-        background:
-          radial-gradient(circle at 50% 10%, #17372a 0, transparent 38%),
-          #090d0b;
-        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      }
-      #organizeon-download * {
-        box-sizing: border-box;
-      }
-      #organizeon-download .card {
-        width: min(100%, 480px);
-        padding: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 20px;
-        background: rgba(20, 27, 23, 0.96);
-        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
-      }
-      #organizeon-download h1 {
-        margin: 0 0 10px;
-        font-size: 27px;
-      }
-      #organizeon-download p {
-        margin: 0 0 20px;
-        color: #b4c1bb;
-        line-height: 1.5;
-      }
-      #organizeon-download .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      #organizeon-download button {
-        min-height: 44px;
-        padding: 0 18px;
-        border: 0;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 750;
-      }
-      #organizeon-download .confirm {
-        flex: 1;
-        color: #07120d;
-        background: #83e4b4;
-      }
-      #organizeon-download .cancel {
-        color: #d8e2dd;
-        background: #303a35;
-      }
-      #organizeon-download .continue {
-        flex-basis: 100%;
-        color: #d7eee5;
-        background: #25443a;
-      }
-      #organizeon-download .reset {
-        flex-basis: 100%;
-        color: #ffd8d8;
-        background: #4a2428;
-      }
-      #organizeon-download button:disabled {
-        cursor: wait;
-        opacity: 0.65;
-      }
-      #organizeon-download .progress-area {
-        display: none;
-      }
-      #organizeon-download progress {
-        width: 100%;
-        height: 14px;
-        overflow: hidden;
-        accent-color: #83e4b4;
-      }
-      #organizeon-download .status {
-        min-height: 42px;
-        margin: 12px 0 4px;
-        color: #dbe5e0;
-        font-size: 13px;
-        overflow-wrap: anywhere;
-      }
-      #organizeon-download .numbers {
-        color: #8fa29a;
-        font-size: 12px;
-      }
-      #organizeon-download .error {
-        color: #ffaaaa;
-      }
-      #organizeon-download.background {
-        inset: auto 14px 14px auto;
-        display: block;
-        width: min(420px, calc(100% - 28px));
-        padding: 0;
-        background: transparent;
-        pointer-events: none;
-      }
-      #organizeon-download.background .card {
-        width: 100%;
-        padding: 16px 18px;
-        border-color: rgba(80, 255, 210, 0.28);
-        border-radius: 14px;
-        background: rgba(8, 18, 17, 0.94);
-        box-shadow: 0 14px 46px rgba(0, 0, 0, 0.44);
-        pointer-events: auto;
-      }
-      #organizeon-download.background h1 {
-        margin-bottom: 7px;
-        color: #75f4d1;
-        font-size: 15px;
-      }
-      #organizeon-download.background .status {
-        min-height: 0;
-        margin: 8px 0 3px;
-      }
-      #organizeon-download.background progress {
-        height: 8px;
-        accent-color: #52f2ce;
-      }
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      #organizeon-download { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; padding: 20px; color: #fafafa; background: #09090b; }
+      #organizeon-download * { box-sizing: border-box; }
+      #organizeon-download .card { width: min(100%, 440px); padding: 24px; border: 1px solid #27272a; border-radius: 10px; background: #111113; }
+      #organizeon-download h1 { margin: 0 0 8px; font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+      #organizeon-download p { margin: 0 0 20px; color: #a1a1aa; line-height: 1.5; }
+      #organizeon-download .actions { display: grid; gap: 8px; }
+      #organizeon-download button { min-height: 42px; padding: 0 14px; border: 1px solid #27272a; border-radius: 7px; color: #fafafa; background: #18181b; font: inherit; font-weight: 550; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+      #organizeon-download button:hover:not(:disabled) { background: #27272a; }
+      #organizeon-download .confirm { border-color: #e4e4e7; color: #18181b; background: #e4e4e7; }
+      #organizeon-download .confirm:hover:not(:disabled) { background: #d4d4d8; }
+      #organizeon-download .continue, #organizeon-download .reset { color: #a1a1aa; background: transparent; }
+      #organizeon-download button:disabled { cursor: wait; opacity: .5; }
+      #organizeon-download .progress-area { display: none; }
+      #organizeon-download progress { width: 100%; height: 8px; overflow: hidden; accent-color: #fafafa; }
+      #organizeon-download .status { min-height: 40px; margin: 12px 0 4px; color: #d4d4d8; font-size: 13px; overflow-wrap: anywhere; }
+      #organizeon-download .numbers { color: #71717a; font-size: 12px; }
+      #organizeon-download .error { color: #fca5a5; }
+      #organizeon-download.background { inset: auto 14px 14px auto; display: block; width: min(400px, calc(100% - 28px)); padding: 0; background: transparent; pointer-events: none; }
+      #organizeon-download.background .card { width: 100%; padding: 16px; box-shadow: 0 12px 40px #0008; pointer-events: auto; }
+      #organizeon-download.background h1 { font-size: 15px; }
+      #organizeon-download.background .status { min-height: 0; margin: 8px 0 3px; }
+      @media (prefers-reduced-motion: reduce) { #organizeon-download button { transition: none; } }
     </style>
     <meta
       name="keywords"
