@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  define: { "process.env.NODE_ENV": JSON.stringify("production") },
   root: import.meta.dirname,
   plugins: [react()],
   resolve: { alias: { "@": resolve(import.meta.dirname, "src") } },
