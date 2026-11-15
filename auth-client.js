@@ -537,69 +537,24 @@ function configureAccountNavigation(account) {
   const isGuest = normalized.role === "guest";
   navigation.innerHTML = `
     <style>
-      #organizeon-account-navigation {
-        position: fixed; inset: 0 auto auto 0; z-index: 2147483645;
-        color: #eafff9; font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      }
+      #organizeon-account-navigation { position: fixed; inset: 0 auto auto 0; z-index: 2147483645; color: #fafafa; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
       #organizeon-account-navigation * { box-sizing: border-box; }
-      #organizeon-account-navigation .trigger {
-        position: fixed; top: 14px; left: 14px; width: 43px; height: 43px;
-        display: grid; place-items: center; border: 1px solid rgba(93,242,208,.3);
-        border-radius: 13px; cursor: pointer; color: #72efd1;
-        background: rgba(8,20,18,.88); box-shadow: 0 10px 35px rgba(0,0,0,.32);
-        backdrop-filter: blur(12px);
-      }
-      #organizeon-account-navigation .glyph {
-        display: grid; grid-template-columns: 5px 15px; gap: 5px;
-        align-items: center; width: 25px;
-      }
-      #organizeon-account-navigation .glyph i {
-        height: 3px; border-radius: 9px; background: currentColor;
-      }
-      #organizeon-account-navigation .glyph i:nth-child(odd) {
-        width: 5px; height: 5px;
-      }
-      #organizeon-account-navigation .drawer {
-        position: fixed; inset: 0 auto 0 0; width: min(310px, 86vw);
-        padding: 78px 18px 20px; transform: translateX(-105%);
-        border-right: 1px solid rgba(255,255,255,.1);
-        background: rgba(7,15,13,.97); box-shadow: 25px 0 70px rgba(0,0,0,.4);
-        transition: transform .22s ease; backdrop-filter: blur(18px);
-      }
-      #organizeon-account-navigation .backdrop {
-        position: fixed; inset: 0; display: none; border: 0;
-        background: rgba(0,0,0,.44); backdrop-filter: blur(2px);
-      }
-      #organizeon-account-navigation.open .backdrop { display: block; }
+      #organizeon-account-navigation .trigger { position: fixed; top: 12px; left: 12px; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #27272a; border-radius: 8px; cursor: pointer; color: #fafafa; background: #18181b; }
+      #organizeon-account-navigation .glyph { display: grid; grid-template-columns: 5px 15px; gap: 5px; align-items: center; width: 25px; }
+      #organizeon-account-navigation .glyph i { height: 2px; border-radius: 2px; background: currentColor; }
+      #organizeon-account-navigation .glyph i:nth-child(odd) { width: 4px; height: 4px; }
+      #organizeon-account-navigation .drawer { position: fixed; inset: 0 auto 0 0; width: min(288px, 86vw); overflow-y: auto; padding: 68px 12px 20px; transform: translateX(-105%); border-right: 1px solid #27272a; background: #111113; transition: transform .2s ease; }
+      #organizeon-account-navigation .backdrop { position: fixed; inset: 0; visibility: hidden; opacity: 0; border: 0; background: rgba(0,0,0,.55); transition: opacity .2s ease, visibility .2s; }
+      #organizeon-account-navigation.open .backdrop { visibility: visible; opacity: 1; }
       #organizeon-account-navigation.open .drawer { transform: translateX(0); }
-      #organizeon-account-navigation .account {
-        margin: 0 8px 22px; color: #8eaaa2; font-size: 12px;
-      }
-      #organizeon-account-navigation .account strong {
-        display: block; margin-bottom: 3px; color: #eafff9; font-size: 15px;
-      }
-      #organizeon-account-navigation .item {
-        width: 100%; min-height: 46px; margin: 5px 0; padding: 0 14px;
-        display: flex; align-items: center; gap: 11px; border: 0;
-        border-radius: 11px; cursor: pointer; color: #cfe1dc;
-        background: transparent; text-align: left; font-weight: 650;
-      }
-      #organizeon-account-navigation .item-icon {
-        width: 18px; height: 18px; flex: 0 0 18px;
-      }
-      #organizeon-account-navigation .item:hover {
-        color: #75f2d2; background: rgba(79,235,199,.1);
-      }
-      #organizeon-account-navigation .item.logout {
-        color: #ff9ca4; background: rgba(255, 83, 96, .06);
-      }
-      #organizeon-account-navigation .item.logout:hover {
-        color: #ffd6d9; background: rgba(255, 83, 96, .16);
-      }
-      #organizeon-account-navigation .badge {
-        margin-left: auto; padding: 3px 8px; border-radius: 99px;
-        color: #73ecca; background: rgba(79,235,199,.12); font-size: 10px;
-      }
+      #organizeon-account-navigation .account { margin: 0 8px 20px; color: #a1a1aa; font-size: 12px; }
+      #organizeon-account-navigation .account strong { display: block; margin-bottom: 3px; color: #fafafa; font-size: 14px; }
+      #organizeon-account-navigation .item { width: 100%; min-height: 44px; margin: 2px 0; padding: 0 12px; display: flex; align-items: center; gap: 11px; border: 0; border-radius: 7px; cursor: pointer; color: #d4d4d8; background: transparent; text-align: left; font-weight: 550; }
+      #organizeon-account-navigation .item-icon { width: 18px; height: 18px; flex: 0 0 18px; }
+      #organizeon-account-navigation .item:hover, #organizeon-account-navigation .item:focus-visible { color: #fafafa; background: #27272a; }
+      #organizeon-account-navigation .item.logout { color: #fca5a5; }
+      #organizeon-account-navigation .badge { margin-left: auto; padding: 3px 8px; border: 1px solid #3f3f46; border-radius: 6px; color: #a1a1aa; font-size: 10px; }
+      @media (prefers-reduced-motion: reduce) { #organizeon-account-navigation .drawer, #organizeon-account-navigation .backdrop { transition: none; } }
     </style>
     <button class="trigger" type="button" aria-label="Abrir menu">
       <span class="glyph"><i></i><i></i><i></i><i></i></span>
@@ -610,7 +565,7 @@ function configureAccountNavigation(account) {
         <strong></strong>
         <span></span>
       </div>
-      <button class="item main" type="button">⌂ <span>Main</span></button>
+      <button class="item main" type="button">⌂ <span>Início</span></button>
       <button class="item games" type="button">
         <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M7 8h10a4 4 0 0 1 3.9 4.9l-.7 3.2a2.4 2.4 0 0 1-4.4.7L14.7 14H9.3l-1.1 2.8a2.4 2.4 0 0 1-4.4-.7l-.7-3.2A4 4 0 0 1 7 8Z"></path>
@@ -618,7 +573,7 @@ function configureAccountNavigation(account) {
         </svg>
         <span>Jogos</span>
       </button>
-      <button class="item settings" type="button">⚙ <span>Settings</span></button>
+      <button class="item settings" type="button">⚙ <span>Configurações</span></button>
       ${isGuest ? "" : '<button class="item data" type="button">▤ <span>Dados</span></button>'}
       <button class="item proxy-server" type="button">
         ⇄ <span>${isGuest ? "Proxy externo" : "Proxy Server"}</span>
@@ -3786,7 +3741,7 @@ function setupMobileMode() {
       max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
     }
     html.organizeon-mobile nav[class~="fixed"][class~="top-0"] {
-      padding: 8px !important; overflow: visible !important;
+      padding: 8px 8px 8px 60px !important; overflow: visible !important;
       flex-wrap: nowrap !important;
     }
     html.organizeon-mobile nav[class~="fixed"][class~="top-0"]
