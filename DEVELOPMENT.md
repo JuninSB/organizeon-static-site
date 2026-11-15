@@ -43,3 +43,7 @@ A distribuição atual mistura funções legíveis em `auth-client.js` e chunks 
 | Painel administrativo | `admin.html`, `admin.js` |
 
 Essas identificações são baseadas no código da revisão `a547108` e devem ser reavaliadas ao mudar os bundles. O backend D2 e o painel D3 não são implementados nesta árvore.
+
+## Escopo do rework visual
+
+O rework atual mira somente os componentes manuais injetados pelo cliente: kernel em `index.html` e overlays/telas de conta em `auth-client.js` (login, sidebar, dados, proxy e catálogo). A aplicação principal compilada em `assets/jdht-e-*.js` e seus chunks foi preservada por já apresentar o estilo aprovado. Ao alterar arquivos distribuídos, gere novamente hashes e versão com `node scripts/update-manifest.mjs` e valide com `npm test`.
