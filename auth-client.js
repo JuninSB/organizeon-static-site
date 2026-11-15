@@ -529,6 +529,9 @@ function configureAccountNavigation(account) {
   };
   window.organizeonAccount = Object.freeze(normalized);
 
+  const previousNavigation = document.getElementById("organizeon-account-navigation-react");
+  previousNavigation?.__cleanup?.();
+  previousNavigation?.remove();
   document.getElementById("organizeon-account-navigation")?.remove();
   const navigation = document.createElement("div");
   navigation.id = "organizeon-account-navigation";
@@ -646,6 +649,43 @@ function configureAccountNavigation(account) {
     window.organizeonAuth.logout();
   });
   document.body.appendChild(navigation);
+  const uiBase = new URL(window.__groveBase || "./", document.baseURI);
+  const uiScript = new URL("ui-dist/client-ui.js", uiBase);
+  const uiStyles = new URL("ui-dist/client-ui.css", uiBase);
+  const version = window.__ORGANIZEON_CLIENT_VERSION__;
+  if (version) {
+    uiScript.searchParams.set("v", version);
+    uiStyles.searchParams.set("v", version);
+  }
+  void import(uiScript.href).then((module) => {
+    if (!navigation.isConnected) return;
+    const host = document.createElement("div");
+    host.id = "organizeon-account-navigation-react";
+    Object.assign(host.style, { position: "fixed", inset: "0", zIndex: "2147483645", pointerEvents: "none" });
+    document.body.appendChild(host);
+    try {
+      host.__cleanup = module.mountNavigation(host, {
+        type: "account", username: normalized.username, role: normalized.role,
+        guest: isGuest, canOpenDashboard,
+        proxyLabel: selectedProxy.beta ? "BETA" : "ATIVO",
+        onNavigate: (action) => {
+          if (action === "home") navigateClientRoute("/");
+          if (action === "games") void showGameCatalog();
+          if (action === "settings") navigateClientRoute("/settings");
+          if (action === "data") void showDataPanel();
+          if (action === "proxy") showProxyServerDialog();
+          if (action === "dashboard") openDashboardWindow();
+          if (action === "logout") window.organizeonAuth.logout();
+        },
+      }, uiStyles.href);
+      const link = host.shadowRoot.querySelector('link[rel="stylesheet"]');
+      link.addEventListener("load", () => navigation.remove(), { once: true });
+      link.addEventListener("error", () => { host.__cleanup?.(); host.remove(); }, { once: true });
+    } catch (error) {
+      host.remove();
+      console.error("Falha ao montar a navegação:", error);
+    }
+  }).catch((error) => console.error("Falha ao carregar a navegação:", error));
 }
 
 function navigateClientRoute(route) {

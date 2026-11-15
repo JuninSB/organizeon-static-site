@@ -3,6 +3,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 
 // Preserve the published list: clients depend on existing paths remaining available.
 const manifest = JSON.parse(await readFile(new URL('../download-manifest.json', import.meta.url), 'utf8'));
+for (const path of ['ui-dist/client-ui.js', 'ui-dist/client-ui.css']) {
+  if (!manifest.files.some((file) => file.path === path)) manifest.files.push({ path, size: 0, sha256: '' });
+}
 for (const file of manifest.files) {
   const bytes = await readFile(new URL(`../${file.path}`, import.meta.url));
   file.size = bytes.length;

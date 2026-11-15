@@ -1,7 +1,7 @@
 {
-  "version": "v2-e2df22995e63c63f",
-  "generatedAt": "2026-11-15T11:55:40.912Z",
-  "totalBytes": 10447676,
+  "version": "v2-55db929f67ad216b",
+  "generatedAt": "2026-11-15T12:10:02.874Z",
+  "totalBytes": 11257165,
   "files": [
     {
       "path": "404.html",
@@ -335,8 +335,8 @@
     },
     {
       "path": "auth-client.js",
-      "size": 165428,
-      "sha256": "90cf7a58a1404fe265ebc304b2eecbb97513cab86e10de54438ca64ee2ce0975"
+      "size": 167480,
+      "sha256": "64094defe4ae9c4cd0e37cfa11d2691019eb67d12750bd62d158cfdfa76d8fc8"
     },
     {
       "path": "config.js",
@@ -777,6 +777,16 @@
       "path": "xzmo/grhp.wasm.wasm",
       "size": 536994,
       "sha256": "ed500d8cb02ea06810707ee40f0eeb5790c2eaa5b53550b19e302815d2b1307a"
+    },
+    {
+      "path": "ui-dist/client-ui.js",
+      "size": 647946,
+      "sha256": "94ccd6ef29c1f7e29f26d0361a57c39bdc3b9ae2c1c566c91cc91d79870324d8"
+    },
+    {
+      "path": "ui-dist/client-ui.css",
+      "size": 159491,
+      "sha256": "7c2446df2a7845b2c88255b2b8910612f102099bf73a35dc273d35a8654d1917"
     }
   ]
 }
