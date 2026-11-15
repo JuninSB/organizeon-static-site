@@ -4003,7 +4003,8 @@ function showLogin(message = "") {
         color: #fca5a5; font-size: 13px;
       }
     </style>
-    <form autocomplete="on">
+    <p class="login-loading" role="status">Carregando acesso…</p>
+    <form autocomplete="on" hidden>
       <h1>Acesso privado</h1>
       <p>Entre no OrganizeOn para continuar.</p>
       <div class="password-fields">
@@ -4031,6 +4032,19 @@ function showLogin(message = "") {
   setMessage(message);
 
   const form = wrapper.querySelector("form");
+  const loading = wrapper.querySelector(".login-loading");
+  let fallbackShown = false;
+  let pendingHost = null;
+  let pendingCleanup = null;
+  const showFallback = () => {
+    if (fallbackShown || !wrapper.isConnected) return;
+    fallbackShown = true;
+    pendingCleanup?.();
+    pendingHost?.remove();
+    loading.remove();
+    form.hidden = false;
+  };
+  const loginLoadTimeout = window.setTimeout(showFallback, 12000);
   const button = wrapper.querySelector('button[type="submit"]');
   const guestButton = wrapper.querySelector(".guest");
   const registerButton = wrapper.querySelector(".register");
@@ -4147,9 +4161,10 @@ function showLogin(message = "") {
   const version = window.__ORGANIZEON_CLIENT_VERSION__;
   if (version) { script.searchParams.set("v", version); stylesheet.searchParams.set("v", version); }
   void import(script.href).then((module) => {
-    if (!wrapper.isConnected) return;
+    if (!wrapper.isConnected || fallbackShown) return;
     const host = document.createElement("div");
-    host.style.cssText = "position:fixed;inset:0;z-index:2147483647";
+    pendingHost = host;
+    host.style.cssText = "position:fixed;inset:0;z-index:2147483647;visibility:hidden";
     wrapper.appendChild(host);
     const cleanup = module.mountClientSurface(host, {
       type: "login", initialMessage: message,
@@ -4175,10 +4190,11 @@ function showLogin(message = "") {
         await startApplication(result.token, result.account);
       },
     }, stylesheet.href);
+    pendingCleanup = cleanup;
     const link = host.shadowRoot.querySelector('link[rel="stylesheet"]');
-    link.addEventListener("load", () => { form.hidden = true; }, { once: true });
-    link.addEventListener("error", () => { cleanup(); host.remove(); }, { once: true });
-  }).catch((error) => console.error("Falha ao carregar a tela de login:", error));
+    link.addEventListener("load", () => { window.clearTimeout(loginLoadTimeout); host.style.visibility = "visible"; loading.remove(); }, { once: true });
+    link.addEventListener("error", () => { window.clearTimeout(loginLoadTimeout); showFallback(); }, { once: true });
+  }).catch((error) => { window.clearTimeout(loginLoadTimeout); showFallback(); console.error("Falha ao carregar a tela de login:", error); });
 }
 
 function apiRequest(path, options) {
