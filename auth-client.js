@@ -78,6 +78,57 @@ let controlReconnectAttempts = 0;
 let maintainControlConnection = false;
 let dashboardPanelCleanup = null;
 let guestMode = false;
+let clientUiPromise = null;
+let toastHost = null;
+
+function clientUiPaths() {
+  const base = new URL(window.__groveBase || "./", document.baseURI);
+  return {
+    script: new URL("ui-dist/client-ui.js", base).href,
+    stylesheet: new URL("ui-dist/client-ui.css", base).href,
+  };
+}
+
+function loadClientUi() {
+  if (!clientUiPromise) {
+    const paths = clientUiPaths();
+    clientUiPromise = import(paths.script).then((module) => ({ module, stylesheet: paths.stylesheet })).catch((error) => {
+      clientUiPromise = null;
+      throw error;
+    });
+  }
+  return clientUiPromise;
+}
+
+function disposeClientSurface(host) {
+  if (!host) return;
+  host.__organizeonCleanup?.();
+  host.remove();
+}
+
+async function renderClientSurface(host, props) {
+  const { module, stylesheet } = await loadClientUi();
+  if (!host.isConnected) return;
+  host.__organizeonCleanup = module.mountClientSurface(host, props, stylesheet);
+}
+
+async function ensureClientToaster() {
+  if (toastHost?.isConnected) return loadClientUi();
+  toastHost = document.createElement("div");
+  toastHost.id = "organizeon-ui-toaster";
+  Object.assign(toastHost.style, { position: "fixed", inset: "0", zIndex: "2147483647", pointerEvents: "none" });
+  document.body.appendChild(toastHost);
+  const { module, stylesheet } = await loadClientUi();
+  toastHost.__organizeonCleanup = module.mountClientToaster(toastHost, stylesheet);
+  return { module, stylesheet };
+}
+
+function toastClient(message, kind = "info", id) {
+  void ensureClientToaster().then(({ module }) => module.showClientToast(message, kind, id)).catch((error) => {
+    console.error("Falha ao carregar a interface de notificações:", error);
+  });
+}
+
 window.organizeonOpenProxyServerDialog = showProxyServerDialog;
 window.organizeonResetAndLogout = resetAuthenticationForDataWipe;
 window.organizeonOpenQuickApp = openQuickApp;
@@ -414,100 +465,17 @@ function publishConnectionState(state) {
   );
 }
 
-function showConnectionStatus(
-  title,
-  detail = "",
-  percent = null,
-  autoHideMs = 8000,
-) {
-  const element = ensureConnectionStatus();
-  element.querySelector(".title").textContent = title;
-  element.querySelector(".detail").textContent = detail;
-  const progress = element.querySelector(".bar span");
-  if (Number.isFinite(percent)) {
-    progress.classList.remove("indeterminate");
-    progress.style.width = `${Math.max(0, Math.min(100, percent))}%`;
-  } else {
-    progress.classList.add("indeterminate");
-    progress.style.width = "38%";
-  }
-  element.hidden = false;
-  window.clearTimeout(element.hideTimer);
-  if (autoHideMs > 0) {
-    element.hideTimer = window.setTimeout(
-      () => hideConnectionStatus(),
-      autoHideMs,
-    );
-  }
+function showConnectionStatus(title, detail = "", percent = null, autoHideMs = 8000) {
+  const percentage = Number.isFinite(percent) ? ` · ${Math.max(0, Math.min(100, percent))}%` : "";
+  const message = `${title}${percentage}${detail ? ` — ${detail}` : ""}`;
+  toastClient(message, Number.isFinite(percent) && percent >= 100 ? "success" : "loading", "organizeon-connection");
+  window.clearTimeout(window.__organizeonConnectionToastTimer);
+  if (autoHideMs > 0) window.__organizeonConnectionToastTimer = window.setTimeout(hideConnectionStatus, autoHideMs);
 }
 
 function hideConnectionStatus() {
-  const element = document.getElementById("organizeon-network-status");
-  if (element) element.hidden = true;
-}
-
-function ensureConnectionStatus() {
-  let element = document.getElementById("organizeon-network-status");
-  if (element) return element;
-
-  element = document.createElement("div");
-  element.id = "organizeon-network-status";
-  element.setAttribute("role", "status");
-  element.setAttribute("aria-live", "polite");
-  element.innerHTML = `
-    <style>
-      #organizeon-network-status {
-        position: fixed; right: 14px; bottom: 14px; z-index: 2147483646;
-        width: min(390px, calc(100% - 28px)); padding: 14px 16px;
-        border: 1px solid rgba(75, 247, 210, .3); border-radius: 13px;
-        color: #eafff9; background: rgba(7, 20, 18, .95);
-        box-shadow: 0 16px 48px rgba(0,0,0,.48);
-        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      }
-      #organizeon-network-status[hidden] { display: none; }
-      #organizeon-network-status .title {
-        padding-right: 28px; color: #70f2d0; font-size: 14px; font-weight: 750;
-      }
-      #organizeon-network-status .close {
-        position: absolute; top: 7px; right: 8px; width: 30px; height: 30px;
-        display: grid; place-items: center; padding: 0; border: 0;
-        border-radius: 8px; cursor: pointer; color: #9db8b1;
-        background: transparent; font: 700 19px/1 system-ui, sans-serif;
-      }
-      #organizeon-network-status .close:hover {
-        color: #fff; background: rgba(255,255,255,.08);
-      }
-      #organizeon-network-status .detail {
-        margin-top: 4px; color: #9db8b1; font-size: 12px; line-height: 1.4;
-      }
-      #organizeon-network-status .bar {
-        height: 6px; margin-top: 10px; overflow: hidden;
-        border-radius: 999px; background: rgba(95, 255, 218, .12);
-      }
-      #organizeon-network-status .bar span {
-        display: block; height: 100%; border-radius: inherit;
-        background: linear-gradient(90deg, #39d9b5, #63f2d5, #43caee);
-        transition: width .2s ease;
-      }
-      #organizeon-network-status .bar span.indeterminate {
-        animation: organizeon-status-slide 1.1s ease-in-out infinite alternate;
-      }
-      @keyframes organizeon-status-slide {
-        from { transform: translateX(-35%); }
-        to { transform: translateX(200%); }
-      }
-    </style>
-    <button class="close" type="button" aria-label="Fechar notificação">×</button>
-    <div class="title"></div>
-    <div class="detail"></div>
-    <div class="bar"><span class="indeterminate"></span></div>
-  `;
-  element.querySelector(".close").addEventListener(
-    "click",
-    hideConnectionStatus,
-  );
-  document.body.appendChild(element);
-  return element;
+  window.clearTimeout(window.__organizeonConnectionToastTimer);
+  void ensureClientToaster().then(({ module }) => module.dismissClientToast("organizeon-connection")).catch(() => {});
 }
 
 window.organizeonStatus = Object.freeze({
@@ -523,129 +491,36 @@ function configureAccountNavigation(account) {
   const normalized = {
     username: account.username,
     role: account.role,
-    permissions: Array.isArray(account.permissions)
-      ? account.permissions
-      : [],
+    permissions: Array.isArray(account.permissions) ? account.permissions : [],
   };
   window.organizeonAccount = Object.freeze(normalized);
-
-  document.getElementById("organizeon-account-navigation")?.remove();
-  const navigation = document.createElement("div");
-  navigation.id = "organizeon-account-navigation";
-  const canOpenDashboard =
-    normalized.permissions.includes("admin.dashboard");
-  const isGuest = normalized.role === "guest";
-  navigation.innerHTML = `
-    <style>
-      #organizeon-account-navigation { position: fixed; inset: 0 auto auto 0; z-index: 2147483645; color: #fafafa; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-      #organizeon-account-navigation * { box-sizing: border-box; }
-      #organizeon-account-navigation .trigger { position: fixed; top: 12px; left: 12px; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #27272a; border-radius: 8px; cursor: pointer; color: #fafafa; background: #18181b; }
-      #organizeon-account-navigation .glyph { display: grid; grid-template-columns: 5px 15px; gap: 5px; align-items: center; width: 25px; }
-      #organizeon-account-navigation .glyph i { height: 2px; border-radius: 2px; background: currentColor; }
-      #organizeon-account-navigation .glyph i:nth-child(odd) { width: 4px; height: 4px; }
-      #organizeon-account-navigation .drawer { position: fixed; inset: 0 auto 0 0; width: min(288px, 86vw); overflow-y: auto; padding: 68px 12px 20px; transform: translateX(-105%); border-right: 1px solid #27272a; background: #111113; transition: transform .2s ease; }
-      #organizeon-account-navigation .backdrop { position: fixed; inset: 0; visibility: hidden; opacity: 0; border: 0; background: rgba(0,0,0,.55); transition: opacity .2s ease, visibility .2s; }
-      #organizeon-account-navigation.open .backdrop { visibility: visible; opacity: 1; }
-      #organizeon-account-navigation.open .drawer { transform: translateX(0); }
-      #organizeon-account-navigation .account { margin: 0 8px 20px; color: #a1a1aa; font-size: 12px; }
-      #organizeon-account-navigation .account strong { display: block; margin-bottom: 3px; color: #fafafa; font-size: 14px; }
-      #organizeon-account-navigation .item { width: 100%; min-height: 44px; margin: 2px 0; padding: 0 12px; display: flex; align-items: center; gap: 11px; border: 0; border-radius: 7px; cursor: pointer; color: #d4d4d8; background: transparent; text-align: left; font-weight: 550; }
-      #organizeon-account-navigation .item-icon { width: 18px; height: 18px; flex: 0 0 18px; }
-      #organizeon-account-navigation .item:hover, #organizeon-account-navigation .item:focus-visible { color: #fafafa; background: #27272a; }
-      #organizeon-account-navigation .item.logout { color: #fca5a5; }
-      #organizeon-account-navigation .badge { margin-left: auto; padding: 3px 8px; border: 1px solid #3f3f46; border-radius: 6px; color: #a1a1aa; font-size: 10px; }
-      @media (prefers-reduced-motion: reduce) { #organizeon-account-navigation .drawer, #organizeon-account-navigation .backdrop { transition: none; } }
-    </style>
-    <button class="trigger" type="button" aria-label="Abrir menu">
-      <span class="glyph"><i></i><i></i><i></i><i></i></span>
-    </button>
-    <button class="backdrop" type="button" aria-label="Fechar menu"></button>
-    <aside class="drawer">
-      <div class="account">
-        <strong></strong>
-        <span></span>
-      </div>
-      <button class="item main" type="button">⌂ <span>Início</span></button>
-      <button class="item games" type="button">
-        <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M7 8h10a4 4 0 0 1 3.9 4.9l-.7 3.2a2.4 2.4 0 0 1-4.4.7L14.7 14H9.3l-1.1 2.8a2.4 2.4 0 0 1-4.4-.7l-.7-3.2A4 4 0 0 1 7 8Z"></path>
-          <path d="M8 11v4M6 13h4M16 12h.01M18 14h.01"></path>
-        </svg>
-        <span>Jogos</span>
-      </button>
-      <button class="item settings" type="button">⚙ <span>Configurações</span></button>
-      ${isGuest ? "" : '<button class="item data" type="button">▤ <span>Dados</span></button>'}
-      <button class="item proxy-server" type="button">
-        ⇄ <span>${isGuest ? "Proxy externo" : "Proxy Server"}</span>
-        <small class="badge proxy-badge"></small>
-      </button>
-      ${
-        canOpenDashboard
-          ? '<button class="item dashboard" type="button">◫ <span>Dashboard</span><small class="badge">ADMIN</small></button>'
-          : ""
-      }
-      <button class="item logout" type="button">⇥ <span>Sair</span></button>
-    </aside>
-  `;
-  navigation.querySelector(".account strong").textContent =
-    normalized.username;
-  navigation.querySelector(".account span").textContent =
-    ({
-      owner: "Owner",
-      ultra_admin: "Ultra Admin",
-      admin: "Administrador",
-      user: "Usuário",
-      guest: "Convidado · somente GitHub",
-    })[normalized.role] || "Usuário";
+  disposeClientSurface(document.getElementById("organizeon-account-navigation"));
+  const host = document.createElement("div");
+  host.id = "organizeon-account-navigation";
+  Object.assign(host.style, { position: "fixed", inset: "0", zIndex: "2147483645", pointerEvents: "none" });
+  document.body.appendChild(host);
   const selectedProxy = getSelectedProxyServer();
-  const proxyBadge = navigation.querySelector(".proxy-badge");
-  if (proxyBadge) {
-    proxyBadge.textContent = selectedProxy.beta ? "BETA" : "ATIVO";
-  }
-  navigation.querySelector(".trigger").addEventListener("click", () => {
-    navigation.classList.toggle("open");
+  void renderClientSurface(host, {
+    type: "account",
+    username: normalized.username,
+    role: normalized.role,
+    guest: normalized.role === "guest",
+    canOpenDashboard: normalized.permissions.includes("admin.dashboard"),
+    proxyLabel: selectedProxy.beta ? "BETA" : "ATIVO",
+    onNavigate: (action) => {
+      if (action !== "logout") disposeClientSurface(host);
+      if (action === "home") navigateClientRoute("/");
+      if (action === "games") showGameCatalog();
+      if (action === "settings") navigateClientRoute("/settings");
+      if (action === "data") showDataPanel();
+      if (action === "proxy") showProxyServerDialog();
+      if (action === "dashboard") openDashboardWindow();
+      if (action === "logout") window.organizeonAuth.logout();
+    },
+  }).catch((error) => {
+    host.remove();
+    console.error("Falha ao abrir navegação da conta:", error);
   });
-  navigation.querySelector(".backdrop").addEventListener("click", () => {
-    navigation.classList.remove("open");
-  });
-  navigation.querySelector(".main").addEventListener("click", () => {
-    navigation.classList.remove("open");
-    navigateClientRoute("/");
-  });
-  navigation.querySelector(".games").addEventListener("click", () => {
-    navigation.classList.remove("open");
-    showGameCatalog();
-  });
-  navigation.querySelector(".settings").addEventListener("click", () => {
-    navigation.classList.remove("open");
-    navigateClientRoute("/settings");
-  });
-  navigation.querySelector(".data")?.addEventListener("click", () => {
-    navigation.classList.remove("open");
-    showDataPanel();
-  });
-  navigation
-    .querySelector(".proxy-server")
-    ?.addEventListener("click", () => {
-      navigation.classList.remove("open");
-      showProxyServerDialog();
-    });
-  navigation
-    .querySelector(".dashboard")
-    ?.addEventListener("click", () => {
-      openDashboardWindow();
-      navigation.classList.remove("open");
-    });
-  navigation.querySelector(".logout").addEventListener("click", () => {
-    const confirmed = window.confirm(
-      isGuest
-        ? "Deseja sair do modo convidado?"
-        : "Deseja realmente sair desta conta?",
-    );
-    if (!confirmed) return;
-    window.organizeonAuth.logout();
-  });
-  document.body.appendChild(navigation);
 }
 
 function navigateClientRoute(route) {
@@ -1137,120 +1012,49 @@ async function clearGameProgress(gameId) {
 }
 
 async function showDataPanel() {
-  document.getElementById("organizeon-data-panel")?.remove();
-  const wrapper = document.createElement("section");
-  wrapper.id = "organizeon-data-panel";
-  wrapper.innerHTML = `
-    <style>
-      #organizeon-data-panel{position:fixed;inset:0;z-index:2147483647;overflow:auto;padding:22px;color:#eafff8;background:#07100e;font-family:Inter,system-ui,sans-serif}
-      #organizeon-data-panel *{box-sizing:border-box}#organizeon-data-panel .shell{width:min(720px,100%);margin:auto}#organizeon-data-panel .top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-      #organizeon-data-panel .back,#organizeon-data-panel button{min-height:42px;border:1px solid #315249;border-radius:10px;color:#dffbf3;background:#13231e;cursor:pointer;font-weight:700}
-      #organizeon-data-panel .back{width:44px;font-size:20px}#organizeon-data-panel h1{margin:0}#organizeon-data-panel .card{margin:14px 0;padding:18px;border:1px solid #263c35;border-radius:16px;background:#0d1915}
-      #organizeon-data-panel .row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#organizeon-data-panel .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:14px}
-      #organizeon-data-panel button{padding:0 13px}#organizeon-data-panel button.primary{color:#062019;background:#63e4c4}#organizeon-data-panel button.danger{color:#ffd6da;border-color:#68383d;background:#32181b}
-      #organizeon-data-panel input,#organizeon-data-panel select{min-height:42px;padding:0 11px;border:1px solid #385148;border-radius:10px;color:#fff;background:#09110e}#organizeon-data-panel .status{color:#8eaaa2;font-size:13px}
-      @media(max-width:560px){#organizeon-data-panel{padding:14px}#organizeon-data-panel .actions{grid-template-columns:1fr}}
-    
-      #organizeon-data-panel { color:#fafafa; background:#09090b; font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
-      #organizeon-data-panel .card { border-color:#27272a; border-radius:9px; background:#111113; box-shadow:none; }
-      #organizeon-data-panel button { border-color:#3f3f46; border-radius:7px; color:#d4d4d8; background:#18181b; transition:background .15s ease,border-color .15s ease; }
-      #organizeon-data-panel button:hover:not(:disabled) { background:#27272a; }
-      #organizeon-data-panel button.primary { border-color:#e4e4e7; color:#18181b; background:#e4e4e7; }
-      #organizeon-data-panel button.danger { border-color:#7f1d1d; color:#fca5a5; background:#1c1113; }
-      #organizeon-data-panel input,#organizeon-data-panel select { border-color:#3f3f46; border-radius:7px; color:#fafafa; background:#09090b; }
-      #organizeon-data-panel .status { color:#a1a1aa; }
-      #organizeon-data-panel :focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
-      @media(prefers-reduced-motion:reduce){#organizeon-data-panel *{transition:none!important}}
-
-      #organizeon-data-panel { width:100vw; max-width:100vw; overflow-x:hidden; }
-      #organizeon-data-panel .shell, #organizeon-data-panel .card, #organizeon-data-panel .actions, #organizeon-data-panel .row { min-width:0; max-width:100%; }
-      #organizeon-data-panel .actions { grid-template-columns:minmax(0,1fr); }
-      #organizeon-data-panel .actions > *, #organizeon-data-panel .row > * { min-width:0; width:100%; }
-      #organizeon-data-panel button { min-height:44px; height:auto; padding:10px 12px; font-size:14px; line-height:1.35; white-space:normal; overflow-wrap:anywhere; }
-      #organizeon-data-panel select { width:100%; max-width:100%; font-size:14px; }
-      #organizeon-data-panel .row { display:grid; grid-template-columns:minmax(0,1fr); }
-      @media (min-width:640px) { #organizeon-data-panel .actions { grid-template-columns:repeat(2,minmax(0,1fr)); } #organizeon-data-panel .actions > .row { grid-column:1/-1; grid-template-columns:minmax(0,1fr) auto; align-items:center; } #organizeon-data-panel .actions > .row > button { width:auto; } }
-</style>
-    <div class="shell"><header class="top"><button class="back">←</button><div><h1>Dados</h1><div class="status">Conta ${window.organizeonAccount?.username || ""}</div></div></header>
-      <article class="card"><div class="row"><div><strong>Backup na nuvem</strong><div class="status backup-status">Consultando…</div></div><button class="toggle primary">Carregando…</button></div><div class="actions"><button class="save">Salvar agora</button><button class="restore">Restaurar</button></div></article>
-      <article class="card"><strong>Progresso dos jogos</strong><p class="status">Os arquivos dos jogos continuam no navegador. Estas ações apagam somente saves.</p><div class="actions"><button class="danger clear-all">Apagar todos os progressos</button><span class="row"><select class="game-id" aria-label="Escolher jogo"><option value="">Carregando jogos…</option></select><button class="danger clear-one" disabled>Apagar jogo</button></span></div></article>
-      <article class="card"><strong>Preferências</strong><p class="status">Tema, proxy, identidade do navegador, teclas e configurações persistentes.</p><button class="danger clear-preferences">Apagar preferências</button></article>
-    </div>`;
-  document.body.appendChild(wrapper);
-  wrapper.querySelector(".back").onclick = () => wrapper.remove();
-  const gameSelect = wrapper.querySelector(".game-id");
-  const clearOneButton = wrapper.querySelector(".clear-one");
-  try {
-    const basePath = window.__groveBase || new URL("./", document.baseURI).pathname;
-    const catalogUrl = new URL("games/catalog.json", new URL(basePath, location.origin));
-    const catalogResponse = await fetch(catalogUrl, { cache: "no-cache" });
-    if (!catalogResponse.ok) throw new Error(`HTTP ${catalogResponse.status}`);
-    const catalogPayload = await catalogResponse.json();
-    const games = Array.isArray(catalogPayload.games) ? catalogPayload.games : [];
-    gameSelect.replaceChildren(
-      new Option("Escolha um jogo…", ""),
-      ...games
+  disposeClientSurface(document.getElementById("organizeon-data-panel"));
+  const host = document.createElement("div");
+  host.id = "organizeon-data-panel";
+  host.style.cssText = "position:fixed;inset:0;z-index:2147483647";
+  document.body.appendChild(host);
+  const basePath = window.__groveBase || new URL("./", document.baseURI).pathname;
+  const catalogUrl = new URL("games/catalog.json", new URL(basePath, location.origin));
+  void renderClientSurface(host, {
+    type: "data",
+    username: window.organizeonAccount?.username || "",
+    getStatus: async () => {
+      const response = await apiRequest("/account/backup", { method: "GET" });
+      if (!response.ok) throw new Error("Não foi possível consultar o backup na nuvem.");
+      const status = await response.json();
+      cloudBackupEnabled = status.enabled === true;
+      return status;
+    },
+    getGames: async () => {
+      const response = await fetch(catalogUrl, { cache: "no-cache" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      return (Array.isArray(payload.games) ? payload.games : [])
         .filter((game) => game && game.id)
         .sort((left, right) => String(left.name || left.id).localeCompare(String(right.name || right.id), "pt-BR"))
-        .map((game) => new Option(`${game.name || game.id} — ${game.id}`, game.id)),
-    );
-    gameSelect.title = "O texto depois do travessão é o ID usado para apagar o save.";
-  } catch (error) {
-    gameSelect.replaceChildren(new Option("Não foi possível carregar os jogos", ""));
-    gameSelect.title = "Falha ao carregar games/catalog.json";
-    console.warn("Falha ao carregar IDs dos jogos:", error);
-  }
-  gameSelect.addEventListener("change", () => {
-    clearOneButton.disabled = !gameSelect.value;
-  });
-  const refreshStatus = async () => {
-    const response = await apiRequest("/account/backup", { method: "GET" });
-    const status = await response.json();
-    cloudBackupEnabled = status.enabled === true;
-    wrapper.querySelector(".backup-status").textContent = `${cloudBackupEnabled ? "ON" : "OFF"} · ${formatCloudBytes(status.size || 0)} / ${formatCloudBytes(status.limit || (256 * 1024 * 1024))}`;
-    wrapper.querySelector(".toggle").textContent = cloudBackupEnabled ? "Desativar" : "Ativar";
-  };
-  wrapper.querySelector(".toggle").onclick = async () => {
-    try {
-      const response = await apiRequest("/account/backup", { method: "PATCH", body: JSON.stringify({ enabled: !cloudBackupEnabled }) });
+        .map((game) => ({ id: game.id, name: game.name || game.id }));
+    },
+    toggleBackup: async (enabled) => {
+      const response = await apiRequest("/account/backup", { method: "PATCH", body: JSON.stringify({ enabled }) });
       if (!response.ok) throw new Error("Não foi possível alterar o backup.");
-      cloudBackupEnabled = !cloudBackupEnabled;
-      if (cloudBackupEnabled) await saveCloudBackup();
-      await refreshStatus();
-    } catch (error) {
-      console.warn("Falha ao atualizar backup na nuvem:", error);
-      wrapper.querySelector(".backup-status").textContent = `Erro: ${error.message || "não foi possível salvar"}`;
-      await refreshStatus().catch(() => {});
-    }
-  };
-  wrapper.querySelector(".save").onclick = async () => {
-    try {
-      await saveCloudBackup();
-      await refreshStatus();
-    } catch (error) {
-      console.warn("Falha ao salvar backup na nuvem:", error);
-      wrapper.querySelector(".backup-status").textContent = `Erro: ${error.message || "não foi possível salvar"}`;
-    }
-  };
-  wrapper.querySelector(".restore").onclick = async () => {
-    try {
-      await restoreCloudBackup();
-      await refreshStatus();
-    } catch (error) {
-      console.warn("Falha ao restaurar backup na nuvem:", error);
-      wrapper.querySelector(".backup-status").textContent = `Erro: ${error.message || "não foi possível restaurar"}`;
-    }
-  };
-  wrapper.querySelector(".clear-all").onclick = async () => { if (confirm("Apagar todos os progressos?")) await clearAllGameProgress(); };
-  clearOneButton.onclick = async () => { const value = gameSelect.value; if (value && confirm(`Apagar o progresso de ${value}?`)) await clearGameProgress(value); };
-  wrapper.querySelector(".clear-preferences").onclick = () => { if (confirm("Apagar todas as preferências?")) clearPreferences(); };
-  await refreshStatus();
-}
-
-function formatCloudBytes(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+      cloudBackupEnabled = enabled;
+      if (enabled) await saveCloudBackup();
+    },
+    saveBackup: () => saveCloudBackup(),
+    restoreBackup: () => restoreCloudBackup(),
+    clearAllProgress: () => clearAllGameProgress(),
+    clearGameProgress: (id) => clearGameProgress(id),
+    clearPreferences: () => clearPreferences(),
+    onClose: () => disposeClientSurface(host),
+  }).catch((error) => {
+    console.error("Falha ao montar a tela de dados:", error);
+    disposeClientSurface(host);
+    showConnectionStatus("Não foi possível abrir os dados", "A interface atualizada não carregou.", null, 0);
+  });
 }
 
 function restartClientAtMain() {
@@ -1365,14 +1169,14 @@ async function showGameCatalog() {
   const previousOverflow = document.body.style.overflow;
   const wrapper = document.createElement("section");
   wrapper.id = "organizeon-game-catalog";
+  wrapper.className = "organizeon-ui dark";
   wrapper.setAttribute("aria-label", "Catálogo de jogos");
   wrapper.innerHTML = `
     <style>
       #organizeon-game-catalog {
         position: fixed; inset: 0; z-index: 2147483646;
-        overflow: auto; color: #eafff8; background:
-          radial-gradient(circle at 50% -10%, #173c34 0, transparent 38%),
-          #070d0b; font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        overflow: auto; color: rgb(var(--foreground)); background: rgb(var(--background));
+        font-family: "Geist Variable", Inter, ui-sans-serif, system-ui, sans-serif;
       }
       #organizeon-game-catalog * { box-sizing: border-box; }
       #organizeon-game-catalog button {
@@ -1425,11 +1229,6 @@ async function showGameCatalog() {
         display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
         gap: 18px;
       }
-      #organizeon-game-catalog .card {
-        overflow: hidden; border: 1px solid rgba(255,255,255,.1);
-        border-radius: 18px; background: rgba(15,27,24,.9);
-        box-shadow: 0 18px 50px rgba(0,0,0,.2);
-      }
       #organizeon-game-catalog .badges {
         display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 9px;
       }
@@ -1473,32 +1272,11 @@ async function showGameCatalog() {
         color: #789d93; font-size: 10px; font-weight: 720;
       }
       #organizeon-game-catalog .actions { display: flex; gap: 8px; }
-      #organizeon-game-catalog .action {
-        min-height: 42px; flex: 1; padding: 0 12px; border-radius: 10px;
-        border: 1px solid rgba(91,238,204,.28); cursor: pointer;
-        color: #062019; background: #63e4c4; font-weight: 800;
-      }
-      #organizeon-game-catalog .remove {
-        display: none; width: 42px; min-height: 42px; border-radius: 10px;
-        border: 1px solid rgba(255,116,130,.24); cursor: pointer;
-        color: #ffabb4; background: rgba(255,92,108,.08);
-      }
       #organizeon-game-catalog .credits {
         min-height: 42px; padding: 0 10px; border-radius: 10px;
         border: 1px solid rgba(255,255,255,.12); cursor: pointer;
         color: #9fc2b9; background: rgba(255,255,255,.035); font-weight: 750;
       }
-      #organizeon-game-catalog .card.installed .remove { display: block; }
-      #organizeon-game-catalog .progress {
-        display: none; height: 5px; margin-top: 11px; overflow: hidden;
-        border-radius: 999px; background: rgba(96,235,202,.12);
-      }
-      #organizeon-game-catalog .progress span {
-        display: block; width: 0; height: 100%; border-radius: inherit;
-        background: linear-gradient(90deg,#54dfbd,#58cbef);
-        transition: width .12s linear;
-      }
-      #organizeon-game-catalog .card.downloading .progress { display: block; }
       #organizeon-game-catalog .empty {
         grid-column: 1/-1; padding: 70px 20px; text-align: center;
         color: #89a098;
@@ -1628,11 +1406,6 @@ async function showGameCatalog() {
       @media (max-width: 700px), (pointer: coarse) {
         #organizeon-game-catalog .shell { padding-inline: 12px; }
         #organizeon-game-catalog .description { min-height: 0; }
-        #organizeon-game-catalog .card.mobile-warning {
-          border-color: rgba(255,198,73,.72);
-          background: linear-gradient(180deg,rgba(64,48,18,.92),rgba(15,27,24,.95));
-          box-shadow: 0 0 0 1px rgba(255,198,73,.08),0 18px 50px rgba(0,0,0,.2);
-        }
         #organizeon-game-catalog .player {
           position: fixed; display: none; overflow: hidden;
         }
@@ -1842,8 +1615,7 @@ async function showGameCatalog() {
     
       #organizeon-game-catalog { color:#fafafa; background:#09090b; }
       #organizeon-game-catalog .back,#organizeon-game-catalog .filter,#organizeon-game-catalog .credits,#organizeon-game-catalog .controls-toggle,#organizeon-game-catalog .controls-settings { border-color:#3f3f46; border-radius:7px; color:#d4d4d8; background:#18181b; box-shadow:none; }
-      #organizeon-game-catalog .filter.active,#organizeon-game-catalog .action,#organizeon-game-catalog .dialog-close { border-color:#e4e4e7; color:#18181b; background:#e4e4e7; }
-      #organizeon-game-catalog .card { border-color:#27272a; border-radius:9px; background:#111113; box-shadow:none; }
+      #organizeon-game-catalog .filter.active,#organizeon-game-catalog .dialog-close { border-color:#e4e4e7; color:#18181b; background:#e4e4e7; }
       #organizeon-game-catalog .search { border-color:#3f3f46; border-radius:7px; color:#fafafa; background:#09090b; }
       #organizeon-game-catalog .search:focus-visible,#organizeon-game-catalog button:focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
       #organizeon-game-catalog .filter,#organizeon-game-catalog button { transition:color .15s ease,background .15s ease,border-color .15s ease; }
@@ -1852,19 +1624,7 @@ async function showGameCatalog() {
       @media(prefers-reduced-motion:reduce){#organizeon-game-catalog *{transition:none!important;animation:none!important}}
 </style>
     <div class="shell">
-      <header class="topbar">
-        <button class="back" type="button" aria-label="Voltar">←</button>
-        <div><h1>Jogos</h1><p class="subtitle">Carregando biblioteca…</p></div>
-        <input class="search" type="search" placeholder="🔎 Pesquisar por nome, gênero ou descrição…" aria-label="Pesquisar jogos">
-      </header>
-      <nav class="filters" aria-label="Filtrar jogos">
-        <button class="filter active" type="button" data-filter="all">Todos</button>
-        <button class="filter" type="button" data-filter="trending">🔥 Em alta</button>
-        <button class="filter" type="button" data-filter="mobile">Mobile</button>
-        <button class="filter" type="button" data-filter="pc">PC</button>
-        <button class="filter" type="button" data-filter="flash">Flash</button>
-        <span class="category-filters"></span>
-      </nav>
+      <div id="catalog-toolbar"></div>
       <div class="grid"><div class="empty">Carregando catálogo…</div></div>
     </div>
     <div class="player">
@@ -1886,9 +1646,10 @@ async function showGameCatalog() {
   document.body.style.overflow = "hidden";
   document.body.appendChild(wrapper);
 
+  const { module: clientUi, stylesheet } = await loadClientUi();
+
   const grid = wrapper.querySelector(".grid");
-  const search = wrapper.querySelector(".search");
-  const filters = wrapper.querySelector(".filters");
+  const toolbarHost = wrapper.querySelector("#catalog-toolbar");
   const player = wrapper.querySelector(".player");
   const frame = player.querySelector("iframe");
   const controls = player.querySelector(".controls");
@@ -1901,6 +1662,7 @@ async function showGameCatalog() {
   let gameStats = { games: {}, trending: [] };
   let playerUrl = null;
   let activeFilter = "all";
+  let searchQuery = "";
   let activeGame = null;
   const isMobileViewport = matchMedia("(max-width: 700px), (pointer: coarse)").matches;
   const assetUrl = (path) => {
@@ -1910,10 +1672,18 @@ async function showGameCatalog() {
   };
   const close = () => {
     if (playerUrl) URL.revokeObjectURL(playerUrl);
+    toolbarMount.unmount();
+    grid.querySelectorAll(":scope > article").forEach((card) => clientUi.unmountGameCard(card));
     document.body.style.overflow = previousOverflow;
     wrapper.remove();
   };
-  wrapper.querySelector(".topbar .back").addEventListener("click", close);
+  const toolbarMount = clientUi.mountCatalogToolbar(toolbarHost, {
+    count: 0,
+    categories: [],
+    onBack: close,
+    onQueryChange: (query) => { searchQuery = query; void renderCatalog(query); },
+    onFilterChange: (filter) => { activeFilter = filter; void renderCatalog(searchQuery); },
+  }, stylesheet);
   wrapper.querySelector(".player-back").addEventListener("click", () => {
     wrapper.classList.remove("playing");
     player.classList.remove("controls-open", "menu-open");
@@ -1923,16 +1693,6 @@ async function showGameCatalog() {
     frame.removeAttribute("src");
     if (playerUrl) URL.revokeObjectURL(playerUrl);
     playerUrl = null;
-  });
-  search.addEventListener("input", () => renderCatalog(search.value));
-  filters.addEventListener("click", (event) => {
-    const button = event.target.closest(".filter");
-    if (!button) return;
-    activeFilter = button.dataset.filter || "all";
-    filters.querySelectorAll(".filter").forEach((item) => {
-      item.classList.toggle("active", item === button);
-    });
-    renderCatalog(search.value);
   });
   controlsToggle.addEventListener("click", () => {
     const open = !player.classList.contains("controls-open");
@@ -1972,22 +1732,10 @@ async function showGameCatalog() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     catalog = Array.isArray(payload.games) ? payload.games : [];
-    const categoryFilters = wrapper.querySelector(".category-filters");
     const categories = Array.from(
       new Set(catalog.map((game) => game.category).filter(Boolean)),
     ).sort((left, right) => left.localeCompare(right, "pt-BR"));
-    categoryFilters.replaceChildren(...categories.map((category) => {
-      const button = document.createElement("button");
-      button.className = "filter";
-      button.type = "button";
-      button.dataset.filter = `category:${category}`;
-      button.textContent = category;
-      return button;
-    }));
-    search.placeholder =
-      `🔎 Pesquisar entre ${catalog.length} jogos…`;
-    wrapper.querySelector(".subtitle").textContent =
-      `${catalog.length} jogos · baixe uma vez e jogue direto do cache.`;
+    toolbarMount.update(catalog.length, categories);
     await pruneRemovedGameCache(catalog).catch((error) => {
       console.warn("Não foi possível limpar jogos removidos do cache:", error);
     });
@@ -1996,7 +1744,8 @@ async function showGameCatalog() {
       console.warn("Estatísticas de jogos indisponíveis:", error);
     });
   } catch (error) {
-    grid.innerHTML = "";
+    grid.querySelectorAll(":scope > article").forEach((card) => clientUi.unmountGameCard(card));
+    grid.replaceChildren();
     const empty = document.createElement("div");
     empty.className = "empty";
     empty.textContent =
@@ -2031,7 +1780,8 @@ async function showGameCatalog() {
     }
   }
 
-  async function renderCatalog(query = "") {
+  async function renderCatalog(query = searchQuery) {
+    searchQuery = query;
     const normalized = query.trim().toLocaleLowerCase("pt-BR");
     const trendingOrder = new Map(
       (gameStats.trending || []).map((gameId, index) => [gameId, index]),
@@ -2071,13 +1821,13 @@ async function showGameCatalog() {
         if (game.type === "external-download") {
           const action = card.querySelector(".action");
           action.disabled = false;
-          action.textContent = "Baixar HTML";
+          setActionLabel(action, "Baixar HTML");
           return;
         }
         if (game.type === "remote") {
           const action = card.querySelector(".action");
           action.disabled = false;
-          action.textContent = "Jogar online";
+          setActionLabel(action, "Jogar online");
           return;
         }
         setCardInstalled(
@@ -2090,88 +1840,37 @@ async function showGameCatalog() {
 
   function createGameCard(game) {
     const card = document.createElement("article");
-    card.className = "card";
+    card.className = "game-card-host min-w-0";
     if (isMobileViewport && game.mobileWarning) {
       card.classList.add("mobile-warning");
     }
     card.dataset.gameId = game.id;
-    const cover = document.createElement("img");
-    cover.className = "cover";
-    cover.src = assetUrl(`games/${game.cover}`).href;
-    cover.alt = `Capa de ${game.name}`;
-    cover.loading = "lazy";
-    const copy = document.createElement("div");
-    copy.className = "copy";
-    const badges = document.createElement("div");
-    badges.className = "badges";
-    const typeBadge = document.createElement("span");
-    typeBadge.className = `badge${game.type === "flash" ? " flash" : ""}`;
-    typeBadge.textContent = game.type === "flash"
-      ? "Flash · Ruffle"
-      : game.type === "external-download"
-        ? "HTML offline · GitHub"
-        : game.type === "remote"
-          ? "Multiplayer online"
-        : "HTML5";
-    badges.appendChild(typeBadge);
-    (game.platforms || ["pc"]).forEach((platform) => {
-      const badge = document.createElement("span");
-      badge.className = "badge";
-      badge.textContent = platform;
-      badges.appendChild(badge);
-    });
-    if (isMobileViewport && game.mobileWarning) {
-      const warning = document.createElement("span");
-      warning.className = "badge flash";
-      warning.textContent = "melhor com teclado/mouse";
-      badges.appendChild(warning);
-    }
-    if ((gameStats.trending || []).includes(game.id)) {
-      const hot = document.createElement("span");
-      hot.className = "badge hot";
-      hot.textContent = "🔥 Em alta";
-      badges.appendChild(hot);
-    }
-    const nameRow = document.createElement("div");
-    nameRow.className = "name-row";
-    const title = document.createElement("h2");
-    title.textContent = game.name;
-    const size = document.createElement("span");
-    size.className = "size";
-    size.textContent = game.type === "flash"
-      ? `${formatGameBytes(game.size)} + Ruffle`
-      : game.type === "external-download"
-        ? `HTML ${formatGameBytes(game.externalDownload.outputSize)}`
-        : game.type === "remote"
-          ? "Servidor BR"
-        : formatGameBytes(game.size);
-    if (game.type === "flash") {
-      size.title = "O Ruffle baixa cerca de 15 MB apenas no primeiro uso e fica em cache.";
-    }
-    nameRow.append(title, size);
-    const description = document.createElement("p");
-    description.className = "description";
-    description.textContent = game.description;
-    const attribution = document.createElement("p");
-    attribution.className = "attribution";
-    attribution.textContent = game.type === "flash"
-      ? `${game.attribution || "OrganizeOn"} · Ruffle ~15 MB no 1º uso`
-      : game.type === "external-download"
-        ? `${game.attribution || "Download externo"} · não usa o relay`
-        : game.type === "remote"
-          ? `${game.attribution || "Servidor OrganizeOn"} · multiplayer dedicado`
-        : game.attribution || "OrganizeOn";
-    const statistics = document.createElement("div");
-    statistics.className = "game-stats";
-    updateGameStatsElement(statistics, game.id);
-    const actions = document.createElement("div");
-    actions.className = "actions";
-    const action = document.createElement("button");
-    action.className = "action";
-    action.type = "button";
-    action.textContent = "Verificando…";
-    action.disabled = true;
-    action.addEventListener("click", async () => {
+    const gameView = {
+      id: game.id,
+      name: game.name,
+      description: game.description,
+      category: game.category || "",
+      type: game.type,
+      platforms: game.platforms || ["pc"],
+      cover: assetUrl(`games/${game.cover}`).href,
+      sizeLabel: game.type === "flash"
+        ? `${formatGameBytes(game.size)} + Ruffle`
+        : game.type === "external-download"
+          ? `HTML ${formatGameBytes(game.externalDownload.outputSize)}`
+          : game.type === "remote" ? "Servidor BR" : formatGameBytes(game.size),
+      attribution: game.type === "flash"
+        ? `${game.attribution || "OrganizeOn"} · Ruffle ~15 MB no 1º uso`
+        : game.type === "external-download"
+          ? `${game.attribution || "Download externo"} · não usa o relay`
+          : game.type === "remote"
+            ? `${game.attribution || "Servidor OrganizeOn"} · multiplayer dedicado`
+            : game.attribution || "OrganizeOn",
+      mobileWarning: Boolean(isMobileViewport && game.mobileWarning),
+      trending: Boolean((gameStats.trending || []).includes(game.id)),
+      relayUrl: game.relayUrl,
+      relaySupport: game.relaySupport,
+      hasCredits: Boolean(game.license || game.attribution || game.source),
+      onAction: async () => {
       if (game.type === "external-download") {
         await downloadExternalGame(game, card);
         return;
@@ -2185,110 +1884,52 @@ async function showGameCatalog() {
       } else {
         await installGame(game, card);
       }
-    });
-    let relayButton = null;
-    if (game.relayUrl) {
-      relayButton = document.createElement("button");
-      relayButton.className = "credits";
-      relayButton.type = "button";
-      relayButton.textContent = "Copiar relay";
-      relayButton.title = game.relaySupport || "Relay multiplayer";
-      relayButton.addEventListener("click", async () => {
+      },
+      onRelay: async () => {
         await navigator.clipboard.writeText(game.relayUrl);
-        relayButton.textContent = "Relay copiado ✓";
-        window.setTimeout(() => { relayButton.textContent = "Copiar relay"; }, 1800);
-      });
-    }
-    const remove = document.createElement("button");
-    remove.className = "remove";
-    remove.type = "button";
-    remove.title = "Apagar jogo do cache";
-    remove.setAttribute("aria-label", `Apagar ${game.name} do cache`);
-    remove.textContent = "×";
-    remove.addEventListener("click", async () => {
+        clientUi.showClientToast("Relay copiado.", "success");
+      },
+      onRemove: async () => {
       const cache = await caches.open(gameCacheName);
       await Promise.all(gameFiles(game).map((file) =>
         cache.delete(gameFileUrl(file)),
       ));
       setCardInstalled(card, false);
-    });
-    let creditsButton = null;
-    if (game.license || game.attribution || game.source) {
-      creditsButton = document.createElement("button");
-      creditsButton.className = "credits";
-      creditsButton.type = "button";
-      creditsButton.textContent = "Créditos";
-      creditsButton.addEventListener("click", () => showGameCredits(game));
-    }
-    const progress = document.createElement("div");
-    progress.className = "progress";
-    progress.innerHTML = "<span></span>";
-    actions.append(action);
-    if (relayButton) actions.append(relayButton);
-    if (creditsButton) actions.append(creditsButton);
-    actions.append(remove);
-    copy.append(
-      badges,
-      nameRow,
-      description,
-      attribution,
-      statistics,
-      actions,
-      progress,
-    );
-    card.append(cover, copy);
+      },
+      onCredits: () => showGameCredits(game),
+    };
+    clientUi.mountGameCard(card, gameView, stylesheet);
+    const statistics = card.querySelector(".game-stats");
+    updateGameStatsElement(statistics, game.id);
     return card;
+  }
+
+  function setActionLabel(action, label) {
+    const target = action.querySelector("[data-action-label]");
+    if (target) target.textContent = label;
+    else action.textContent = label;
   }
 
   function setCardInstalled(card, installed) {
     card.classList.toggle("installed", installed);
     const action = card.querySelector(".action");
     action.disabled = false;
-    action.textContent = installed ? "Jogar" : "Baixar";
+    setActionLabel(action, installed ? "Jogar" : "Baixar");
+    card.querySelector(".remove").hidden = !installed;
+    card.querySelector(".progress").hidden = true;
   }
 
   function showGameCredits(game) {
-    const backdrop = document.createElement("div");
-    backdrop.className = "dialog-backdrop";
-    backdrop.setAttribute("role", "dialog");
-    backdrop.setAttribute("aria-modal", "true");
-    const dialog = document.createElement("div");
-    dialog.className = "dialog";
-    const title = document.createElement("h2");
-    title.textContent = `Créditos · ${game.name}`;
-    dialog.appendChild(title);
-    [
-      game.attribution,
-      game.copyright,
-      game.license ? `Licença: ${game.license}` : "",
-    ].filter(Boolean).forEach((value) => {
-      const line = document.createElement("p");
-      line.textContent = value;
-      dialog.appendChild(line);
-    });
-    if (game.source) {
-      const sourceLine = document.createElement("p");
-      const link = document.createElement("a");
-      link.href = game.source;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = game.sourceLabel || "Abrir código-fonte e licença";
-      sourceLine.appendChild(link);
-      dialog.appendChild(sourceLine);
-    }
-    const closeButton = document.createElement("button");
-    closeButton.className = "dialog-close";
-    closeButton.type = "button";
-    closeButton.textContent = "Fechar";
-    closeButton.addEventListener("click", () => backdrop.remove());
-    dialog.appendChild(closeButton);
-    backdrop.appendChild(dialog);
-    backdrop.addEventListener("click", (event) => {
-      if (event.target === backdrop) backdrop.remove();
-    });
-    wrapper.appendChild(backdrop);
-    closeButton.focus();
+    const host = document.createElement("div");
+    wrapper.append(host);
+    let cleanup;
+    const closeDialog = () => {
+      cleanup?.();
+      host.remove();
+    };
+    cleanup = clientUi.mountGameCreditsDialog(host, game, closeDialog, stylesheet);
   }
+
 
   function readGameControlSettings() {
     try {
@@ -2306,123 +1947,45 @@ async function showGameCatalog() {
     return Array.isArray(saved) ? saved : (game.keys || []);
   }
 
-  function definitionIsSelected(definition, selectedKeys) {
-    const selected = new Set(selectedKeys);
-    return selected.has(definition.label) ||
-      selected.has(definition.code) ||
-      selected.has(definition.key);
-  }
-
   function showGameControlSettings(game) {
-    const backdrop = document.createElement("div");
-    backdrop.className = "dialog-backdrop";
-    backdrop.setAttribute("role", "dialog");
-    backdrop.setAttribute("aria-modal", "true");
-    const dialog = document.createElement("div");
-    dialog.className = "dialog key-settings";
-    const title = document.createElement("h2");
-    title.textContent = `Teclas · ${game.name}`;
-    const description = document.createElement("p");
-    description.textContent =
-      "Ligue somente as teclas usadas pelo jogo. Esta escolha fica salva neste aparelho.";
-    const grid = document.createElement("div");
-    grid.className = "key-settings-grid";
-    const selectedKeys = configuredGameKeys(game);
-    virtualGameKeyDefinitions.forEach((definition) => {
-      const choice = document.createElement("label");
-      choice.className = "key-choice";
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.value = definition.code;
-      checkbox.checked = definitionIsSelected(definition, selectedKeys);
-      const label = document.createElement("span");
-      label.textContent = definition.label;
-      choice.append(checkbox, label);
-      grid.appendChild(choice);
-    });
-    let tetrisLeftHandedInput = null;
-    const tetrisSettingsNodes = [];
     const isClassicTetris = String(game.id || "").toLowerCase() === "classic-tetris" ||
       String(game.entry || "").toLowerCase().endsWith("classic-tetris.html") ||
       String(game.name || "").trim().toLowerCase() === "tetris";
-    if (isClassicTetris) {
-      const optionsTitle = document.createElement("p");
-      optionsTitle.textContent = "Opções do Tetris";
-      optionsTitle.style.cssText = "margin:16px 0 8px;color:#d9f5ed;font-weight:800";
-      const choice = document.createElement("label");
-      choice.className = "key-choice";
-      tetrisLeftHandedInput = document.createElement("input");
-      tetrisLeftHandedInput.type = "checkbox";
-      tetrisLeftHandedInput.checked = localStorage.getItem("organizeon-tetris-left-handed") === "1";
-      const label = document.createElement("span");
-      label.textContent = "Sou canhoto (ações à esquerda)";
-      choice.append(tetrisLeftHandedInput, label);
-      const fullscreen = document.createElement("button");
-      fullscreen.className = "settings-action";
-      fullscreen.type = "button";
-      fullscreen.textContent = "⛶ Tela cheia";
-      fullscreen.style.cssText = "width:100%;min-height:42px;margin-top:9px;border:1px solid rgba(99,228,196,.25);border-radius:10px;color:#78e8cd;background:rgba(99,228,196,.08);font-weight:800;cursor:pointer";
-      fullscreen.addEventListener("click", async () => {
+    const host = document.createElement("div");
+    wrapper.append(host);
+    let cleanup;
+    const closeDialog = () => {
+      cleanup?.();
+      host.remove();
+    };
+    cleanup = clientUi.mountGameControlSettingsDialog(host, {
+      name: game.name,
+      definitions: virtualGameKeyDefinitions,
+      selectedKeys: configuredGameKeys(game),
+      defaultKeys: game.keys || [],
+      isTetris: isClassicTetris,
+      initialLeftHanded: localStorage.getItem("organizeon-tetris-left-handed") === "1",
+      onClose: closeDialog,
+      onSave: (keys, leftHanded) => {
+        const settings = readGameControlSettings();
+        settings[game.id] = keys;
+        localStorage.setItem(gameControlSettingsStorageKey, JSON.stringify(settings));
+        if (isClassicTetris) {
+          localStorage.setItem("organizeon-tetris-left-handed", leftHanded ? "1" : "0");
+          frame.contentWindow?.postMessage({ type: "organizeon-tetris-settings", leftHanded }, "*");
+        }
+        buildVirtualControls(game);
+        closeDialog();
+      },
+      onFullscreen: async () => {
         try {
           if (document.fullscreenElement) await document.exitFullscreen();
           else await (frame.requestFullscreen?.() || frame.contentDocument?.documentElement?.requestFullscreen?.());
         } catch (error) {
           console.warn("Tela cheia indisponível:", error);
         }
-      });
-      tetrisSettingsNodes.push(optionsTitle, choice, fullscreen);
-    }
-    const actions = document.createElement("div");
-    actions.className = "key-settings-actions";
-    const reset = document.createElement("button");
-    reset.className = "keys-reset";
-    reset.type = "button";
-    reset.textContent = "Restaurar padrão";
-    reset.addEventListener("click", () => {
-      grid.querySelectorAll("input").forEach((checkbox) => {
-        const definition = virtualGameKeyDefinitions.find(
-          (item) => item.code === checkbox.value,
-        );
-        checkbox.checked = definitionIsSelected(
-          definition,
-          game.keys || [],
-        );
-      });
-      if (tetrisLeftHandedInput) tetrisLeftHandedInput.checked = false;
-    });
-    const save = document.createElement("button");
-    save.className = "keys-save";
-    save.type = "button";
-    save.textContent = "Salvar";
-    save.addEventListener("click", () => {
-      const settings = readGameControlSettings();
-      settings[game.id] = Array.from(
-        grid.querySelectorAll("input:checked"),
-        (checkbox) => checkbox.value,
-      );
-      localStorage.setItem(
-        gameControlSettingsStorageKey,
-        JSON.stringify(settings),
-      );
-      if (tetrisLeftHandedInput) {
-        const leftHanded = tetrisLeftHandedInput.checked;
-        localStorage.setItem("organizeon-tetris-left-handed", leftHanded ? "1" : "0");
-        frame.contentWindow?.postMessage({
-          type: "organizeon-tetris-settings",
-          leftHanded,
-        }, "*");
-      }
-      buildVirtualControls(game);
-      backdrop.remove();
-    });
-    actions.append(reset, save);
-    dialog.append(title, description, grid, ...tetrisSettingsNodes, actions);
-    backdrop.appendChild(dialog);
-    backdrop.addEventListener("click", (event) => {
-      if (event.target === backdrop) backdrop.remove();
-    });
-    wrapper.appendChild(backdrop);
-    save.focus();
+      },
+    }, stylesheet);
   }
 
   async function pruneRemovedGameCache(games) {
@@ -2459,18 +2022,22 @@ async function showGameCatalog() {
   async function downloadExternalGame(game, card) {
     const download = game.externalDownload;
     if (!download?.url || !download.filename) return;
-    const approved = window.confirm(
+    const approved = await clientUi.confirmClientAction(
       `${game.name} será baixado diretamente do GitHub e salvo como ` +
       `${download.filename}. O OrganizeOn verificará a integridade antes de ` +
       "entregar o HTML. Continuar?",
+      stylesheet,
+      "Baixar jogo externo?",
+      "Baixar e verificar",
     );
     if (!approved) return;
 
     const action = card.querySelector(".action");
     const bar = card.querySelector(".progress span");
     card.classList.add("downloading");
+    card.querySelector(".progress").hidden = false;
     action.disabled = true;
-    action.textContent = "Conectando ao GitHub…";
+    setActionLabel(action, "Conectando ao GitHub…");
     try {
       const response = await fetch(download.url, { cache: "no-store" });
       if (!response.ok) throw new Error(`GitHub respondeu HTTP ${response.status}`);
@@ -2488,8 +2055,8 @@ async function showGameCatalog() {
             Math.round((received / Math.max(1, download.size)) * 100),
           );
           bar.style.width = `${percent}%`;
-          action.textContent =
-            `GitHub ${formatGameBytes(received)}/${formatGameBytes(download.size)} · ${percent}%`;
+          setActionLabel(action,
+            `GitHub ${formatGameBytes(received)}/${formatGameBytes(download.size)} · ${percent}%`);
         }
       } else {
         const fallback = new Uint8Array(await response.arrayBuffer());
@@ -2507,9 +2074,9 @@ async function showGameCatalog() {
         throw new Error("o SHA-256 recebido não corresponde à revisão fixada");
       }
 
-      action.textContent = download.format === "zip-single-html"
+      setActionLabel(action, download.format === "zip-single-html"
         ? "Extraindo HTML…"
-        : "Verificando HTML…";
+        : "Verificando HTML…");
       const html = download.format === "zip-single-html"
         ? await extractSingleHtmlFromZip(archive, download.filename)
         : archive;
@@ -2534,9 +2101,9 @@ async function showGameCatalog() {
       reportGameEvent(game, "download");
       window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
       bar.style.width = "100%";
-      action.textContent = "HTML baixado";
+      setActionLabel(action, "HTML baixado");
     } catch (error) {
-      action.textContent = "Tentar novamente";
+      setActionLabel(action, "Tentar novamente");
       window.alert(
         `Não foi possível baixar ${game.name}: ${
           error instanceof Error ? error.message : "erro desconhecido"
@@ -2546,9 +2113,10 @@ async function showGameCatalog() {
       action.disabled = false;
       window.setTimeout(() => {
         card.classList.remove("downloading");
+        card.querySelector(".progress").hidden = true;
         bar.style.width = "0";
-        if (action.textContent === "HTML baixado") {
-          action.textContent = "Baixar novamente";
+        if (action.querySelector("[data-action-label]")?.textContent === "HTML baixado") {
+          setActionLabel(action, "Baixar novamente");
         }
       }, 900);
     }
@@ -2619,8 +2187,9 @@ async function showGameCatalog() {
     const action = card.querySelector(".action");
     const bar = card.querySelector(".progress span");
     card.classList.add("downloading");
+    card.querySelector(".progress").hidden = false;
     action.disabled = true;
-    action.textContent = "Baixando 0%";
+    setActionLabel(action, "Baixando 0%");
     try {
       const cache = await caches.open(gameCacheName);
       const files = gameFiles(game);
@@ -2679,7 +2248,7 @@ async function showGameCatalog() {
       bar.style.width = "100%";
     } catch (error) {
       action.disabled = false;
-      action.textContent = "Tentar novamente";
+      setActionLabel(action, "Tentar novamente");
       window.alert(
         `Não foi possível baixar ${game.name}: ${
           error instanceof Error ? error.message : "erro desconhecido"
@@ -2688,6 +2257,7 @@ async function showGameCatalog() {
     } finally {
       window.setTimeout(() => {
         card.classList.remove("downloading");
+        card.querySelector(".progress").hidden = true;
         bar.style.width = "0";
       }, 350);
     }
@@ -2698,9 +2268,9 @@ async function showGameCatalog() {
         Math.round((received / Math.max(1, total)) * 100),
       );
       bar.style.width = `${percent}%`;
-      action.textContent = fileCount > 1
+      setActionLabel(action, fileCount > 1
         ? `Baixando ${file}/${fileCount} · ${percent}%`
-        : `Baixando ${percent}%`;
+        : `Baixando ${percent}%`);
     }
   }
 
@@ -2708,7 +2278,7 @@ async function showGameCatalog() {
     const cache = await caches.open(gameCacheName);
     const response = await cache.match(gameUrl(game));
     if (!response) {
-      await renderCatalog(search.value);
+      await renderCatalog(searchQuery);
       return;
     }
     if (playerUrl) URL.revokeObjectURL(playerUrl);
@@ -2791,7 +2361,7 @@ async function showGameCatalog() {
     // Recompute locally so an older API response cannot mark every played game
     // as trending while the server is being updated.
     rebuildTrendingGames();
-    if (wrapper.isConnected) await renderCatalog(search.value);
+    if (wrapper.isConnected) await renderCatalog(searchQuery);
   }
 
   async function reportGameEvent(game, event) {
@@ -3150,59 +2720,6 @@ function getSelectedBrowserIdentity() {
 }
 
 function setupBrowserIdentitySetting() {
-  const style = document.createElement("style");
-  style.id = "organizeon-browser-identity-setting-styles";
-  style.textContent = `
-    #organizeon-browser-identity-setting {
-      padding: 20px; border: 1px solid hsl(var(--border));
-      border-radius: 12px; background: hsl(var(--card) / .8);
-    }
-    #organizeon-browser-identity-setting .row {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 18px;
-    }
-    #organizeon-browser-identity-setting h2 {
-      margin: 0; color: hsl(var(--foreground)); font-size: 18px;
-      font-weight: 600;
-    }
-    #organizeon-browser-identity-setting p {
-      margin: 5px 0 0; max-width: 650px;
-      color: hsl(var(--muted-foreground)); font-size: 13px;
-      line-height: 1.5;
-    }
-    #organizeon-browser-identity-setting .controls {
-      display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
-    }
-    #organizeon-browser-identity-setting select,
-    #organizeon-browser-identity-setting button {
-      min-height: 40px; padding: 0 12px; border-radius: 8px;
-      border: 1px solid hsl(var(--border)); font: inherit;
-    }
-    #organizeon-browser-identity-setting select {
-      color: hsl(var(--foreground)); background: hsl(var(--background));
-    }
-    #organizeon-browser-identity-setting button {
-      border-color: hsl(var(--primary) / .35);
-      color: hsl(var(--primary-foreground));
-      background: hsl(var(--primary)); font-weight: 600; cursor: pointer;
-    }
-    #organizeon-browser-identity-setting button:disabled {
-      opacity: .5; cursor: default;
-    }
-    @media (max-width: 760px) {
-      #organizeon-browser-identity-setting { padding: 16px; }
-      #organizeon-browser-identity-setting .row {
-        align-items: stretch; flex-direction: column;
-      }
-      #organizeon-browser-identity-setting .controls {
-        width: 100%; flex-direction: column; align-items: stretch;
-      }
-      #organizeon-browser-identity-setting select,
-      #organizeon-browser-identity-setting button { width: 100%; }
-    }
-  `;
-  document.head.appendChild(style);
-
   const apply = () => {
     const settingsHeading = [...document.querySelectorAll("h1")].find(
       (heading) => heading.textContent?.trim().toLowerCase() === "settings",
@@ -3211,6 +2728,7 @@ function setupBrowserIdentitySetting() {
       "organizeon-browser-identity-setting",
     );
     if (!settingsHeading) {
+      if (existing) loadClientUi().then(({ module }) => module.unmountPreferenceCard(existing));
       existing?.remove();
       return;
     }
@@ -3223,51 +2741,6 @@ function setupBrowserIdentitySetting() {
     const card = document.createElement("section");
     card.id = "organizeon-browser-identity-setting";
     card.setAttribute("aria-labelledby", "organizeon-browser-identity-title");
-    const row = document.createElement("div");
-    row.className = "row";
-    const copy = document.createElement("div");
-    const title = document.createElement("h2");
-    title.id = "organizeon-browser-identity-title";
-    title.textContent = "Identidade do navegador";
-    const description = document.createElement("p");
-    description.textContent =
-      "Escolhe como os sites abertos pelo proxy reconhecem o navegador. " +
-      "A alteração vale para Ultraviolet e Scramjet após recarregar o cliente.";
-    copy.append(title, description);
-
-    const controls = document.createElement("div");
-    controls.className = "controls";
-    const select = document.createElement("select");
-    select.setAttribute("aria-label", "Identidade do navegador");
-    browserIdentityOptions.forEach((identity) => {
-      const option = document.createElement("option");
-      option.value = identity.id;
-      option.textContent = identity.name;
-      select.appendChild(option);
-    });
-    select.value = getSelectedBrowserIdentity().id;
-    select.title =
-      browserIdentityOptions.find((item) => item.id === select.value)
-        ?.description || "";
-
-    const applyButton = document.createElement("button");
-    applyButton.type = "button";
-    applyButton.textContent = "Aplicar";
-    applyButton.disabled = true;
-    select.addEventListener("change", () => {
-      applyButton.disabled =
-        select.value === getSelectedBrowserIdentity().id;
-      select.title =
-        browserIdentityOptions.find((item) => item.id === select.value)
-          ?.description || "";
-    });
-    applyButton.addEventListener("click", () => {
-      localStorage.setItem(browserIdentityStorageKey, select.value);
-      restartClientAtMain();
-    });
-    controls.append(select, applyButton);
-    row.append(copy, controls);
-    card.appendChild(row);
 
     const bandwidthCard = document.getElementById(
       "organizeon-bandwidth-setting",
@@ -3282,6 +2755,20 @@ function setupBrowserIdentitySetting() {
         settingsContainer.prepend(card);
       }
     }
+    loadClientUi().then(({ module, stylesheet }) => {
+      if (!card.isConnected) return;
+      module.mountPreferenceCard(card, {
+        title: "Identidade do navegador",
+        description: "Escolhe como os sites abertos pelo proxy reconhecem o navegador. A alteração vale para Ultraviolet e Scramjet após recarregar o cliente.",
+        label: "Identidade do navegador",
+        value: getSelectedBrowserIdentity().id,
+        options: browserIdentityOptions.map(({ id, name, description }) => ({ value: id, label: name, description })),
+        onApply: (value) => {
+          localStorage.setItem(browserIdentityStorageKey, value);
+          restartClientAtMain();
+        },
+      }, stylesheet);
+    }).catch((error) => console.error("Não foi possível carregar as configurações do cliente.", error));
   };
 
   const observer = new MutationObserver(apply);
@@ -3291,59 +2778,6 @@ function setupBrowserIdentitySetting() {
 }
 
 function setupWispBandwidthSetting() {
-  const style = document.createElement("style");
-  style.id = "organizeon-bandwidth-setting-styles";
-  style.textContent = `
-    #organizeon-bandwidth-setting {
-      padding: 20px; border: 1px solid hsl(var(--border));
-      border-radius: 12px; background: hsl(var(--card) / .8);
-    }
-    #organizeon-bandwidth-setting .row {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 18px;
-    }
-    #organizeon-bandwidth-setting h2 {
-      margin: 0; color: hsl(var(--foreground)); font-size: 18px;
-      font-weight: 600;
-    }
-    #organizeon-bandwidth-setting p {
-      margin: 5px 0 0; max-width: 650px;
-      color: hsl(var(--muted-foreground)); font-size: 13px;
-      line-height: 1.5;
-    }
-    #organizeon-bandwidth-setting .controls {
-      display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
-    }
-    #organizeon-bandwidth-setting select,
-    #organizeon-bandwidth-setting button {
-      min-height: 40px; padding: 0 12px; border-radius: 8px;
-      border: 1px solid hsl(var(--border)); font: inherit;
-    }
-    #organizeon-bandwidth-setting select {
-      color: hsl(var(--foreground)); background: hsl(var(--background));
-    }
-    #organizeon-bandwidth-setting button {
-      border-color: hsl(var(--primary) / .35);
-      color: hsl(var(--primary-foreground));
-      background: hsl(var(--primary)); font-weight: 600; cursor: pointer;
-    }
-    #organizeon-bandwidth-setting button:disabled {
-      opacity: .5; cursor: default;
-    }
-    @media (max-width: 760px) {
-      #organizeon-bandwidth-setting { padding: 16px; }
-      #organizeon-bandwidth-setting .row {
-        align-items: stretch; flex-direction: column;
-      }
-      #organizeon-bandwidth-setting .controls {
-        width: 100%; flex-direction: column; align-items: stretch;
-      }
-      #organizeon-bandwidth-setting select,
-      #organizeon-bandwidth-setting button { width: 100%; }
-    }
-  `;
-  document.head.appendChild(style);
-
   const apply = () => {
     const settingsHeading = [...document.querySelectorAll("h1")].find(
       (heading) => heading.textContent?.trim().toLowerCase() === "settings",
@@ -3352,6 +2786,7 @@ function setupWispBandwidthSetting() {
       "organizeon-bandwidth-setting",
     );
     if (!settingsHeading) {
+      if (existing) loadClientUi().then(({ module }) => module.unmountPreferenceCard(existing));
       existing?.remove();
       return;
     }
@@ -3366,60 +2801,30 @@ function setupWispBandwidthSetting() {
     card.id = "organizeon-bandwidth-setting";
     card.setAttribute("aria-labelledby", "organizeon-bandwidth-title");
 
-    const row = document.createElement("div");
-    row.className = "row";
-    const copy = document.createElement("div");
-    const title = document.createElement("h2");
-    title.id = "organizeon-bandwidth-title";
-    title.textContent = "Limite de streaming do YouTube";
-    const description = document.createElement("p");
-    description.textContent =
-      "O OrganizeOn limita somente a mídia do YouTube a 6 Mbps por conta. " +
-      "Pesquisa, páginas, CSS, scripts e outros sites ficam sem limite. " +
-      "“Sem limite” também libera o vídeo. Não afeta WISPs externos.";
-    copy.append(title, description);
-
-    const controls = document.createElement("div");
-    controls.className = "controls";
-    const select = document.createElement("select");
-    select.setAttribute("aria-label", "Limite de banda do WISP");
-    const limited = document.createElement("option");
-    limited.value = "limited";
-    limited.textContent = "6 Mbps (padrão)";
-    const unlimited = document.createElement("option");
-    unlimited.value = "off";
-    unlimited.textContent = "Sem limite";
-    select.append(limited, unlimited);
-    select.value = isWispBandwidthLimitEnabled() ? "limited" : "off";
-
-    const applyButton = document.createElement("button");
-    applyButton.type = "button";
-    applyButton.textContent = "Aplicar";
-    applyButton.disabled = true;
-    select.addEventListener("change", () => {
-      const currentValue = isWispBandwidthLimitEnabled()
-        ? "limited"
-        : "off";
-      applyButton.disabled = select.value === currentValue;
-    });
-    applyButton.addEventListener("click", () => {
-      if (select.value === "off") {
-        localStorage.setItem(wispBandwidthStorageKey, "off");
-      } else {
-        localStorage.removeItem(wispBandwidthStorageKey);
-      }
-      restartClientAtMain();
-    });
-    controls.append(select, applyButton);
-    row.append(copy, controls);
-    card.appendChild(row);
-
     const headerBlock = settingsHeading.parentElement;
     if (headerBlock?.parentElement === settingsContainer) {
       headerBlock.insertAdjacentElement("afterend", card);
     } else {
       settingsContainer.prepend(card);
     }
+    loadClientUi().then(({ module, stylesheet }) => {
+      if (!card.isConnected) return;
+      module.mountPreferenceCard(card, {
+        title: "Limite de streaming do YouTube",
+        description: "O OrganizeOn limita somente a mídia do YouTube a 6 Mbps por conta. Pesquisa, páginas, CSS, scripts e outros sites ficam sem limite. “Sem limite” também libera o vídeo. Não afeta WISPs externos.",
+        label: "Limite de banda do WISP",
+        value: isWispBandwidthLimitEnabled() ? "limited" : "off",
+        options: [
+          { value: "limited", label: "6 Mbps (padrão)" },
+          { value: "off", label: "Sem limite" },
+        ],
+        onApply: (value) => {
+          if (value === "off") localStorage.setItem(wispBandwidthStorageKey, "off");
+          else localStorage.removeItem(wispBandwidthStorageKey);
+          restartClientAtMain();
+        },
+      }, stylesheet);
+    }).catch((error) => console.error("Não foi possível carregar as configurações do cliente.", error));
   };
 
   const observer = new MutationObserver(apply);
@@ -3451,180 +2856,32 @@ function hideDefaultHomepageShortcuts() {
 }
 
 function showProxyServerDialog() {
-  document.getElementById("organizeon-proxy-dialog")?.remove();
+  disposeClientSurface(document.getElementById("organizeon-proxy-dialog"));
   const availableOptions = guestMode
     ? proxyServerOptions.filter((option) => option.id !== "organizeon")
     : proxyServerOptions;
   const current = getSelectedProxyServer(guestMode);
-  let pendingId = current.id;
-  const wrapper = document.createElement("div");
-  wrapper.id = "organizeon-proxy-dialog";
-  wrapper.innerHTML = `
-    <style>
-      #organizeon-proxy-dialog {
-        position: fixed; inset: 0; z-index: 2147483647;
-        display: grid; place-items: center; padding: 22px;
-        color: #eafff9; background: rgba(1, 7, 6, .76);
-        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-        backdrop-filter: blur(10px);
-      }
-      #organizeon-proxy-dialog * { box-sizing: border-box; }
-      #organizeon-proxy-dialog .panel {
-        width: min(100%, 520px); padding: 24px;
-        border: 1px solid rgba(104, 241, 210, .22); border-radius: 18px;
-        background: #091512; box-shadow: 0 28px 90px rgba(0,0,0,.55);
-      }
-      #organizeon-proxy-dialog h2 { margin: 0; font-size: 22px; }
-      #organizeon-proxy-dialog .intro {
-        margin: 7px 0 18px; color: #91aaa3; font-size: 13px;
-        line-height: 1.5;
-      }
-      #organizeon-proxy-dialog .option {
-        width: 100%; margin: 8px 0; padding: 14px;
-        display: flex; align-items: flex-start; gap: 12px;
-        border: 1px solid rgba(255,255,255,.1); border-radius: 13px;
-        color: #dcebe7; background: rgba(255,255,255,.025);
-        cursor: pointer; text-align: left;
-      }
-      #organizeon-proxy-dialog .option:hover {
-        border-color: rgba(97,239,207,.35);
-      }
-      #organizeon-proxy-dialog .option.selected {
-        border-color: #54e3c2; background: rgba(72,224,190,.09);
-      }
-      #organizeon-proxy-dialog .radio {
-        width: 17px; height: 17px; margin-top: 2px; flex: 0 0 auto;
-        border: 2px solid #58716a; border-radius: 50%;
-      }
-      #organizeon-proxy-dialog .selected .radio {
-        border: 5px solid #54e3c2;
-      }
-      #organizeon-proxy-dialog strong { font-size: 14px; }
-      #organizeon-proxy-dialog .description {
-        display: block; margin-top: 4px; color: #8ea69f;
-        font-size: 12px; line-height: 1.4;
-      }
-      #organizeon-proxy-dialog .connection {
-        display: flex; align-items: center; gap: 6px; margin-top: 7px;
-        color: #88a099; font-size: 11px; font-weight: 650;
-      }
-      #organizeon-proxy-dialog .connection::before {
-        width: 7px; height: 7px; border-radius: 50%;
-        background: #71817d; content: "";
-      }
-      #organizeon-proxy-dialog .connection.online {
-        color: #66e8c9;
-      }
-      #organizeon-proxy-dialog .connection.online::before {
-        background: #4ee0bd; box-shadow: 0 0 9px rgba(78,224,189,.7);
-      }
-      #organizeon-proxy-dialog .connection.offline {
-        color: #ff9da5;
-      }
-      #organizeon-proxy-dialog .connection.offline::before {
-        background: #ff6b75;
-      }
-      #organizeon-proxy-dialog .option.best {
-        box-shadow: inset 0 0 0 1px rgba(84,227,194,.18);
-      }
-      #organizeon-proxy-dialog .beta {
-        margin-left: 7px; padding: 2px 6px; border-radius: 999px;
-        color: #fbd38d; background: rgba(245,158,11,.13);
-        font-size: 9px; letter-spacing: .05em;
-      }
-      #organizeon-proxy-dialog .warning {
-        margin: 16px 0; padding: 11px 12px;
-        border: 1px solid rgba(245,158,11,.22); border-radius: 10px;
-        color: #d7b97b; background: rgba(245,158,11,.07);
-        font-size: 11px; line-height: 1.45;
-      }
-      #organizeon-proxy-dialog .actions {
-        display: flex; justify-content: flex-end; gap: 9px;
-      }
-      #organizeon-proxy-dialog .actions button {
-        min-height: 40px; padding: 0 15px; border-radius: 10px;
-        border: 1px solid rgba(255,255,255,.12); cursor: pointer;
-        color: #dcebe7; background: transparent; font-weight: 700;
-      }
-      #organizeon-proxy-dialog .actions .apply {
-        border-color: #54e3c2; color: #062018; background: #54e3c2;
-      }
-    
-      #organizeon-proxy-dialog { color:#fafafa; background:rgba(0,0,0,.58); backdrop-filter:blur(4px); }
-      #organizeon-proxy-dialog .panel { border-color:#27272a; border-radius:9px; background:#111113; box-shadow:0 20px 60px rgba(0,0,0,.35); }
-      #organizeon-proxy-dialog .option { border-color:#27272a; border-radius:7px; color:#d4d4d8; background:#18181b; transition:background .15s ease,border-color .15s ease; }
-      #organizeon-proxy-dialog .option:hover,#organizeon-proxy-dialog .option.selected { border-color:#71717a; background:#27272a; box-shadow:none; }
-      #organizeon-proxy-dialog .radio { border-color:#71717a; }
-      #organizeon-proxy-dialog .selected .radio { border-color:#e4e4e7; }
-      #organizeon-proxy-dialog .intro,#organizeon-proxy-dialog .description { color:#a1a1aa; }
-      #organizeon-proxy-dialog button { border-radius:7px; }
-      #organizeon-proxy-dialog :focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
-      @media(max-width:520px){#organizeon-proxy-dialog{padding:12px}#organizeon-proxy-dialog .panel{padding:18px}}
-      @media(prefers-reduced-motion:reduce){#organizeon-proxy-dialog *{transition:none!important}}
-</style>
-    <section class="panel" role="dialog" aria-modal="true"
-      aria-labelledby="organizeon-proxy-title">
-      <h2 id="organizeon-proxy-title">Escolher servidor proxy</h2>
-      <p class="intro">
-        ${guestMode
-          ? "Convidados podem usar apenas os WISP públicos externos; o relay OrganizeOn e a API privada permanecem isolados."
-          : "Isto escolhe o servidor WISP. Ultraviolet e Scramjet continuam disponíveis separadamente em Settings → Proxy."}
-        A latência abaixo é o tempo completo para abrir o WebSocket neste
-        dispositivo, não ping ICMP.
-      </p>
-      <div class="options"></div>
-      <p class="warning">
-        Servidores BETA são externos, podem ficar lentos ou sair do ar e o
-        tráfego de navegação não passará pelo backend OrganizeOn.
-      </p>
-      <div class="actions">
-        <button class="cancel" type="button">Cancelar</button>
-        <button class="apply" type="button">Aplicar e reiniciar</button>
-      </div>
-    </section>
-  `;
-  const options = wrapper.querySelector(".options");
-  for (const option of availableOptions) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className =
-      "option" + (option.id === pendingId ? " selected" : "");
-    button.dataset.proxyId = option.id;
-    button.innerHTML = `
-      <span class="radio"></span>
-      <span>
-        <strong></strong>
-        ${option.beta ? '<small class="beta">BETA</small>' : ""}
-        <span class="description"></span>
-        <span class="connection">Medindo latência WebSocket…</span>
-      </span>
-    `;
-    button.querySelector("strong").textContent = option.name;
-    button.querySelector(".description").textContent =
-      option.description;
-    button.addEventListener("click", () => {
-      pendingId = option.id;
-      options.querySelectorAll(".option").forEach((item) => {
-        item.classList.toggle(
-          "selected",
-          item.dataset.proxyId === pendingId,
-        );
-      });
-    });
-    options.appendChild(button);
-  }
-  wrapper.querySelector(".cancel").addEventListener("click", () => {
-    wrapper.remove();
+  const host = document.createElement("div");
+  host.id = "organizeon-proxy-dialog";
+  host.style.cssText = "position:fixed;inset:0;z-index:2147483647";
+  document.body.appendChild(host);
+  void renderClientSurface(host, {
+    type: "proxy",
+    options: availableOptions,
+    currentId: current.id,
+    latency: {},
+    guestMode,
+    onClose: () => disposeClientSurface(host),
+    onApply: (id) => {
+      localStorage.setItem(proxyServerStorageKey, id);
+      disposeClientSurface(host);
+      restartClientAtMain();
+    },
+  }).then(() => measureProxyServerOptions(host, availableOptions)).catch((error) => {
+    console.error("Falha ao abrir a seleção de proxy:", error);
+    disposeClientSurface(host);
+    showConnectionStatus("Não foi possível abrir os servidores proxy", "A interface atualizada não carregou.", null, 0);
   });
-  wrapper.querySelector(".apply").addEventListener("click", () => {
-    localStorage.setItem(proxyServerStorageKey, pendingId);
-    restartClientAtMain();
-  });
-  wrapper.addEventListener("click", (event) => {
-    if (event.target === wrapper) wrapper.remove();
-  });
-  document.body.appendChild(wrapper);
-  measureProxyServerOptions(wrapper, availableOptions);
 }
 
 async function measureProxyServerOptions(
@@ -3900,149 +3157,22 @@ function setupMobileMode() {
 }
 
 function showLogin(message = "") {
-  if (document.getElementById("organizeon-login")) {
-    setMessage(message);
-    return;
+  let wrapper = document.getElementById("organizeon-login");
+  if (!wrapper) {
+    wrapper = document.createElement("div");
+    wrapper.id = "organizeon-login";
+    document.body.appendChild(wrapper);
   }
 
-  const wrapper = document.createElement("div");
-  wrapper.id = "organizeon-login";
-  wrapper.innerHTML = `
-    <style>
-      #organizeon-login {
-        position: fixed; inset: 0; z-index: 2147483647;
-        display: grid; place-items: center; padding: 24px;
-        color: #fafafa; background: #09090b;
-        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      }
-      #organizeon-login * { box-sizing: border-box; }
-      #organizeon-login form {
-        width: min(100%, 390px); padding: 26px;
-        border: 1px solid #27272a; border-radius: 10px;
-        background: #111113;
-      }
-      #organizeon-login h1 { margin: 0 0 8px; font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
-      #organizeon-login p { margin: 0 0 22px; color: #a1a1aa; font-size: 14px; }
-      #organizeon-login label { display: block; margin: 14px 0 6px; font-size: 13px; }
-      #organizeon-login input {
-        width: 100%; height: 44px; padding: 0 12px;
-        border: 1px solid #3f3f46; border-radius: 7px;
-        color: #fafafa; background: #09090b; outline: none;
-      }
-      #organizeon-login input:focus { border-color: #a1a1aa; }
-      #organizeon-login button {
-        width: 100%; height: 44px; margin-top: 20px;
-        border: 1px solid #e4e4e7; border-radius: 7px; cursor: pointer;
-        color: #18181b; background: #e4e4e7; font-weight: 600;
-      }
-      #organizeon-login button:disabled { cursor: wait; opacity: .65; }
-      #organizeon-login .guest {
-        margin-top: 10px; color: #d4d4d8;
-        border: 1px solid #3f3f46; background: #18181b;
-      }
-      #organizeon-login .register {
-        margin-top: 10px; color: #d4d4d8;
-        border: 1px solid #3f3f46; background: transparent;
-      }
-      #organizeon-login .code-toggle {
-        margin-top: 10px; color: #d4d4d8;
-        border: 1px solid #3f3f46; background: transparent;
-      }
-      #organizeon-login .code-fields[hidden],
-      #organizeon-login .password-fields[hidden] { display: none; }
-      #organizeon-login .code-input {
-        text-transform: uppercase; letter-spacing: .28em;
-        text-align: center; font-size: 19px; font-weight: 800;
-      }
-      #organizeon-login .guest:hover { border-color: #a1a1aa; }
-      #organizeon-login .guest-note {
-        margin: 9px 0 0; color: #71717a; text-align: center; font-size: 12px;
-      }
-      #organizeon-login .message {
-        min-height: 19px; margin: 14px 0 0;
-        color: #fca5a5; font-size: 13px;
-      }
-    </style>
-    <form autocomplete="on">
-      <h1>Acesso privado</h1>
-      <p>Entre no OrganizeOn para continuar.</p>
-      <div class="password-fields">
-        <label for="organizeon-username">Usuário</label>
-        <input id="organizeon-username" name="username" autocomplete="username" required>
-        <label for="organizeon-password">Senha</label>
-        <input id="organizeon-password" name="password" type="password"
-               autocomplete="current-password" required>
-      </div>
-      <div class="code-fields" hidden>
-        <label for="organizeon-code">Código de login</label>
-        <input class="code-input" id="organizeon-code" name="loginCode"
-               maxlength="6" pattern="[A-Za-z0-9]{6}" autocomplete="one-time-code">
-      </div>
-      <button type="submit">Entrar</button>
-      <button class="register" type="button">Registrar</button>
-      <button class="code-toggle" type="button">Usar código de login</button>
-      <button class="guest" type="button">Continuar como convidado</button>
-      <p class="guest-note">Acesso convidado com recursos limitados</p>
-      <div class="message" role="status" aria-live="polite"></div>
-    </form>
-  `;
-
-  document.body.appendChild(wrapper);
-  setMessage(message);
-
-  const form = wrapper.querySelector("form");
-  const button = wrapper.querySelector('button[type="submit"]');
-  const guestButton = wrapper.querySelector(".guest");
-  const registerButton = wrapper.querySelector(".register");
-  const codeToggle = wrapper.querySelector(".code-toggle");
-  const passwordFields = wrapper.querySelector(".password-fields");
-  const codeFields = wrapper.querySelector(".code-fields");
-  let loginWithCode = false;
-  let registrationMode = false;
-  registerButton.addEventListener("click", () => {
-    registrationMode = !registrationMode;
-    loginWithCode = false;
-    passwordFields.hidden = false;
-    codeFields.hidden = true;
-    form.elements.username.required = true;
-    form.elements.password.required = true;
-    form.elements.loginCode.required = false;
-    wrapper.querySelector("h1").textContent = registrationMode
-      ? "Criar conta"
-      : "Acesso privado";
-    button.textContent = registrationMode ? "Criar conta" : "Entrar";
-    registerButton.textContent = registrationMode
-      ? "Já tenho uma conta"
-      : "Registrar";
-    codeToggle.hidden = registrationMode;
-    setMessage(registrationMode
-      ? "A conta começa sem permissões. Um administrador pode liberá-las depois."
-      : "");
-  });
-  codeToggle.addEventListener("click", () => {
-    loginWithCode = !loginWithCode;
-    passwordFields.hidden = loginWithCode;
-    codeFields.hidden = !loginWithCode;
-    form.elements.username.required = !loginWithCode;
-    form.elements.password.required = !loginWithCode;
-    form.elements.loginCode.required = loginWithCode;
-    codeToggle.textContent = loginWithCode
-      ? "Usar usuário e senha"
-      : "Usar código de login";
-    (loginWithCode ? form.elements.loginCode : form.elements.username).focus();
-  });
-  guestButton.addEventListener("click", async () => {
-    button.disabled = true;
-    guestButton.disabled = true;
-    localStorage.removeItem(tokenStorageKey);
-    localStorage.setItem(guestStorageKey, "1");
-    await startGuestApplication();
-  });
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    button.disabled = true;
-    button.textContent = "Autenticando…";
-    setMessage("");
+  void renderClientSurface(wrapper, {
+    type: "login",
+    initialMessage: message,
+    onGuest: async () => {
+      localStorage.removeItem(tokenStorageKey);
+      localStorage.setItem(guestStorageKey, "1");
+      await startGuestApplication();
+    },
+    onSubmit: async ({ mode, username, password, loginCode }) => {
     showConnectionStatus(
       "Autenticando…",
       "Enviando credenciais com conexão segura.",
@@ -4050,19 +3180,19 @@ function showLogin(message = "") {
 
     try {
       const response = await apiRequest(
-        registrationMode ? "/auth/register" : "/auth/login",
+        mode === "register" ? "/auth/register" : "/auth/login",
         {
         method: "POST",
-        body: JSON.stringify(registrationMode
+        body: JSON.stringify(mode === "register"
           ? {
-              username: form.elements.username.value,
-              password: form.elements.password.value,
+              username,
+              password,
             }
-          : loginWithCode
-          ? { loginCode: form.elements.loginCode.value }
+          : mode === "code"
+          ? { loginCode }
           : {
-              username: form.elements.username.value,
-              password: form.elements.password.value,
+              username,
+              password,
             }),
         },
       );
@@ -4073,12 +3203,12 @@ function showLogin(message = "") {
           throw new Error("Muitas tentativas. Aguarde 15 minutos.");
         }
         throw new Error(
-          registrationMode
+          mode === "register"
             ? ({
                 username_exists: "Esse usuário já existe.",
                 invalid_username: "Use de 3 a 32 letras, números, ponto, hífen ou sublinhado.",
               })[result.error] || "Não foi possível criar a conta. Use uma senha com pelo menos 8 caracteres."
-            : loginWithCode
+            : mode === "code"
             ? "Código inválido, expirado ou já utilizado."
             : "Usuário ou senha inválidos.",
         );
@@ -4090,15 +3220,12 @@ function showLogin(message = "") {
       await startApplication(result.token, result.account);
     } catch (error) {
       hideConnectionStatus();
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível conectar ao servidor.",
-      );
-    } finally {
-      button.disabled = false;
-      button.textContent = registrationMode ? "Criar conta" : "Entrar";
+      throw error instanceof Error ? error : new Error("Não foi possível conectar ao servidor.");
     }
+    },
+  }).catch((error) => {
+    console.error("Falha ao carregar a interface de autenticação:", error);
+    wrapper.textContent = "Não foi possível carregar a tela de acesso. Recarregue o cliente.";
   });
 }
 

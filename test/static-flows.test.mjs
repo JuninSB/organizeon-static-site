@@ -7,42 +7,45 @@ const root = new URL("../", import.meta.url);
 const text = (path) => readFile(new URL(path, root), "utf8");
 
 test("registration, Data controls and cloud backup are present", async () => {
-  const source = await text("auth-client.js");
+  const [source, surfaces] = await Promise.all([text("auth-client.js"), text("ui/src/components/client/surfaces.tsx")]);
   assert.match(source, /\/auth\/register/);
-  assert.match(source, /Registrar/);
-  assert.match(source, /Backup na nuvem/);
-  assert.match(source, /Apagar todos os progressos/);
-  assert.match(source, /Apagar preferências/);
+  assert.match(surfaces, /Criar conta/);
+  assert.match(surfaces, /Backup na nuvem/);
+  assert.match(surfaces, /Apagar todos os progressos/);
+  assert.match(surfaces, /Apagar preferências locais/);
   assert.match(source, /exportIndexedDatabases/);
   assert.match(source, /restoreCookies/);
   assert.match(source, /star-settings/);
   assert.match(source, /isCloudPreferenceStorageKey/);
   assert.match(source, /organizeonCloudBackup/);
   assert.match(source, /games\/catalog\.json/);
-  assert.match(source, /Escolha um jogo/);
+  assert.match(surfaces, /Escolha um jogo/);
   const restoreIndex = source.indexOf("await initializeCloudBackup({ timeoutMs: 3500 })");
   const appImportIndex = source.indexOf("await import(config.appModule)", restoreIndex);
   assert.ok(restoreIndex >= 0 && appImportIndex > restoreIndex, "cloud preferences restore before app initialization");
 });
 
 test("mobile data panel uses the server-reported 256 MiB cap without horizontal overflow", async () => {
-  const source = await text("auth-client.js");
-  assert.match(source, /status\.limit \|\| \(256 \* 1024 \* 1024\)/);
-  assert.match(source, /#organizeon-data-panel \{ width:100vw; max-width:100vw; overflow-x:hidden; \}/);
-  assert.match(source, /grid-template-columns:minmax\(0,1fr\)/);
+  const source = await text("ui/src/components/client/surfaces.tsx");
+  assert.match(source, /status\?\.limit \|\| 256 \* 1024 \* 1024/);
+  assert.match(source, /fixed inset-0 .*overflow-y-auto/);
+  assert.match(source, /grid-cols-1 gap-2 sm:grid-cols-\[minmax\(0,1fr\)_auto\]/);
   assert.doesNotMatch(source, /\/ 500 MB/);
 });
 
-test("admin dashboard uses D3-aligned dark tokens and accessible compact navigation", async () => {
-  const source = await text("admin.html");
-  assert.match(source, /--bg: #09090b/);
-  assert.match(source, /--panel: #111113/);
-  assert.match(source, /@media\(max-width:390px\)/);
-  assert.match(source, /prefers-reduced-motion:reduce/);
-  assert.match(source, /aria-label="Visão geral"/);
-  assert.match(source, /aria-label="Eventos"/);
-  assert.match(source, /<svg class="nav-icon"/);
-  assert.doesNotMatch(source, /◫ <span|≡ <span|♙ <span/);
+test("admin dashboard mounts the modular React and shadcn UI bundle", async () => {
+  const [html, source, styles] = await Promise.all([
+    text("admin.html"),
+    text("ui/src/admin/admin-app.tsx"),
+    text("ui/src/styles/ui.css"),
+  ]);
+  assert.match(html, /ui-dist\/admin-ui\.js/);
+  assert.match(html, /ui-dist\/admin-ui\.css/);
+  assert.match(source, /<SidebarProvider/);
+  assert.match(source, /<Tabs/);
+  assert.match(source, /<Dialog/);
+  assert.match(styles, /prefers-reduced-motion/);
+  assert.match(styles, /--background:\s*9 9 11/);
 });
 
 test("internal links and dashboard remain inside the client", async () => {
@@ -105,7 +108,7 @@ test("game catalog integrity metadata matches distributed files", async () => {
 
 test("Tetris includes guideline mechanics and persistent high score", async () => {
   const source = await text("games/library/classic-tetris.html");
-  const client = await text("auth-client.js");
+  const [client, dialogs] = await Promise.all([text("auth-client.js"), text("ui/src/components/client/game-dialogs.tsx")]);
   for (const feature of ["jlKicks", "iKicks", "LOCK_DELAY", "LOCK_RESETS", "refill", "ghostY", "hardDrop", "hold"]) {
     assert.match(source, new RegExp(`\\b${feature}\\b`));
   }
@@ -116,8 +119,8 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.doesNotMatch(source, /tetris-menu|<dialog class="settings-dialog"/);
   assert.match(client, /classic-tetris\.html/);
   assert.match(client, /organizeon-tetris-settings/);
-  assert.match(client, /Sou canhoto \(ações à esquerda\)/);
-  assert.match(client, /⛶ Tela cheia/);
+  assert.match(dialogs, /Sou canhoto \(ações à esquerda\)/);
+  assert.match(dialogs, /<DialogContent/);
   assert.match(source, /playSound/);
   assert.match(source, /playNoise/);
   assert.match(source, /name===\"fill\"/);

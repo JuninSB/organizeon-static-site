@@ -59,9 +59,7 @@ const terminalView = new Terminal({
 let terminalOpened = false;
 setupDashboardMobileMode();
 
-document.querySelectorAll("[data-view]").forEach((button) => {
-  button.addEventListener("click", () => showView(button.dataset.view));
-});
+window.addEventListener("organizeon:admin-view", (event) => showView(event.detail));
 document.getElementById("back-link").addEventListener("click", () => {
   if (window.parent !== window) {
     window.parent.postMessage(
@@ -102,9 +100,6 @@ document
 document
   .getElementById("user-form")
   .addEventListener("submit", createUser);
-document.querySelector(".cancel-dialog").addEventListener("click", () => {
-  document.getElementById("user-dialog").close();
-});
 document
   .getElementById("terminal-connect")
   .addEventListener("click", connectTerminal);
@@ -169,12 +164,7 @@ async function initialize() {
 }
 
 function showView(name) {
-  document.querySelectorAll(".view").forEach((view) => {
-    view.hidden = view.id !== `view-${name}`;
-  });
-  document.querySelectorAll("[data-view]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.view === name);
-  });
+  window.OrganizeOnAdminUI?.setView(name);
   if (name === "users") loadUsers();
   if (name === "services") loadServices();
   if (name === "terminal") ensureTerminalOpen();
@@ -185,10 +175,14 @@ async function loadServices() {
   const grid = document.getElementById("services-grid");
   const refresh = document.getElementById("services-refresh");
   refresh.disabled = true;
-  refresh.textContent = "↻ Consultando…";
+  setButtonLabel(refresh, "Consultando…");
+  refresh.setAttribute("aria-busy", "true");
+  refresh.querySelector("svg")?.classList.add("animate-spin");
   const response = await api("/admin/services");
   refresh.disabled = false;
-  refresh.textContent = "↻ Atualizar status";
+  refresh.removeAttribute("aria-busy");
+  refresh.querySelector("svg")?.classList.remove("animate-spin");
+  setButtonLabel(refresh, "Atualizar status");
   if (!response.ok) return showToast(await apiError(response));
   const { services = [] } = await response.json();
   if (!services.length) {
@@ -233,8 +227,10 @@ async function loadServices() {
         (action === "start" && service.status?.state === "running") ||
         (action === "stop" && service.status?.state === "stopped");
       control.addEventListener("click", async () => {
-        if (!window.confirm(
+        if (!await window.OrganizeOnAdminUI?.confirm(
           `${serviceActionLabel(action)} ${service.label}?`,
+          "Controlar serviço",
+          serviceActionLabel(action),
         )) return;
         control.disabled = true;
         const response = await api(
@@ -274,20 +270,18 @@ function renderMonitoring(monitoring) {
   document.getElementById("monitoring-off").hidden = monitoring.active;
   document.getElementById("monitoring-content").hidden = !monitoring.active;
   const toggle = document.getElementById("monitor-toggle");
-  toggle.textContent = state.monitorSocket
-    ? "Stop monitoring"
+  setButtonLabel(toggle, state.monitorSocket
+    ? "Pausar monitoramento"
     : monitoring.active
-      ? "Join monitoring"
-      : "Activate monitoring";
+      ? "Conectar ao monitoramento"
+      : "Ativar monitoramento");
   toggle.classList.toggle("danger", Boolean(state.monitorSocket));
   toggle.classList.toggle("primary", !state.monitorSocket);
   const refresh = document.getElementById("monitor-refresh");
   refresh.disabled =
     state.monitorSocket?.readyState !== WebSocket.OPEN ||
     state.monitorRefreshPending;
-  refresh.textContent = state.monitorRefreshPending
-    ? "↻ Atualizando…"
-    : "↻ Atualizar";
+  setButtonLabel(refresh, state.monitorRefreshPending ? "Atualizando…" : "Atualizar");
   if (!monitoring.active) return;
 
   document.getElementById("cpu-value").textContent =
@@ -529,28 +523,11 @@ function renderCharts(history) {
 }
 
 function updateRequestDomainOptions(requests) {
-  const select = document.getElementById("request-domain-select");
   const domains = (requests.byDomain || []).map((entry) => entry.domain);
-  if (
-    state.requestDomain !== "all" &&
-    !domains.includes(state.requestDomain)
-  ) {
+  if (state.requestDomain !== "all" && !domains.includes(state.requestDomain)) {
     state.requestDomain = "all";
   }
-  const expected = ["all", ...domains];
-  const current = [...select.options].map((option) => option.value);
-  if (expected.join("\0") !== current.join("\0")) {
-    select.replaceChildren(
-      ...expected.map((domain) => {
-        const option = document.createElement("option");
-        option.value = domain;
-        option.textContent =
-          domain === "all" ? "Todos os domínios" : domain;
-        return option;
-      }),
-    );
-  }
-  select.value = state.requestDomain;
+  window.OrganizeOnAdminUI?.setRequestDomains(domains, state.requestDomain);
 }
 
 function selectedRequestStats(requests) {
@@ -809,9 +786,7 @@ function renderUsers(users) {
       }
     });
     password.addEventListener("click", async () => {
-      const nextPassword = window.prompt(
-        `Nova senha para ${user.username} (mínimo 8 caracteres):`,
-      );
+      const nextPassword = await window.OrganizeOnAdminUI?.promptPassword(user.username);
       if (nextPassword === null) return;
       const response = await api(
         `/admin/users/${encodeURIComponent(user.username)}`,
@@ -837,7 +812,11 @@ function renderUsers(users) {
       showLoginCodeDialog(user.username, result.code, result.expiresAt);
     });
     remove.addEventListener("click", async () => {
-      if (!window.confirm(`Excluir a conta ${user.username}?`)) return;
+      if (!await window.OrganizeOnAdminUI?.confirm(
+        `Excluir a conta ${user.username}?`,
+        "Excluir conta",
+        "Excluir",
+      )) return;
       const response = await api(
         `/admin/users/${encodeURIComponent(user.username)}`,
         { method: "DELETE" },
@@ -881,14 +860,8 @@ function renderPermissionChecks() {
 function openCreateUser() {
   document.getElementById("user-form").reset();
   renderPermissionChecks();
-  const roleSelect = document.querySelector('#user-form select[name="role"]');
-  roleSelect.replaceChildren(...state.roles.map((roleName) => {
-    const option = document.createElement("option");
-    option.value = roleName;
-    option.textContent = roleLabel(roleName);
-    return option;
-  }));
-  document.getElementById("user-dialog").showModal();
+  window.OrganizeOnAdminUI?.setRoles(state.roles);
+  window.OrganizeOnAdminUI?.openUserDialog();
 }
 
 function roleLabel(role) {
@@ -908,30 +881,7 @@ function canManageAccess(user) {
 }
 
 function showLoginCodeDialog(username, code, expiresAt) {
-  const dialog = document.createElement("dialog");
-  dialog.innerHTML = `
-    <div class="modal">
-      <h2>Código de login</h2>
-      <p>Conta <strong></strong> · uso único · válido até <span></span></p>
-      <input readonly aria-label="Código de login" />
-      <div class="modal-actions">
-        <button class="button copy" type="button">Copiar</button>
-        <button class="button primary close" type="button">Fechar</button>
-      </div>
-    </div>`;
-  dialog.querySelector("strong").textContent = username;
-  dialog.querySelector("span").textContent = new Date(expiresAt).toLocaleTimeString("pt-BR");
-  const input = dialog.querySelector("input");
-  input.value = code;
-  dialog.querySelector(".copy").addEventListener("click", async () => {
-    await navigator.clipboard.writeText(code);
-    showToast("Código copiado.");
-  });
-  dialog.querySelector(".close").addEventListener("click", () => dialog.close());
-  dialog.addEventListener("close", () => dialog.remove());
-  document.body.append(dialog);
-  dialog.showModal();
-  input.select();
+  window.OrganizeOnAdminUI?.showLoginCode({ username, code, expiresAt });
 }
 
 async function createUser(event) {
@@ -948,7 +898,7 @@ async function createUser(event) {
     }),
   });
   if (!response.ok) return showToast(await apiError(response));
-  document.getElementById("user-dialog").close();
+  window.OrganizeOnAdminUI?.closeUserDialog();
   showToast("Conta criada.");
   loadUsers();
 }
@@ -1049,18 +999,18 @@ function setTerminalConnectionState(connectionState) {
   const connect = document.getElementById("terminal-connect");
   const disconnect = document.getElementById("terminal-disconnect");
   if (connectionState === "connecting") {
-    connect.textContent = "Conectando…";
+    setButtonLabel(connect, "Conectando…");
     connect.disabled = true;
     disconnect.hidden = false;
     return;
   }
   if (connectionState === "connected") {
-    connect.textContent = "Terminal conectado ✓";
+    setButtonLabel(connect, "Terminal conectado");
     connect.disabled = true;
     disconnect.hidden = false;
     return;
   }
-  connect.textContent = "Conectar terminal";
+  setButtonLabel(connect, "Conectar terminal");
   connect.disabled = false;
   disconnect.hidden = true;
 }
@@ -1116,33 +1066,20 @@ async function apiError(response) {
   return messages[result.error] || `Erro HTTP ${response.status}.`;
 }
 
-function showToast(message, autoHide = 8000) {
-  const toast = document.getElementById("toast");
-  toast.replaceChildren();
-  const text = document.createElement("span");
-  text.textContent = message;
-  const close = document.createElement("button");
-  close.type = "button";
-  close.className = "toast-close";
-  close.setAttribute("aria-label", "Fechar notificação");
-  close.textContent = "×";
-  close.addEventListener("click", () => {
-    window.clearTimeout(toast.timer);
-    toast.hidden = true;
-  });
-  toast.append(text, close);
-  toast.hidden = false;
-  window.clearTimeout(toast.timer);
-  if (autoHide > 0) {
-    toast.timer = window.setTimeout(() => {
-      toast.hidden = true;
-    }, autoHide);
-  }
+function showToast(message) {
+  window.OrganizeOnAdminUI?.toast(message, "info");
+}
+
+function setButtonLabel(button, label) {
+  const target = button.querySelector("[data-ui-label]");
+  if (target) target.textContent = label;
+  else button.textContent = label;
 }
 
 function button(label, className) {
   const element = document.createElement("button");
   element.type = "button";
+  element.dataset.slot = "button";
   element.className = className;
   element.textContent = label;
   return element;
