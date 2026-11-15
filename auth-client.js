@@ -4140,6 +4140,45 @@ function showLogin(message = "") {
       button.textContent = registrationMode ? "Criar conta" : "Entrar";
     }
   });
+
+  const uiBase = new URL(window.__groveBase || "./", document.baseURI);
+  const script = new URL("ui-dist/client-ui.js", uiBase);
+  const stylesheet = new URL("ui-dist/client-ui.css", uiBase);
+  const version = window.__ORGANIZEON_CLIENT_VERSION__;
+  if (version) { script.searchParams.set("v", version); stylesheet.searchParams.set("v", version); }
+  void import(script.href).then((module) => {
+    if (!wrapper.isConnected) return;
+    const host = document.createElement("div");
+    host.style.cssText = "position:fixed;inset:0;z-index:2147483647";
+    wrapper.appendChild(host);
+    const cleanup = module.mountClientSurface(host, {
+      type: "login", initialMessage: message,
+      onGuest: async () => {
+        localStorage.removeItem(tokenStorageKey);
+        localStorage.setItem(guestStorageKey, "1");
+        await startGuestApplication();
+      },
+      onSubmit: async ({ mode, username, password, loginCode }) => {
+        const response = await apiRequest(mode === "register" ? "/auth/register" : "/auth/login", {
+          method: "POST",
+          body: JSON.stringify(mode === "code" ? { loginCode } : { username, password }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.token) {
+          if (response.status === 429) throw new Error("Muitas tentativas. Aguarde 15 minutos.");
+          if (mode === "register") throw new Error(({ username_exists: "Esse usuário já existe.", invalid_username: "Use de 3 a 32 letras, números, ponto, hífen ou sublinhado." })[result.error] || "Não foi possível criar a conta. Use uma senha com pelo menos 8 caracteres.");
+          throw new Error(mode === "code" ? "Código inválido, expirado ou já utilizado." : "Usuário ou senha inválidos.");
+        }
+        localStorage.setItem(tokenStorageKey, result.token);
+        localStorage.removeItem(guestStorageKey);
+        scheduleExpiration(result.expiresAt);
+        await startApplication(result.token, result.account);
+      },
+    }, stylesheet.href);
+    const link = host.shadowRoot.querySelector('link[rel="stylesheet"]');
+    link.addEventListener("load", () => { form.hidden = true; }, { once: true });
+    link.addEventListener("error", () => { cleanup(); host.remove(); }, { once: true });
+  }).catch((error) => console.error("Falha ao carregar a tela de login:", error));
 }
 
 function apiRequest(path, options) {

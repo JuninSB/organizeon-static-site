@@ -87,7 +87,7 @@ function LoginSurface({ initialMessage = "", onSubmit, onGuest }: LoginProps) {
     <main className="fixed inset-0 z-[2147483647] grid min-h-svh place-items-center overflow-y-auto bg-background px-4 py-8">
       <Card className="w-full max-w-[420px] animate-ui-enter border-border/80 bg-card shadow-none">
         <CardHeader className="gap-2 px-6 pt-7">
-          <div className="mb-2 flex size-10 items-center justify-center rounded-lg border bg-muted text-foreground"><Shield className="size-5" /></div>
+          <div className="mb-3 flex items-center gap-3"><Shield className="size-8" /><div><p className="text-sm font-semibold">OrganizeOn</p><p className="text-xs text-muted-foreground">Cliente</p></div></div>
           <CardTitle className="text-xl font-semibold tracking-tight">{mode === "register" ? "Criar conta" : mode === "code" ? "Entrar com código" : "Entrar no OrganizeOn"}</CardTitle>
           <CardDescription>Autentique-se para acessar seus jogos e configurações.</CardDescription>
         </CardHeader>
