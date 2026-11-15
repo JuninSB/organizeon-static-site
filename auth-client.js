@@ -83,9 +83,16 @@ let toastHost = null;
 
 function clientUiPaths() {
   const base = new URL(window.__groveBase || "./", document.baseURI);
+  const script = new URL("ui-dist/client-ui.js", base);
+  const stylesheet = new URL("ui-dist/client-ui.css", base);
+  const version = window.__ORGANIZEON_CLIENT_VERSION__;
+  if (version) {
+    script.searchParams.set("v", version);
+    stylesheet.searchParams.set("v", version);
+  }
   return {
-    script: new URL("ui-dist/client-ui.js", base).href,
-    stylesheet: new URL("ui-dist/client-ui.css", base).href,
+    script: script.href,
+    stylesheet: stylesheet.href,
   };
 }
 
