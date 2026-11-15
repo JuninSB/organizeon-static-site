@@ -25,3 +25,21 @@ Antes de alterar roteamento ou acesso remoto, identifique os processos reais, va
 ## Atualização do manifesto
 
 Depois de editar arquivos já listados em `download-manifest.json`, execute `node scripts/update-manifest.mjs` e depois `npm test`. O script preserva a lista de caminhos, recalcula tamanho e SHA-256, atualiza `totalBytes` e grava uma versão `v2-` derivada da lista atualizada em `version.txt`. Arquivos novos exigem inclusão explícita no manifesto; mudanças no kernel também exigem tratar `index-version.txt`. Revise e teste a migração em um cliente instalado antes de publicar.
+
+## Onde alterar cada tela
+
+A distribuição atual mistura funções legíveis em `auth-client.js` e chunks compilados de `assets/`. Use nomes de função para localizar o código, pois a numeração de linhas muda:
+
+| Área | Local de implementação |
+| --- | --- |
+| Atualizador e tela inicial do kernel | `index.html`, bloco `organizeon-download` |
+| Login, registro, código e convidado | `auth-client.js`, `showLogin` |
+| Sidebar da conta e navegação | `auth-client.js`, `configureAccountNavigation` |
+| Dados e backup | `auth-client.js`, `showDataPanel` |
+| Catálogo de jogos e controles do jogador | `auth-client.js`, `showGameCatalog` |
+| Seleção de proxy | `auth-client.js`, `showProxyServerDialog` |
+| Adaptações móveis legadas | `auth-client.js`, `setupMobileMode` |
+| Aplicação principal, navegação e configurações originais | `config.js` aponta para `assets/jdht-e-DdM4s9z4.js`, que carrega chunks compilados; `assets/jdht-c-BElH72MW.js` contém navegação da página inicial e `assets/jdht-c-B5kF6u_m.js` contém lógica de atalhos |
+| Painel administrativo | `admin.html`, `admin.js` |
+
+Essas identificações são baseadas no código da revisão `a547108` e devem ser reavaliadas ao mudar os bundles. O backend D2 e o painel D3 não são implementados nesta árvore.
