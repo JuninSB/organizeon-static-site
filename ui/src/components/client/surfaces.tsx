@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  ArrowLeft, Check, Cloud, Gamepad2, Home, LogOut, Menu, Settings2, Shield, Signal,
+  ArrowLeft, Check, Cloud, Gamepad2, Home, LogOut, Menu, Settings2, Shield, ShieldCheck, Signal,
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader,
   DialogTitle,
@@ -121,6 +121,7 @@ function LoginSurface({ initialMessage = "", onSubmit, onGuest }: LoginProps) {
             <p className="mt-2 text-center text-xs text-muted-foreground">Acesso convidado com recursos limitados</p>
           </div>
         </CardContent>
+        <CardFooter className="gap-2 border-t border-border pt-4 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />Acesse com sua conta OrganizeOn.</CardFooter>
       </Card>
     </main>
   );
