@@ -1150,7 +1150,18 @@ async function showDataPanel() {
       #organizeon-data-panel button{padding:0 13px}#organizeon-data-panel button.primary{color:#062019;background:#63e4c4}#organizeon-data-panel button.danger{color:#ffd6da;border-color:#68383d;background:#32181b}
       #organizeon-data-panel input,#organizeon-data-panel select{min-height:42px;padding:0 11px;border:1px solid #385148;border-radius:10px;color:#fff;background:#09110e}#organizeon-data-panel .status{color:#8eaaa2;font-size:13px}
       @media(max-width:560px){#organizeon-data-panel{padding:14px}#organizeon-data-panel .actions{grid-template-columns:1fr}}
-    </style>
+    
+      #organizeon-data-panel { color:#fafafa; background:#09090b; font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
+      #organizeon-data-panel .card { border-color:#27272a; border-radius:9px; background:#111113; box-shadow:none; }
+      #organizeon-data-panel button { border-color:#3f3f46; border-radius:7px; color:#d4d4d8; background:#18181b; transition:background .15s ease,border-color .15s ease; }
+      #organizeon-data-panel button:hover:not(:disabled) { background:#27272a; }
+      #organizeon-data-panel button.primary { border-color:#e4e4e7; color:#18181b; background:#e4e4e7; }
+      #organizeon-data-panel button.danger { border-color:#7f1d1d; color:#fca5a5; background:#1c1113; }
+      #organizeon-data-panel input,#organizeon-data-panel select { border-color:#3f3f46; border-radius:7px; color:#fafafa; background:#09090b; }
+      #organizeon-data-panel .status { color:#a1a1aa; }
+      #organizeon-data-panel :focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
+      @media(prefers-reduced-motion:reduce){#organizeon-data-panel *{transition:none!important}}
+</style>
     <div class="shell"><header class="top"><button class="back">←</button><div><h1>Dados</h1><div class="status">Conta ${window.organizeonAccount?.username || ""}</div></div></header>
       <article class="card"><div class="row"><div><strong>Backup na nuvem</strong><div class="status backup-status">Consultando…</div></div><button class="toggle primary">Carregando…</button></div><div class="actions"><button class="save">Salvar agora</button><button class="restore">Restaurar</button></div></article>
       <article class="card"><strong>Progresso dos jogos</strong><p class="status">Os arquivos dos jogos continuam no navegador. Estas ações apagam somente saves.</p><div class="actions"><button class="danger clear-all">Apagar todos os progressos</button><span class="row"><select class="game-id" aria-label="Escolher jogo"><option value="">Carregando jogos…</option></select><button class="danger clear-one" disabled>Apagar jogo</button></span></div></article>
@@ -1819,7 +1830,18 @@ async function showGameCatalog() {
           grid-template-columns: repeat(3,minmax(0,1fr));
         }
       }
-    </style>
+    
+      #organizeon-game-catalog { color:#fafafa; background:#09090b; }
+      #organizeon-game-catalog .back,#organizeon-game-catalog .filter,#organizeon-game-catalog .credits,#organizeon-game-catalog .controls-toggle,#organizeon-game-catalog .controls-settings { border-color:#3f3f46; border-radius:7px; color:#d4d4d8; background:#18181b; box-shadow:none; }
+      #organizeon-game-catalog .filter.active,#organizeon-game-catalog .action,#organizeon-game-catalog .dialog-close { border-color:#e4e4e7; color:#18181b; background:#e4e4e7; }
+      #organizeon-game-catalog .card { border-color:#27272a; border-radius:9px; background:#111113; box-shadow:none; }
+      #organizeon-game-catalog .search { border-color:#3f3f46; border-radius:7px; color:#fafafa; background:#09090b; }
+      #organizeon-game-catalog .search:focus-visible,#organizeon-game-catalog button:focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
+      #organizeon-game-catalog .filter,#organizeon-game-catalog button { transition:color .15s ease,background .15s ease,border-color .15s ease; }
+      @media(max-width:700px){#organizeon-game-catalog .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+      @media(max-width:440px){#organizeon-game-catalog .grid{grid-template-columns:1fr}#organizeon-game-catalog .topbar{flex-wrap:wrap}#organizeon-game-catalog .search{order:3;width:100%;margin:4px 0 0}}
+      @media(prefers-reduced-motion:reduce){#organizeon-game-catalog *{transition:none!important;animation:none!important}}
+</style>
     <div class="shell">
       <header class="topbar">
         <button class="back" type="button" aria-label="Voltar">←</button>
@@ -3518,7 +3540,19 @@ function showProxyServerDialog() {
       #organizeon-proxy-dialog .actions .apply {
         border-color: #54e3c2; color: #062018; background: #54e3c2;
       }
-    </style>
+    
+      #organizeon-proxy-dialog { color:#fafafa; background:rgba(0,0,0,.58); backdrop-filter:blur(4px); }
+      #organizeon-proxy-dialog .panel { border-color:#27272a; border-radius:9px; background:#111113; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+      #organizeon-proxy-dialog .option { border-color:#27272a; border-radius:7px; color:#d4d4d8; background:#18181b; transition:background .15s ease,border-color .15s ease; }
+      #organizeon-proxy-dialog .option:hover,#organizeon-proxy-dialog .option.selected { border-color:#71717a; background:#27272a; box-shadow:none; }
+      #organizeon-proxy-dialog .radio { border-color:#71717a; }
+      #organizeon-proxy-dialog .selected .radio { border-color:#e4e4e7; }
+      #organizeon-proxy-dialog .intro,#organizeon-proxy-dialog .description { color:#a1a1aa; }
+      #organizeon-proxy-dialog button { border-radius:7px; }
+      #organizeon-proxy-dialog :focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
+      @media(max-width:520px){#organizeon-proxy-dialog{padding:12px}#organizeon-proxy-dialog .panel{padding:18px}}
+      @media(prefers-reduced-motion:reduce){#organizeon-proxy-dialog *{transition:none!important}}
+</style>
     <section class="panel" role="dialog" aria-modal="true"
       aria-labelledby="organizeon-proxy-title">
       <h2 id="organizeon-proxy-title">Escolher servidor proxy</h2>
