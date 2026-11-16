@@ -25,3 +25,13 @@ it('renders six distinct selectable materials without changing the seeded fluid 
  const css=readFileSync(resolve(process.cwd(),'src/features/profile/profile-banner.css'),'utf8');
  writeFileSync('/tmp/organizeon-materials.html','<!doctype html><style>body{background:#09090b;color:#fafafa;font:14px system-ui;padding:24px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}section{border:1px solid #27272a;border-radius:12px;overflow:hidden}h2{margin:0;padding:12px}'+css+'</style>'+html);
 });
+it('uses independent material structures instead of routing every theme through fluidPath',()=>{
+ const signatures={slime:'elastic-gel',bubbles:'merging-metaballs',gradient:'diffused-color-mesh',lava:'volcanic-crust',stars:'parallax-starfield',rainbow:'spectral-rings'};
+ for(const [material,renderer] of Object.entries(signatures)){
+  const html=renderToStaticMarkup(<LavaBanner seed="account-one" color="#34d399" material={material}/>);
+  expect(html).toContain(`data-renderer="${renderer}"`);
+  expect(html).not.toContain('oo-lava-depth');
+  if(material==='bubbles'){expect(html).toContain('22 -10');expect(html).toContain('oo-blob-cross');}
+  if(material==='slime')expect(html).toContain('oo-gel-stretch');
+ }
+});

@@ -14,6 +14,7 @@ const files = [
   "features/profile/profile-banner.css",
   "features/profile/profile-banner.ts",
   "features/profile/lava-banner.tsx",
+  "features/profile/material-banner.tsx",
   "features/profile/fluid-paths.ts",
   "features/profile/banner-cooldown.ts",
   "features/profile/banner-seed-control.tsx",

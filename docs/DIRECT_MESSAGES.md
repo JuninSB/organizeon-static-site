@@ -219,3 +219,13 @@ Todos os materiais animados exigem emblema no backend. A validação de perfil e
 - Backend: alteração restrita à validação/serialização de `profiles.mjs`, com cópia anterior em `~/.local/share/organizeon/rollback/material-catalog-*`. Para rollback, restaurar esse arquivo e reiniciar somente `organizeon-backend`; restaurar o template D2 do mesmo backup se necessário.
 - API health 200; processos D3, Survival e sessão tmux Xiaomi preservados. Nenhum envio Xiaomi, DM, concessão de emblema ou reroll de conta real foi usado nos testes.
 - GitHub Pages execução `43978832943` concluída; hashes SHA-256 dos quatro bundles públicos conferidos com a distribuição local. D2 passou a usar `material-catalog-e6b3e1c-final` nas quatro referências. D3 login e asset `index-wJJGFT1f.js` responderam HTTP 200.
+
+## Renderizações independentes de materiais
+A primeira versão dos materiais reutilizava `fluidPath`, tornando slime, lava, gradiente e arcos visualmente semelhantes. `material-banner.tsx` agora separa os desenhos e movimentos:
+- Slime: fios elásticos ancorados no topo, gotas arredondadas, reflexos e poça inferior. Referências: https://www.scienceinschool.org/article/2024/the-science-of-slime/ e referências visuais de slime esticado e brilhante.
+- Bolhas: metaballs com blur/limiar alfa; massas se unem e se separam, em vez de círculos vazados subindo.
+- Gradiente: manchas difusas sem contornos ou faixas de tecido.
+- Lava: crosta escura irregular, fissuras quentes e pulsação térmica.
+- Estrelas: pontos com profundidades, cintilação e estrela cadente.
+- Arcos de cor: anéis espectrais com precessão.
+`lava-banner.tsx` mantém as 12 composições antigas e delega somente materiais explícitos ao novo módulo. Seed, APIs, permissões e cooldown não mudam. Nenhum loop JavaScript de frames ou dependência gráfica foi adicionado. IDs SVG usam useId; reduced motion desativa as animações, incluindo animationName inline.

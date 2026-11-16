@@ -23,3 +23,17 @@
 @keyframes oo-fluid-stars { from {opacity:.2;transform:translateX(-8px)} to {opacity:1;transform:translateX(8px)} }
 @keyframes oo-fluid-rainbow { from {transform:translateY(-20px) rotate(-8deg)} to {transform:translateY(20px) rotate(8deg)} }
 .oo-lava-field[data-pattern="gradient"] > g {filter:blur(15px)}
+
+/* Material-specific motion: each renderer owns its geometry and dynamics. */
+.oo-material-motion { animation-timing-function:ease-in-out; animation-iteration-count:infinite; animation-direction:alternate; }
+@keyframes oo-gel-stretch { 0%,100% {transform:translateY(-7px) scale(.98,.76)} 55% {transform:translateY(9px) scale(.82,1.24)} 78% {transform:translateY(2px) scale(1.06,.96)} }
+@keyframes oo-blob-orbit { from {transform:translate(-26px,28px) scale(1.05,.9)} to {transform:translate(44px,-30px) scale(.85,1.14)} }
+@keyframes oo-blob-cross { from {transform:translate(38px,-35px)} to {transform:translate(-45px,45px)} }
+@keyframes oo-mesh-drift { from {transform:translate(-65px,25px) scale(1.2,.8)} to {transform:translate(65px,-25px) scale(.85,1.3)} }
+@keyframes oo-magma-heat { from {opacity:.6} to {opacity:1} }
+@keyframes oo-crust-drift { from {transform:translate(-4px,-3px) rotate(-2deg)} to {transform:translate(4px,4px) rotate(2deg)} }
+@keyframes oo-star-travel { from {transform:translateX(-25px)} to {transform:translateX(25px)} }
+@keyframes oo-star-twinkle { from {opacity:.2} to {opacity:1} }
+@keyframes oo-star-shoot { 0%,80% {transform:translate(50px,-20px) rotate(20deg);opacity:0} 82% {opacity:.8} 95%,100% {transform:translate(450px,135px) rotate(20deg);opacity:0} }
+@keyframes oo-ring-precess { from {transform:translateY(-8px) rotate(-12deg) scaleX(.9)} to {transform:translateY(12px) rotate(12deg) scaleX(1.1)} }
+@media(prefers-reduced-motion:reduce) { .oo-material-motion {animation:none !important} .oo-shooting-star {display:none} }
