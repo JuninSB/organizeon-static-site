@@ -7,7 +7,7 @@ async function updateDashboard() {
     if (dashboardCleanup) dashboardCleanup();
     dashboardCleanup = null;
     dashboardHost?.remove(); dashboardHost = null;
-    panel.classList.remove("enhanced");
+    if (panel.classList.contains("enhanced")) panel.classList.remove("enhanced");
     return;
   }
   if (dashboardHost || mounting) return;
@@ -33,6 +33,7 @@ async function updateDashboard() {
   } catch (error) { host.remove(); dashboardHost = null; console.error("Falha ao carregar o painel D2:", error); }
   finally { mounting = false; }
 }
-new MutationObserver(updateDashboard).observe(panel, { attributes: true, attributeFilter: ["class"] });
+let wasHidden = panel.classList.contains("hidden");
+new MutationObserver(() => { const hidden = panel.classList.contains("hidden"); if (hidden === wasHidden) return; wasHidden = hidden; void updateDashboard(); }).observe(panel, { attributes: true, attributeFilter: ["class"] });
 void updateDashboard();
 </script>

@@ -1,3 +1,25 @@
+// One notification host for the client; the UI bundle owns visuals and lifecycle.
+let notificationUI;
+async function showToast(message, kind = "info") {
+  try {
+    if (!notificationUI) notificationUI = (async () => {
+      const base = new URL(window.__groveBase || "./", document.baseURI);
+      const script = new URL("ui-dist/client-ui.js", base);
+      const css = new URL("ui-dist/client-ui.css", base);
+      const version = window.__ORGANIZEON_CLIENT_VERSION__;
+      if (version) { script.searchParams.set("v", version); css.searchParams.set("v", version); }
+      const ui = await import(script.href);
+      const host = document.createElement("div");
+      host.id = "organizeon-notifications";
+      host.style.cssText = "position:fixed;inset:0;z-index:2147483647;pointer-events:none";
+      document.body.append(host);
+      ui.mountClientToaster(host, css.href);
+      return ui;
+    })();
+    (await notificationUI).showClientToast(String(message), kind);
+  } catch (error) { notificationUI = null; console.warn("Falha ao exibir notificação:", error); }
+}
+
 const config = window.__ORGANIZEON_CONFIG__;
 const tokenStorageKey = "organizeon-access-token";
 const guestStorageKey = "organizeon-guest-mode";
@@ -3869,26 +3891,6 @@ function setupMobileMode() {
     html.organizeon-mobile #organizeon-account-navigation .trigger {
       top: 12px; left: 12px;
     }
-    #organizeon-mobile-notice {
-      position: fixed; top: 14px; left: 50%; z-index: 2147483647;
-      width: max-content; max-width: calc(100vw - 28px);
-      padding: 10px 14px; transform: translateX(-50%);
-      border: 1px solid rgba(93,240,200,.3); border-radius: 999px;
-      color: #dffff6; background: rgba(5,22,18,.94);
-      box-shadow: 0 12px 38px rgba(0,0,0,.35);
-      font: 650 12px/1.3 Inter, ui-sans-serif, system-ui, sans-serif;
-      transition: opacity .25s ease, transform .25s ease;
-      backdrop-filter: blur(12px);
-    }
-    #organizeon-mobile-notice button {
-      width: 25px; min-height: 25px; margin: -5px -7px -5px 7px;
-      padding: 0; border: 0; border-radius: 999px; cursor: pointer;
-      color: #a9c9c0; background: rgba(255,255,255,.06);
-      font: 700 16px/1 system-ui, sans-serif;
-    }
-    #organizeon-mobile-notice.leaving {
-      opacity: 0; transform: translate(-50%, -8px);
-    }
     @media (max-width: 390px) {
       html.organizeon-mobile [class~="grid-cols-3"],
       html.organizeon-mobile [class~="grid-cols-4"],
@@ -3917,22 +3919,7 @@ function setupMobileMode() {
     );
     if (!enabled || noticeShown) return;
     noticeShown = true;
-    const notice = document.createElement("div");
-    notice.id = "organizeon-mobile-notice";
-    notice.setAttribute("role", "status");
-    notice.append(document.createTextNode("Modo mobile ativado"));
-    const close = document.createElement("button");
-    close.type = "button";
-    close.setAttribute("aria-label", "Fechar notificação");
-    close.textContent = "×";
-    notice.appendChild(close);
-    document.body.appendChild(notice);
-    const dismiss = () => {
-      notice.classList.add("leaving");
-      window.setTimeout(() => notice.remove(), 300);
-    };
-    close.addEventListener("click", dismiss);
-    window.setTimeout(dismiss, 8000);
+    void showToast("Modo mobile ativado");
   };
 
   applyMode();

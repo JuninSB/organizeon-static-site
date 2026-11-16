@@ -1,7 +1,8 @@
 import { createRoot, type Root } from "react-dom/client";
 import { flushSync } from "react-dom";
 import type { ComponentProps, ReactNode } from "react";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { ClientSurface, type SurfaceProps } from "@/components/client/surfaces";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PortalContextProvider } from "@/components/ui/portal-context";
@@ -186,7 +187,7 @@ export function mountClientToaster(host: HTMLElement, stylesheetHref: string) {
   container.className = "organizeon-ui organizeon-overlay-root dark";
   shadow.append(container);
   const root = createRoot(container);
-  root.render(<PortalContextProvider container={shadow}><Toaster position="bottom-right" theme="dark" closeButton /></PortalContextProvider>);
+  root.render(<PortalContextProvider container={shadow}><Toaster position="bottom-right" theme="dark" closeButton richColors={false} /></PortalContextProvider>);
   mounts.set(host, { root, shadow, container });
   return () => { root.unmount(); shadow.replaceChildren(); mounts.delete(host); };
 }
