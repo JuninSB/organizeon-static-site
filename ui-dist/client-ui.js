@@ -23187,7 +23187,7 @@ function Cv({ username: e, role: t, request: n, upload: r, logout: i }) {
 							disabled: u !== null,
 							children: [/* @__PURE__ */ (0, K.jsx)(We, {}), "Selecionar arquivo"]
 						}), /* @__PURE__ */ (0, K.jsx)("span", {
-							className: "min-w-0 flex-1 break-all text-sm text-muted-foreground",
+							className: "w-full min-w-0 break-words text-sm text-muted-foreground sm:w-auto sm:flex-1",
 							children: c?.name || "Nenhum arquivo selecionado"
 						})]
 					}),
