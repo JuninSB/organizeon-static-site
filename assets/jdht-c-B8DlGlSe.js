@@ -1,3 +1,4 @@
+import { initializeScramjet, waitForWorkerControl } from "../core/proxy/scramjet-bootstrap.js";
 import {
   S as f,
   a as g,
@@ -535,40 +536,12 @@ async function de(o, e) {
     const t = o || O,
       a = o ? L(o) : W,
       i = `${window.__groveBase}${I}`;
-    if (e === "scramjet")
-      try {
-        if (!window.$scramjetLoadController) {
-          const r = document.createElement("script");
-          ((r.src = `${window.__groveBase}${f}/${g}.all.js`),
-            await new Promise((n, p) => {
-              ((r.onload = n), (r.onerror = p), document.head.appendChild(r));
-            }));
-        }
-        const { ScramjetController: l } = window.$scramjetLoadController();
-        (window.scramjetController ||
-          (window.scramjetController = new l({
-            prefix: `${window.__groveBase}${N}/`,
-            files: {
-              wasm: `${window.__groveBase}${f}/${g}.wasm.wasm`,
-              all: `${window.__groveBase}${f}/${g}.all.js`,
-              sync: `${window.__groveBase}${f}/${g}.sync.js`,
-            },
-          })),
-          window.scramjetController
-            .init()
-            .then(() => {
-              console.log("Scramjet controller initialized");
-            })
-            .catch((r) => {
-              console.error("Scramjet init failed:", r);
-            }));
-      } catch (l) {
-        console.error("Failed to load Scramjet:", l);
-      }
     const c = await navigator.serviceWorker.register(i);
     ((c.waiting || c.installing) && (await c.update()),
       await navigator.serviceWorker.ready,
       console.log("Service worker ready"));
+    await waitForWorkerControl(i);
+    if(e === "scramjet") await initializeScramjet(window.__groveBase);
     const w = new Z(`${window.__groveBase}${D}/worker.js`),
       s = `${window.__groveBase}${e === "scramjet" ? F : H}/index.mjs`;
     (await w.setTransport(s, [

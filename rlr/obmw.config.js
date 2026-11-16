@@ -1,4 +1,6 @@
-const __cfgBase = self.location.pathname.replace(/tbojzp\.js$/, '')
+const __cfgBase = typeof document !== 'undefined' && document.currentScript
+  ? new URL('../', document.currentScript.src).pathname
+  : new URL('./', self.location.href).pathname
 
 self.__uv$config = {
 	prefix: __cfgBase + 'nq/',

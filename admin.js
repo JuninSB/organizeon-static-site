@@ -158,7 +158,7 @@ initialize().catch((error) => {
   showToast(
     error.message === "forbidden"
       ? "Esta conta não possui acesso ao Dashboard."
-      : "Não foi possível conectar ao servidor.",
+      : error.message === "admin_reauth_required" ? "Confirme sua senha para acessar o dashboard." : "Não foi possível conectar ao servidor.",
     0,
   );
 });
@@ -168,6 +168,7 @@ async function initialize() {
   if (response.status === 401 || response.status === 403) {
     throw new Error("forbidden");
   }
+  if(!response.ok)throw new Error("admin_reauth_required");
   const result = await response.json();
   state.account = result.account;
   state.monitoring = result.monitoring;
@@ -357,7 +358,9 @@ function routeStatusLabel(route) {
   return "Aguardando";
 }
 
-function connectMonitoring() {
+async function connectMonitoring() {
+  const access=await api('/account/admin-reauth');
+  if(!access.ok)return showToast('Confirme sua senha para continuar.');
   const token = localStorage.getItem(tokenKey);
   const base =
     `${config.apiOrigin.replace(/^http/, "ws")}` +
@@ -510,7 +513,9 @@ function selectedRequestStats(requests) {
   );
 }
 
-function connectLogs() {
+async function connectLogs() {
+  const access=await api('/account/admin-reauth');
+  if(!access.ok)return showToast('Confirme sua senha para continuar.');
   if (
     state.logSocket &&
     state.logSocket.readyState <= WebSocket.OPEN
@@ -665,10 +670,22 @@ async function loadUsers() {
 function renderUsers(users) {
   const checked=async response=>{if(!response.ok)throw Error(await apiError(response));return response;};
   window.OrganizeOnAdminUI.setUsers({
+    currentUser:{...state.account,canEdit:false,canRevokeSessions:true,isSelf:true},
     users:users.map(user=>({...user,canEdit:canManageAccess(user),canRevokeSessions:user.username===state.account.username||canManageAccess(user),isSelf:user.username===state.account.username})),
     permissions:state.permissions,grantablePermissions:state.grantablePermissions,roles:state.roles,
     onSave:async(user,patch)=>{await checked(await api(`/admin/users/${encodeURIComponent(user.username)}`,{method:'PATCH',body:JSON.stringify(patch)}));showToast('Conta atualizada.');await loadUsers();},
-    onPassword:async user=>{const password=await window.OrganizeOnAdminUI.promptPassword(user.username);if(password===null)return;await checked(await api(`/admin/users/${encodeURIComponent(user.username)}`,{method:'PATCH',body:JSON.stringify({password})}));showToast('Senha alterada; os tokens anteriores foram invalidados.');await loadUsers();},
+    onPassword:async user=>{
+      const self=user.username===state.account.username;
+      const saved=await window.OrganizeOnAdminUI.changePassword({username:user.username,self,submit:async values=>{
+        const path=self?'/account/password':`/admin/users/${encodeURIComponent(user.username)}`;
+        const body=self?values:{password:values.newPassword};
+        await checked(await api(path,{method:self?'POST':'PATCH',body:JSON.stringify(body)}));
+      }});
+      if(!saved)return;
+      showToast('Senha alterada.');
+      if(self){localStorage.removeItem(tokenKey);if(window.parent!==window)window.parent.postMessage({type:'organizeon:open-main',loggedOut:true},'*');else window.location.replace(new URL('./',document.baseURI).href);}
+      else await loadUsers();
+    },
     onCode:async user=>{const response=await checked(await api(`/admin/users/${encodeURIComponent(user.username)}/login-code`,{method:'POST'}));const result=await response.json();showLoginCodeDialog(user.username,result.code,result.expiresAt);},
     onRevokeSessions:async user=>{
       if(!await window.OrganizeOnAdminUI.confirm(`Encerrar todas as sessões de ${user.username}? Será necessário entrar novamente em todos os dispositivos.`, 'Deslogar todas as sessões', 'Deslogar'))return;
@@ -771,7 +788,9 @@ async function createUser(event) {
   loadUsers();
 }
 
-function connectTerminal() {
+async function connectTerminal() {
+  const access=await api('/account/admin-reauth');
+  if(!access.ok)return showToast('Confirme sua senha para continuar.');
   disconnectTerminal();
   const token = localStorage.getItem(tokenKey);
   const base =
@@ -901,7 +920,7 @@ function setupDashboardMobileMode() {
   window.setTimeout(() => showToast("Modo mobile ativado"), 50);
 }
 
-function api(path, options = {}) {
+function rawApi(path, options = {}) {
   const token = localStorage.getItem(tokenKey);
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
@@ -915,9 +934,25 @@ function api(path, options = {}) {
   });
 }
 
+let adminReauthPending = null;
+async function api(path, options = {}) {
+  let response=await rawApi(path,options);
+  if(response.status!==428)return response;
+  if(!adminReauthPending)adminReauthPending=window.OrganizeOnAdminUI.reauthenticate(async password=>{
+    const verified=await rawApi('/account/admin-reauth',{method:'POST',body:JSON.stringify({password})});
+    if(!verified.ok)throw Error(await apiError(verified));
+  }).finally(()=>{adminReauthPending=null;});
+  if(await adminReauthPending)response=await rawApi(path,options);
+  return response;
+}
+
 async function apiError(response) {
   const result = await response.json().catch(() => ({}));
   const messages = {
+    invalid_current_password: "A senha atual está incorreta.",
+    password_confirmation_mismatch: "As novas senhas não coincidem.",
+    invalid_password: "A nova senha deve ter pelo menos 8 caracteres.",
+    too_many_attempts: "Muitas tentativas. Aguarde antes de tentar novamente.",
     username_exists: "Esse nome de usuário já existe.",
     invalid_username: "Nome de usuário inválido.",
     invalid_role: "Tipo de conta inválido.",

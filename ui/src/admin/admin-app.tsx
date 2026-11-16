@@ -1,3 +1,5 @@
+import {AdminReauthDialog} from "@/components/admin/admin-reauth-dialog";
+import { PasswordDialog, type PasswordRequest } from "@/components/admin/password-dialog";
 import { TerminalPanel } from "@/components/admin/terminal-panel";
 import { UsersPanel, type UsersData } from "@/components/admin/users-panel";
 import { RoutesPanel, type AdminRoute } from "@/components/admin/routes-panel";
@@ -33,7 +35,8 @@ type AdminUIBridge = {
   showLoginCode: (data: { username: string; code: string; expiresAt: string }) => void;
   toast: (message: string, kind?: "success" | "error" | "info") => void;
   confirm: (description: string, title?: string, confirmLabel?: string) => Promise<boolean>;
-  promptPassword: (username: string) => Promise<string | null>;
+  reauthenticate: (verify:(password:string)=>Promise<void>)=>Promise<boolean>;
+  changePassword: (request: PasswordRequest) => Promise<boolean>;
 };
 declare global { interface Window { OrganizeOnAdminUI?: AdminUIBridge } }
 
@@ -64,10 +67,11 @@ export function AdminApp() {
   const [role, setRole] = useState("user");
   const [codeDialog, setCodeDialog] = useState<{ username: string; code: string; expiresAt: string } | null>(null);
   const [confirmation, setConfirmation] = useState<{ title: string; description: string; confirmLabel: string } | null>(null);
-  const [passwordTarget, setPasswordTarget] = useState<string | null>(null);
-  const [newPassword, setNewPassword] = useState("");
+  const [adminVerification,setAdminVerification]=useState<{verify:(password:string)=>Promise<void>}|null>(null);
+  const adminVerificationResolver=useRef<((accepted:boolean)=>void)|null>(null);
+  const [passwordRequest, setPasswordRequest] = useState<PasswordRequest | null>(null);
   const confirmResolver = useRef<((value: boolean) => void) | null>(null);
-  const passwordResolver = useRef<((value: string | null) => void) | null>(null);
+  const passwordResolver = useRef<((value: boolean) => void) | null>(null);
   const [domain, setDomain] = useState("all");
   const [domains, setDomains] = useState(["all"]);
   const domainElement = useRef<HTMLDivElement>(null);
@@ -94,10 +98,10 @@ export function AdminApp() {
         confirmResolver.current = resolve;
         setConfirmation({ title, description, confirmLabel });
       }),
-      promptPassword: (username) => new Promise((resolve) => {
+      reauthenticate: (verify) => new Promise(resolve=>{adminVerificationResolver.current=resolve;setAdminVerification({verify});}),
+      changePassword: (request) => new Promise((resolve) => {
         passwordResolver.current = resolve;
-        setPasswordTarget(username);
-        setNewPassword("");
+        setPasswordRequest(request);
       }),
     };
     window.OrganizeOnAdminUI = bridge;
@@ -189,9 +193,8 @@ export function AdminApp() {
       <Dialog open={confirmation !== null} onOpenChange={(open) => { if (!open && confirmation) { confirmResolver.current?.(false); confirmResolver.current = null; setConfirmation(null); } }}>
         <DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>{confirmation?.title}</DialogTitle><DialogDescription>{confirmation?.description}</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => { confirmResolver.current?.(false); confirmResolver.current = null; setConfirmation(null); }}>Cancelar</Button><Button variant="destructive" onClick={() => { confirmResolver.current?.(true); confirmResolver.current = null; setConfirmation(null); }}>{confirmation?.confirmLabel}</Button></DialogFooter></DialogContent>
       </Dialog>
-      <Dialog open={passwordTarget !== null} onOpenChange={(open) => { if (!open && passwordTarget !== null) { passwordResolver.current?.(null); passwordResolver.current = null; setPasswordTarget(null); } }}>
-        <DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>Alterar senha</DialogTitle><DialogDescription>Defina uma nova senha para {passwordTarget}.</DialogDescription></DialogHeader><form onSubmit={(event) => { event.preventDefault(); passwordResolver.current?.(newPassword); passwordResolver.current = null; setPasswordTarget(null); }} className="grid gap-4"><label className="grid gap-1.5 text-sm font-medium">Nova senha<Input type="password" minLength={8} autoComplete="new-password" required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /></label><DialogFooter><Button type="button" variant="outline" onClick={() => { passwordResolver.current?.(null); passwordResolver.current = null; setPasswordTarget(null); }}>Cancelar</Button><Button type="submit">Salvar senha</Button></DialogFooter></form></DialogContent>
-      </Dialog>
+      {passwordRequest&&<PasswordDialog request={passwordRequest} onClose={saved=>{passwordResolver.current?.(saved);passwordResolver.current=null;setPasswordRequest(null);}}/>}
+      {adminVerification&&<AdminReauthDialog verify={adminVerification.verify} onClose={accepted=>{adminVerificationResolver.current?.(accepted);adminVerificationResolver.current=null;setAdminVerification(null);}}/>}
         <div id="toast" className="hidden" aria-hidden="true" />
     </div>
   </TooltipProvider></PortalContextProvider>;
