@@ -1,6 +1,7 @@
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  ArrowLeft, Check, Cloud, Gamepad2, Home, LogOut, Menu, Settings2, Shield, ShieldCheck, Signal,
+  ChevronUp, ArrowLeft, Check, Cloud, Gamepad2, Home, LogOut, Menu, Settings2, Shield, ShieldCheck, Signal,
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -251,9 +252,9 @@ function AccountSurface(props: AccountProps) {
   ];
   return <Sheet open={open} onOpenChange={setOpen}><SheetTrigger render={<Button variant="outline" size="icon" className="pointer-events-auto fixed left-3 top-3 z-40" aria-label="Abrir menu" />}><Menu /></SheetTrigger>
     <SheetContent side="left" className="w-[min(88vw,320px)] border-border bg-popover p-3">
-      <SheetHeader className="px-2 pb-4 text-left"><SheetTitle>OrganizeOn</SheetTitle><SheetDescription>Navegação</SheetDescription></SheetHeader>
+      <SheetHeader className="border-b px-2 pb-4 text-left"><SheetTitle className="flex items-center gap-2.5"><img className="size-7" src="https://organizeon.com.br/d3/assets/organizeon-icon.png" alt="" />OrganizeOn</SheetTitle><SheetDescription>Workspace</SheetDescription></SheetHeader>
       <nav className="grid gap-1" aria-label="Navegação da conta">{actions.map(({ id, label, icon: Icon }) => <Button key={id} variant="ghost" className="justify-start" onClick={() => { setOpen(false); props.onNavigate(id); }}><Icon className="size-4 text-muted-foreground" />{label}{id === "proxy" && <Badge variant="secondary" className="ml-auto">{props.proxyLabel}</Badge>}</Button>)}</nav>
-      <div className="mt-auto border-t pt-3"><div className="flex items-center gap-3 px-2 py-2"><UserRound className="size-5 text-muted-foreground" /><div className="min-w-0"><p className="truncate text-sm font-medium">{props.username}</p><p className="text-xs text-muted-foreground">{roleLabels[props.role] || "Usuário"}</p></div></div><Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => setLogoutOpen(true)}><LogOut className="size-4" />Sair</Button></div>
+      <div className="mt-auto border-t pt-3"><DropdownMenu><DropdownMenuTrigger render={<Button variant="ghost" className="h-12 w-full justify-start" aria-label={`Perfil de ${props.username}`} />}><UserRound className="size-4"/><span className="grid flex-1 text-left"><span className="text-sm">{props.username}</span><span className="text-xs text-muted-foreground">{roleLabels[props.role] || "Usuário"}</span></span><ChevronUp className="size-4"/></DropdownMenuTrigger><DropdownMenuContent side="top" align="start" className="w-64"><DropdownMenuGroup><DropdownMenuLabel>{props.username} · {roleLabels[props.role] || "Usuário"}</DropdownMenuLabel></DropdownMenuGroup><DropdownMenuSeparator/><DropdownMenuItem onClick={() => setLogoutOpen(true)} className="text-destructive"><LogOut/>Sair da conta</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>
     </SheetContent>
     <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}><DialogContent className="sm:max-w-sm"><DialogHeader><DialogTitle>Encerrar sessão?</DialogTitle><DialogDescription>{props.guest ? "Deseja sair do modo convidado?" : "Deseja realmente sair desta conta?"}</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setLogoutOpen(false)}>Cancelar</Button><Button variant="destructive" onClick={() => props.onNavigate("logout")}>Sair</Button></DialogFooter></DialogContent></Dialog>
   </Sheet>;
