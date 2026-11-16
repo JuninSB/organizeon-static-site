@@ -1,3 +1,4 @@
+import { LavaBanner } from "./lava-banner";
 import { profileBannerPattern } from "./profile-banner";
 import { GoldBadge } from "./gold-badge";
 import "./profile-banner.css";
@@ -56,6 +57,7 @@ export function ProfileCard({
             : { ...profileBannerPattern(profile.bannerSeed || username), "--profile-color": profile.nameColor } as CSSProperties
         }
       >
+        {profile.goldBadge && profile.bannerStyle === "lava" && <LavaBanner seed={profile.bannerSeed || username} color={profile.nameColor} />}
         {profile.goldBadge && onEdit && <div className="absolute right-3 top-3">{pencil("appearance", "Editar aparência")}</div>}
       </div>
       <div className="px-5 pb-5 sm:px-6 sm:pb-6">

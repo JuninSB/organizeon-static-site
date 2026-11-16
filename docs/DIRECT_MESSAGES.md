@@ -152,7 +152,7 @@ O emblema é uma concessão independente do cargo. Só um owner autenticado pode
 
 A concessão persiste `goldBadge` fora das preferências editáveis, com emissor e data privados. O perfil público inclui apenas a elegibilidade e aparência. Ela libera `bannerStyle=lava` e exibição opcional do emblema. O símbolo oficial usa as variantes clara/escura conforme o tema de quem visualiza. O emblema fica no agrupamento ao lado do avatar; a edição de aparência permite ocultá-lo sem perder a elegibilidade.
 
-`bannerSeed` é derivado do identificador público imutável da conta. `profile-banner.ts` determina geometria, ritmo, fase e rotação estáveis por conta; `nameColor` define a cor. O efeito usa camadas CSS pequenas com transform, máscara estática e pausa em `prefers-reduced-motion`. Não usa canvas, timers de renderização ou sorteio a cada abertura.
+`bannerSeed` é derivado do identificador público imutável da conta. `profile-banner.ts` determina geometria, ritmo, fase e rotação estáveis por conta; `nameColor` define a cor. O efeito usa SVG limitado ao banner, máscara de metaballs com blur/limiar de alfa, massas com iluminação radial e movimento por CSS, com pausa em `prefers-reduced-motion`. Não usa canvas, timers de renderização ou sorteio a cada abertura.
 
 A concessão deixa uma notificação pendente persistente na conta, inclusive offline. O inbox autenticado expõe essa pendência somente ao titular; `POST /dm/awards/gold-badge/claim` a confirma uma única vez para uma sessão visível. O aviso usa o emblema oficial e abre o próprio perfil. É uma notificação de conta, sem criar conversa ou mensagem artificial; a preferência de avisos de DMs não suprime esse recebimento. Concessões repetidas são idempotentes e não criam novos avisos.
 
@@ -161,3 +161,27 @@ Contratos: `POST /dm/people/:username/gold-badge` (owner, origem validada); `POS
 Validação/publicação em 16/11/2026: 31 testes UI/stores e 13 do cliente passaram; 34 testes do backend passaram também no Android, com contas e armazenamento isolados. Há teste adicional para o owner conceder ao próprio perfil mesmo quando sua identidade administrativa não aparece na listagem. Playwright verificou owner/não-owner, concessão, esconder o emblema, trocar lava/sólido, variantes oficiais de tema, movimento real, `prefers-reduced-motion`, aviso de recebimento e abertura do próprio perfil. Não foram concedidos emblemas a contas reais nos testes.
 
 GitHub Pages publicou `4df70a1`, execução `43963000061`; os quatro bundles e `admin.js` conferiram por SHA-256. D2: `gold-badge-4df70a1`; D3: `index-BT4b87gh.js`. Backup restrito de código/contas e template D2: `~/.local/share/organizeon/rollback/gold-badge-20261116-184311/`; frontend: `~/organizeon/backend/staging/d3-gold-badge-rollback-20261116-184432/`. Restaurar código não exige restaurar contas; preservar concessões e alterações posteriores ao backup. Senhas, cargos, permissões e tokenVersion foram comparados sem imprimir credenciais e permaneceram iguais. Xiaomi e Survival ficaram ativos.
+
+
+## Lava volumétrica: 12 famílias
+
+A revisão substitui manchas de gradiente por massas que se fundem e se separam. `lava-banner.tsx` separa a máscara de fusão da iluminação, deixando o filtro restrito ao banner. Cada massa tem tom, relevo, tamanho, rotação, velocidade e fase derivados da conta. A distribuição inicial das fases evita quedas sincronizadas; o hash possui mistura final para não correlacionar os parâmetros de massas vizinhas.
+
+| Família | Movimento |
+| --- | --- |
+| fall | Queda com alongamento e compressão |
+| spiral | Descida em espiral com rotação completa |
+| cascade | Cascata com alternância de expansão e estiramento |
+| drift | Queda diagonal com deriva lateral |
+| counterflow | Correntes de descida e retorno |
+| orbit | Percurso orbital com rotação |
+| stretch | Filamentos que se alongam e se espalham |
+| wave | Descida ondulante |
+| helix | Hélice com torção e estreitamento |
+| rain | Gotas que caem e achatam na base |
+| tumble | Queda com giros e deformação |
+| slowflow | Fluxo lento com massas maiores e retorno |
+
+Há 12 famílias, com parâmetros próprios por conta dentro de cada família. O mesmo identificador mantém sua combinação entre sessões. Emblema, permissões e notificações não mudam nesta revisão.
+
+Referências técnicas consultadas: [Codrops GooeyCursor](https://github.com/codrops/GooeyCursor), [feColorMatrix no SVG](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/feColorMatrix). O código do efeito é próprio; nenhuma biblioteca gráfica foi adicionada.

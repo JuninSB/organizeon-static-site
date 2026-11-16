@@ -12,6 +12,7 @@ const files = [
   "features/profile/grant-gold-badge.tsx",
   "features/profile/profile-banner.css",
   "features/profile/profile-banner.ts",
+  "features/profile/lava-banner.tsx",
   "features/profile/profile-avatar.tsx",
   "features/profile/profile-boundary.tsx",
   "features/profile/avatar-editor.tsx",
