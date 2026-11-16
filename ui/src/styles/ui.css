@@ -96,7 +96,7 @@
 .organizeon-ui [data-slot="dialog-overlay"],
 .organizeon-ui [data-slot="sheet-overlay"] { background: rgb(0 0 0 / .68); pointer-events: auto; }
 .organizeon-ui [data-slot="dialog-content"],
-.organizeon-ui [data-slot="sheet-content"],
+.organizeon-ui .d3-sheet-content,
 .organizeon-ui [data-slot="select-content"],
 .organizeon-ui [data-slot="dropdown-menu-content"] {
   pointer-events: auto;
@@ -105,7 +105,7 @@
 }
 .organizeon-ui [data-slot="dialog-content"] { transform: none; translate: -50% -50%; }
 .organizeon-ui [data-slot="dialog-content"][data-open],
-.organizeon-ui [data-slot="sheet-content"][data-open],
+.organizeon-ui .d3-sheet-content[data-open],
 .organizeon-ui [data-slot="select-content"][data-open],
 .organizeon-ui [data-slot="dropdown-menu-content"][data-open] {
   animation: ui-enter 160ms cubic-bezier(.2,.8,.2,1);
@@ -113,7 +113,7 @@
 .organizeon-ui [data-slot="dialog-overlay"][data-open],
 .organizeon-ui [data-slot="sheet-overlay"][data-open] { animation: ui-fade-in 150ms ease-out; }
 .organizeon-ui [data-slot="dialog-content"][data-closed],
-.organizeon-ui [data-slot="sheet-content"][data-closed],
+.organizeon-ui .d3-sheet-content[data-closed],
 .organizeon-ui [data-slot="select-content"][data-closed],
 .organizeon-ui [data-slot="dropdown-menu-content"][data-closed] {
   animation: ui-exit 120ms ease-in;
@@ -131,19 +131,19 @@
 }
 
 /* Shared motion contract: Base UI lifecycle attributes, compatible with Tailwind 3. */
-.organizeon-ui [data-slot="sheet-content"][data-open],
-.organizeon-ui [data-slot="sheet-content"][data-closed] { animation: none; }
-.organizeon-ui [data-slot="sheet-content"] { transition: transform 180ms cubic-bezier(.22,1,.36,1), opacity 180ms ease; }
-.organizeon-ui [data-slot="sheet-content"][data-starting-style],
-.organizeon-ui [data-slot="sheet-content"][data-ending-style] { opacity: 0; }
-.organizeon-ui [data-slot="sheet-content"][data-side="left"][data-starting-style],
-.organizeon-ui [data-slot="sheet-content"][data-side="left"][data-ending-style] { transform: translateX(-100%); }
-.organizeon-ui [data-slot="sheet-content"][data-side="right"][data-starting-style],
-.organizeon-ui [data-slot="sheet-content"][data-side="right"][data-ending-style] { transform: translateX(100%); }
+.organizeon-ui .d3-sheet-content[data-open],
+.organizeon-ui .d3-sheet-content[data-closed] { animation: none; }
+.organizeon-ui .d3-sheet-content { transition: transform 180ms cubic-bezier(.22,1,.36,1), opacity 180ms ease; }
+.organizeon-ui .d3-sheet-content[data-starting-style],
+.organizeon-ui .d3-sheet-content[data-ending-style] { opacity: 0; }
+.organizeon-ui .d3-sheet-content[data-side="left"][data-starting-style],
+.organizeon-ui .d3-sheet-content[data-side="left"][data-ending-style] { transform: translateX(-100%); }
+.organizeon-ui .d3-sheet-content[data-side="right"][data-starting-style],
+.organizeon-ui .d3-sheet-content[data-side="right"][data-ending-style] { transform: translateX(100%); }
 .organizeon-ui [data-slot="tabs-trigger"] { transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease; }
 .organizeon-ui [data-slot="tabs-content"] { animation: ui-fade-in 160ms ease-out; min-width: 0; }
 .organizeon-ui [data-slot="sidebar-container"], .organizeon-ui [data-slot="sidebar-gap"] { transition-duration: 180ms; transition-timing-function: cubic-bezier(.22,1,.36,1); }
-@media(prefers-reduced-motion:reduce) { .organizeon-ui [data-slot="sheet-content"], .organizeon-ui [data-slot="tabs-content"] { animation:none; transition:none; } }
+@media(prefers-reduced-motion:reduce) { .organizeon-ui .d3-sheet-content, .organizeon-ui [data-slot="tabs-content"] { animation:none; transition:none; } }
 /* Shadow-root mounts need their own element reset; document preflight cannot cross it. */
 .organizeon-ui a { color: inherit; text-decoration: inherit; }
 .organizeon-ui ul, .organizeon-ui ol { list-style: none; padding: 0; margin: 0; }

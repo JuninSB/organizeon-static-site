@@ -20716,7 +20716,7 @@ function Ng({ className: e, children: t, side: n = "right", showCloseButton: r =
 			}),
 			children: [/* @__PURE__ */ (0, K.jsx)(Bt, {}), /* @__PURE__ */ (0, K.jsx)("span", {
 				className: "sr-only",
-				children: "Close"
+				children: "Fechar navegação"
 			})]
 		})]
 	})] });
@@ -22797,12 +22797,12 @@ function ov({ side: e = "left", variant: t = "sidebar", collapsible: n = "offcan
 			"data-sidebar": "sidebar",
 			"data-slot": "sidebar",
 			"data-mobile": "true",
-			className: "w-[var(--sidebar-width)] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden",
+			className: "w-[var(--sidebar-width)] bg-sidebar p-0 text-sidebar-foreground",
 			style: { "--sidebar-width": ev },
 			side: e,
 			children: [/* @__PURE__ */ (0, K.jsxs)(Pg, {
 				className: "sr-only",
-				children: [/* @__PURE__ */ (0, K.jsx)(Fg, { children: "Sidebar" }), /* @__PURE__ */ (0, K.jsx)(Ig, { children: "Displays the mobile sidebar." })]
+				children: [/* @__PURE__ */ (0, K.jsx)(Fg, { children: "Navegação" }), /* @__PURE__ */ (0, K.jsx)(Ig, { children: "Navegue entre as páginas da aplicação." })]
 			}), /* @__PURE__ */ (0, K.jsx)("div", {
 				className: "flex h-full w-full flex-col",
 				children: i
