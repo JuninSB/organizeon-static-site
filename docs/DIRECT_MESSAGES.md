@@ -210,3 +210,12 @@ Rollback de backend/template/contas: `~/.local/share/organizeon/rollback/fluid-o
 Em Editar aparência, o catálogo oferece Slime, Bolhas, Gradiente, Lava, Estrelas e Arcos de cor, além de Cor sólida e dos 12 fluidos existentes. O material é salvo separadamente como `bannerStyle`: `slime`, `bubbles`, `gradient`, `magma`, `stars`, `rainbow`. `lava` continua identificando as 12 composições anteriores para preservar seeds e perfis existentes. O renderer mapeia `magma` para a nova composição de lava. Selecionar um material não gera outra seed; o reroll mantém sua regra de owner livre e demais contas com 24 horas.
 
 Todos os materiais animados exigem emblema no backend. A validação de perfil e a representação pública reconhecem os mesmos valores. A prévia usa o mesmo renderer do perfil. Movimento reduzido desativa as animações. Pesquisa de referências: exemplos oficiais do three.js (lava/ocean), Vanta (waves/fog) e Codrops (ambient backgrounds); a implementação usa SVG/CSS locais sem acrescentar bibliotecas gráficas.
+
+### Validação e publicação dos materiais (2026-11-16)
+- Código: `89b974a`; distribuição: `e6b3e1c`.
+- TypeScript, builds client/admin/D3, 39 testes de UI, 13 testes de distribuição e 7 testes backend passaram. Os 7 testes backend também passaram no Termux com fixtures isoladas.
+- Catálogo dos seis materiais inspecionado em screenshot de navegador; animação e reduced motion verificados. Sem validação de toque em aparelho físico nesta etapa.
+- D3 publicado por substituição atômica do index e sobreposição dos assets, sem reiniciar o serviço. Rollback: `~/organizeon/backend/staging/d3-material-rollback-20261116-202310/` (index, fontes e pacotes anteriores).
+- Backend: alteração restrita à validação/serialização de `profiles.mjs`, com cópia anterior em `~/.local/share/organizeon/rollback/material-catalog-*`. Para rollback, restaurar esse arquivo e reiniciar somente `organizeon-backend`; restaurar o template D2 do mesmo backup se necessário.
+- API health 200; processos D3, Survival e sessão tmux Xiaomi preservados. Nenhum envio Xiaomi, DM, concessão de emblema ou reroll de conta real foi usado nos testes.
+- GitHub Pages execução `43978832943` concluída; hashes SHA-256 dos quatro bundles públicos conferidos com a distribuição local. D2 passou a usar `material-catalog-e6b3e1c-final` nas quatro referências. D3 login e asset `index-wJJGFT1f.js` responderam HTTP 200.
