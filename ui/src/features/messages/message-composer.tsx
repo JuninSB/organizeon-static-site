@@ -75,6 +75,9 @@ export const MessageComposer = forwardRef<
     [emojiQuery, setEmojiQuery] = useState("");
   const value = editing ? editText : draft.text;
   useLayoutEffect(() => {
+    if (editing) text.current?.focus();
+  }, [editing?.id]);
+  useLayoutEffect(() => {
     if (!text.current) return;
     text.current.style.height = "auto";
     text.current.style.height =

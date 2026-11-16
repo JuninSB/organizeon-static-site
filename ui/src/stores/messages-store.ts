@@ -56,6 +56,8 @@ let state = initial(),
   polling = false,
   revision = 0,
   cursor: number | null = null;
+// Dirty cached messages survive inbox polling while a conversation is hidden.
+const pendingChanges = new Map<string, Set<string>>();
 const listeners = new Set<() => void>();
 const emptyThread = (): Thread => ({
   messages: [],
@@ -123,6 +125,7 @@ export const messagesStore = {
   start(username: string) {
     if (state.username !== username) {
       generation++;
+      pendingChanges.clear();
       if (timer) clearTimeout(timer);
       state = { ...initial(), username };
       cursor = null;
@@ -137,6 +140,7 @@ export const messagesStore = {
       if (current !== generation) return;
       if (--references <= 0) {
         generation++;
+        pendingChanges.clear();
         if (timer) clearTimeout(timer);
         polling = false;
         cursor = null;
@@ -207,7 +211,7 @@ export const messagesStore = {
       );
       if (version !== generation) return;
       threadPatch(id, {
-        messages: merge(current.messages, page.messages),
+        messages: merge(state.threads[id]?.messages || [], page.messages),
         hasMore: page.hasMore,
         typing: page.typing,
         loading: false,
@@ -349,6 +353,23 @@ async function poll() {
     )
       throw Error("As mensagens estão temporariamente indisponíveis.");
     if (stamp !== revision) return;
+    for (const event of inbox.events) {
+      if (
+        !event.messageId ||
+        !["edited", "deleted", "changed"].includes(event.kind)
+      )
+        continue;
+      if (
+        !state.threads[event.conversationId]?.messages.some(
+          (message) => message.id === event.messageId,
+        )
+      )
+        continue;
+      const dirty =
+        pendingChanges.get(event.conversationId) || new Set<string>();
+      dirty.add(event.messageId);
+      pendingChanges.set(event.conversationId, dirty);
+    }
     cursor = inbox.cursor;
     set({ inbox, connected: true, updatedAt: Date.now(), error: "" });
     const selected = state.selectedId;
@@ -360,24 +381,22 @@ async function poll() {
       );
       if (version !== generation || stamp !== revision) return;
       let data = merge(current.messages, page.messages);
-      const changed = new Set(
-        inbox.events
-          .filter(
-            (e) =>
-              e.conversationId === selected &&
-              ["edited", "deleted", "changed"].includes(e.kind),
-          )
-          .map((e) => e.messageId)
-          .filter((id): id is string => !!id),
-      );
-      for (const id of changed)
-        if (data.some((m) => m.id === id)) {
-          try {
-            const result = await dmService.message(id);
-            if (version !== generation) return;
-            data = merge(data, [result.message]);
-          } catch {}
+      const changed = pendingChanges.get(selected);
+      for (const id of [...(changed || [])]) {
+        if (!data.some((message) => message.id === id)) {
+          changed?.delete(id);
+          continue;
         }
+        try {
+          const result = await dmService.message(id);
+          if (version !== generation || stamp !== revision) return;
+          data = merge(data, [result.message]);
+          changed?.delete(id);
+        } catch {
+          /* Keep dirty entries for the next successful read. */
+        }
+      }
+      if (!changed?.size) pendingChanges.delete(selected);
       threadPatch(selected, {
         messages: data,
         hasMore: current.messages.length ? current.hasMore : page.hasMore,
@@ -457,6 +476,7 @@ async function poll() {
     if (version === generation) {
       if (error instanceof AccountApiError && error.status === 401) {
         cursor = null;
+        pendingChanges.clear();
         set({
           inbox: null,
           threads: {},

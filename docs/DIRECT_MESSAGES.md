@@ -84,3 +84,7 @@ Referências consultadas: [Drawer Base UI](https://base-ui.com/react/components/
 Em Users, a troca de senha permanece no menu de três pontos de cada conta; o atalho separado foi removido. O fluxo de senha atual/nova/confirmação e as permissões existentes foram preservados.
 
 Validação deste refinamento: TypeScript e builds cliente/admin/D3 passaram; os 10 testes da interface passaram. Playwright validou pesquisa fechada inicialmente, abertura e restauração do histórico, arraste via CDP touch com deslocamento real do painel, fechamento por arraste e por ação, além das regressões de envio, respostas, notificações e navegação mobile/desktop. A troca de senha pelos três pontos passou com confirmação diferente, senha atual incorreta e sucesso com encerramento da sessão fictícia. Captura do menu inspecionada; o ambiente Linux de teste não tem a mesma fonte de emojis do Android.
+
+A validação adicional encontrou uma perda de atualização quando o polling consumia eventos de edição em segundo plano. O store agora mantém as mensagens em cache marcadas como pendentes até recarregá-las com sucesso; esses marcadores são apagados ao sair da conta. Um teste de regressão simula consumir o evento com a página oculta e voltar sem receber o mesmo evento novamente. O compositor também foca o campo de edição depois de montar a instância correta, após a saída do Drawer.
+
+Para executar o teste de navegador em outro checkout, `DM_BACKEND_ROOT` pode apontar para as fontes do backend extraídas do arquivo de recuperação.
