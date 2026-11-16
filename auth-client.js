@@ -46,27 +46,6 @@ async function mountClientPage(id, props) {
   }
 }
 
-async function showHomePanel() {
-  const previous = document.getElementById('organizeon-home'); previous?.__cleanup?.(); previous?.remove();
-  const host = document.createElement('section'); host.id = 'organizeon-home';
-  host.textContent = 'Carregando início…';
-  host.style.cssText = 'position:fixed;inset:0;overflow:auto;z-index:2147483644;background:#09090b';
-  document.body.append(host); const {ui,css} = await loadClientUI(); if (!host.isConnected) return;
-  host.textContent = '';
-  const close = () => { host.__cleanup?.();host.remove(); };
-  host.__cleanup = ui.mountHomePage(host, { username: window.organizeonAccount?.username || 'visitante',
-    onSearch: value => { close();navigateClientRoute('/search?query='+encodeURIComponent(btoa(unescape(encodeURIComponent(value))))); },
-    onNavigate: action => {
-      if(action === 'games') { void showGameCatalog();return; }
-      if(action === 'settings') { close();navigateClientRoute('/settings');return; }
-      // Use the existing launcher's actual controls, preserving its navigation contract.
-      const label = action === 'music' ? /^(music|música)$/i : /^(apps|aplicativos)$/i;
-      const original = [...document.querySelectorAll('#root button,#root a')].find(element=>label.test(element.textContent.trim()));
-      close();if(original) original.click();else void showToast('Não foi possível abrir esta seção.');
-    },
-  },css);
-}
-
 const config = window.__ORGANIZEON_CONFIG__;
 const tokenStorageKey = "organizeon-access-token";
 const guestStorageKey = "organizeon-guest-mode";
@@ -243,7 +222,6 @@ async function startApplication(
       );
       await import(config.appModule);
       installInternalNavigationGuard();
-    void showHomePanel();
       showConnectionStatus(
         "Modo convidado pronto",
         "Jogos usam o GitHub; pesquisas usam somente um relay público externo.",
@@ -287,7 +265,6 @@ async function startApplication(
     // a conexão é estabelecida. A promessa sempre trata o erro acima.
     await import(config.appModule);
     installInternalNavigationGuard();
-    void showHomePanel();
     // O estado do socket pode mudar depois que a tela já está pronta; não
     // segure a navegação aguardando o timeout do handshake.
     const controlConnected = controlReady;
@@ -651,7 +628,7 @@ function configureAccountNavigation(account) {
         guest: isGuest, canOpenDashboard,
         proxyLabel: selectedProxy.beta ? "BETA" : "ATIVO",
         onNavigate: (action) => {
-          if (action === "home") { navigateClientRoute("/"); void showHomePanel(); }
+          if (action === "home") navigateClientRoute("/");
           if (action === "games") void showGameCatalog();
           if (action === "settings") navigateClientRoute("/settings");
           if (action === "data") void showDataPanel();
@@ -1286,7 +1263,11 @@ async function openQuickApp(app, navigate) {
 
 async function showGameCatalog() {
   const { ui: catalogUI, css: catalogCSS } = await loadClientUI();
-  document.getElementById("organizeon-game-catalog")?.remove();
+  document.getElementById("organizeon-game-catalog-host")?.__cleanup?.();
+  document.getElementById("organizeon-game-catalog-host")?.remove();
+  const catalogHost = document.createElement("div"); catalogHost.id = "organizeon-game-catalog-host";
+  catalogHost.style.cssText = "position:fixed;inset:0;z-index:2147483646";
+  const catalogShadow = catalogHost.attachShadow({mode:"open"});
   const previousOverflow = document.body.style.overflow;
   const wrapper = document.createElement("section");
   wrapper.id = "organizeon-game-catalog";
@@ -1809,7 +1790,8 @@ async function showGameCatalog() {
     </div>
   `;
   document.body.style.overflow = "hidden";
-  document.body.appendChild(wrapper);
+  catalogShadow.append(wrapper);
+  document.body.append(catalogHost);
 
   const grid = wrapper.querySelector(".grid");
   const search = wrapper.querySelector(".search");
@@ -1828,6 +1810,8 @@ async function showGameCatalog() {
   let activeFilter = "all";
   let activeGame = null;
   let toolbarUI = null;
+  let catalogGeneration = 0;
+  wrapper.querySelector(".topbar").style.display = "none"; filters.style.display = "none";
   const isMobileViewport = matchMedia("(max-width: 700px), (pointer: coarse)").matches;
   const assetUrl = (path) => {
     const basePath = window.__groveBase || new URL("./", location.href).pathname;
@@ -1835,12 +1819,14 @@ async function showGameCatalog() {
     return new URL(path.replace(/^\/+/, ""), base);
   };
   const close = () => {
+    catalogGeneration++;
     if (playerUrl) URL.revokeObjectURL(playerUrl);
     document.body.style.overflow = previousOverflow;
     toolbarUI?.unmount();
     grid.querySelectorAll("[data-game-id]").forEach(card => catalogUI.unmountGameCard(card));
-    wrapper.remove();
+    catalogHost.remove();
   };
+  catalogHost.__cleanup = close;
   wrapper.querySelector(".topbar .back").addEventListener("click", close);
   wrapper.querySelector(".player-back").addEventListener("click", () => {
     wrapper.classList.remove("playing");
@@ -1968,6 +1954,7 @@ async function showGameCatalog() {
   }
 
   async function renderCatalog(query = "") {
+    const generation = ++catalogGeneration;
     const normalized = query.trim().toLocaleLowerCase("pt-BR");
     const trendingOrder = new Map(
       (gameStats.trending || []).map((gameId, index) => [gameId, index]),
@@ -2017,16 +2004,15 @@ async function showGameCatalog() {
           (action.querySelector("[data-action-label]") || action).textContent = "Jogar online";
           return;
         }
-        setCardInstalled(
-          card,
-          await isGameInstalled(game),
-        );
+        const installed = await isGameInstalled(game);
+        if (generation === catalogGeneration && card.isConnected) setCardInstalled(card, installed);
       }),
     );
   }
 
   function createGameCard(game) {
     const card = document.createElement('article'); card.className = 'modern-game-card'; card.dataset.gameId = game.id;
+    grid.append(card);
     catalogUI.mountGameCard(card, { ...game, cover: assetUrl(`games/${game.cover}`).href,
       platforms: game.platforms || ['pc'], attribution: game.attribution || 'OrganizeOn',
       sizeLabel: game.type === 'remote' ? 'Online' : formatGameBytes(game.size || 0),
@@ -2044,6 +2030,7 @@ async function showGameCatalog() {
   function setCardInstalled(card, installed) {
     card.classList.toggle("installed", installed);
     const action = card.querySelector(".action");
+    if (!action) return;
     action.disabled = false;
     const remove = card.querySelector(".remove"); if (remove) remove.hidden = !installed;
     (action.querySelector("[data-action-label]") || action).textContent = installed ? "Jogar" : "Baixar";

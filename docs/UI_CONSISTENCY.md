@@ -20,7 +20,7 @@ D2 agora oferece alternância claro/escuro no header e perfil com a mesma compos
 
 O simples build de um componente não muda a tela se seu ponto de entrada continuar chamando o renderizador antigo. `auth-client.js` agora usa `loadClientUI()` como carregador único e `mountClientPage()` como ciclo de vida para Dados e Proxy. `mountReactiveSurface()` mantém a mesma raiz React durante atualização de latências, preservando seleção e foco.
 
-- Início: `HomePage` recebe navegação e busca, sem reimplementar autenticação ou o motor de proxy. Aplicativos/Música acionam os controles reais do launcher existente.
+- Início e pesquisa: pertencem ao Fern original. Não substituir por outro formulário ou overlay. A sidebar chama a navegação existente para Início e Configurações; as modernizações do catálogo, Proxy, Dados e Admin são independentes.
 - Jogos: `mountCatalogToolbar` e `mountGameCard` recebem callbacks das funções existentes de cache, instalação, execução, remoção e créditos. Ao filtrar/fechar, roots são desmontadas. Atualizações de progresso alteram o label da ação sem remover o ícone. O toolbar é inline: nunca deve herdar `min-height:100%`.
 - Créditos e teclas: Dialog shadcn preserva teclas, configuração de canhoto do Tetris e fullscreen.
 - Conexão: `ConnectionStatus` usa Sonner com ID estável, progresso monocromático e Lucide. O aviso “Cliente pronto” não é mais um bloco verde paralelo.
@@ -28,3 +28,9 @@ O simples build de um componente não muda a tela se seu ponto de entrada contin
 - A raiz do admin e os contêineres dos portais possuem o escopo `organizeon-ui`; sem ele, os estilos Tailwind encapsulados não alcançam os menus.
 
 O manifesto inclui também `admin-ui.js` e `admin-ui.css`. Rebuild exige regenerar hashes e `version.txt` antes de publicar. O kernel não precisa ser trocado para substituir esses assets baixados.
+
+### Escopo preservado do Fern
+
+A homepage e a pesquisa original do Fern não devem ser substituídas por uma homepage própria. A tentativa de `HomePage` foi removida: cobria a página e impedia ver Configurações ao navegar pela sidebar. Busca, engine de proxy e páginas originais continuam sob o módulo indicado em `config.js`. A sidebar usa `navigateClientRoute` para Início e Configurações.
+
+O catálogo adicional agora mora em um ShadowRoot próprio. `ensureDocumentStylesheet` instala o CSS na árvore real de cada componente; nunca pressupor `document.head` para componentes em Shadow DOM. A geração de render do catálogo invalida leituras de cache antigas quando filtros mudam ou a tela fecha, evitando atualização de cards já desmontados.

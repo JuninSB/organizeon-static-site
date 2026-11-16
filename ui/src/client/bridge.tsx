@@ -1,4 +1,3 @@
-import { HomePage, type HomeProps } from "@/components/client/home-page";
 import { ConnectionStatus } from "@/components/client/connection-status";
 import { createRoot, type Root } from "react-dom/client";
 import { flushSync } from "react-dom";
@@ -21,19 +20,21 @@ const mounts = new WeakMap<HTMLElement, ClientMount>();
 const inlineMounts = new WeakMap<HTMLElement, Root>();
 const preferenceMounts = new WeakMap<HTMLElement, Root>();
 
-function ensureDocumentStylesheet(href: string) {
-  const existing = document.querySelector<HTMLLinkElement>('link[data-organizeon-ui="client"]');
+function ensureDocumentStylesheet(href: string, host?: HTMLElement) {
+  const tree = host?.getRootNode();
+  const scope = tree instanceof ShadowRoot ? tree : document;
+  const existing = scope.querySelector<HTMLLinkElement>('link[data-organizeon-ui="client"]');
   if (existing) return;
   const stylesheet = document.createElement("link");
   stylesheet.rel = "stylesheet";
   stylesheet.href = href;
   stylesheet.dataset.organizeonUi = "client";
-  document.head.append(stylesheet);
+  if (scope instanceof ShadowRoot) scope.append(stylesheet); else document.head.append(stylesheet);
 }
 
 export function mountGameCard(host: HTMLElement, game: GameCardData, stylesheetHref: string) {
   inlineMounts.get(host)?.unmount();
-  ensureDocumentStylesheet(stylesheetHref);
+  ensureDocumentStylesheet(stylesheetHref, host);
   const root = createRoot(host);
   flushSync(() => root.render(<div className="organizeon-ui dark min-h-full"><GameCard game={game} /></div>));
   inlineMounts.set(host, root);
@@ -45,7 +46,7 @@ export function unmountGameCard(host: HTMLElement) {
 }
 
 export function mountCatalogToolbar(host: HTMLElement, props: CatalogToolbarProps, stylesheetHref: string) {
-  ensureDocumentStylesheet(stylesheetHref);
+  ensureDocumentStylesheet(stylesheetHref, host);
   const root = createRoot(host);
   const render = (next: CatalogToolbarProps) => flushSync(() => root.render(<div className="organizeon-ui organizeon-inline-ui dark"><CatalogToolbar {...next} /></div>));
   render(props);
@@ -57,7 +58,7 @@ export function mountCatalogToolbar(host: HTMLElement, props: CatalogToolbarProp
 
 export function mountPreferenceCard(host: HTMLElement, props: PreferenceCardProps, stylesheetHref: string) {
   preferenceMounts.get(host)?.unmount();
-  ensureDocumentStylesheet(stylesheetHref);
+  ensureDocumentStylesheet(stylesheetHref, host);
   const root = createRoot(host);
   flushSync(() => root.render(<div className="organizeon-ui organizeon-inline-ui dark"><PreferenceCard {...props} /></div>));
   preferenceMounts.set(host, root);
@@ -70,7 +71,7 @@ export function unmountPreferenceCard(host: HTMLElement) {
 
 export function mountClientDialog(host: HTMLElement, dialog: ReactNode, stylesheetHref: string) {
   host.classList.add("organizeon-ui", "organizeon-overlay-root", "dark");
-  ensureDocumentStylesheet(stylesheetHref);
+  ensureDocumentStylesheet(stylesheetHref, host);
   const root = createRoot(host);
   flushSync(() => root.render(<div className="organizeon-ui dark"><PortalContextProvider container={host}>{dialog}</PortalContextProvider></div>));
   return () => root.unmount();
@@ -99,7 +100,7 @@ export function confirmClientAction(description: string, stylesheetHref: string,
     const host = document.createElement("div");
     host.className = "organizeon-ui dark";
     document.body.append(host);
-    ensureDocumentStylesheet(stylesheetHref);
+    ensureDocumentStylesheet(stylesheetHref, host);
     const root = createRoot(host);
     let settled = false;
     const finish = (confirmed: boolean) => {
@@ -213,10 +214,4 @@ export function mountReactiveSurface(host: HTMLElement, props: SurfaceProps, sty
 }
 export function showConnectionToast(title: string, detail: string, percent: number | null, duration: number) {
  toast.custom(id => <ConnectionStatus title={title} detail={detail} percent={percent} onClose={() => toast.dismiss(id)}/>, { id: 'connection-status', duration: duration > 0 ? duration : Infinity });
-}
-
-export function mountHomePage(host: HTMLElement, props: HomeProps, stylesheetHref: string) {
- const shadow = host.attachShadow({mode:'open'}); const link=document.createElement('link');link.rel='stylesheet';link.href=stylesheetHref;
- const container=document.createElement('div');container.className='organizeon-ui dark';shadow.append(link,container);const root=createRoot(container);
- flushSync(()=>root.render(<HomePage {...props}/>));return ()=>{root.unmount();shadow.replaceChildren();};
 }

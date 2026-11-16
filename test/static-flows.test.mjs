@@ -187,3 +187,13 @@ test("kernel 2.7.0 download artifact matches the served index", async () => {
   assert.match(index, /kernel-enter/);
   assert.match(index, /prefers-reduced-motion/);
 });
+
+
+test("Fern search and settings remain owned by the original client", async () => {
+  const auth = await text("auth-client.js");
+  assert.doesNotMatch(auth, /showHomePanel|mountHomePage/);
+  assert.match(auth, /if \(action === "home"\) navigateClientRoute\("\/"\)/);
+  assert.match(auth, /if \(action === "settings"\) navigateClientRoute\("\/settings"\)/);
+  assert.match(await text("config.js"), /appModule: "\.\/assets\/jdht-e-DdM4s9z4\.js"/);
+  assert.match(auth, /catalogHost\.attachShadow/);
+});
