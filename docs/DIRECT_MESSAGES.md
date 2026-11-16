@@ -234,3 +234,4 @@ Validação desta correção: 40 testes de UI passaram, incluindo três testes e
 
 ## Remoção de Lava e Slime
 Removidos os materiais selecionáveis `magma` (Lava) e `slime`. Perfis antigos com esses valores deixam de renderizar o efeito; o editor normaliza a seleção para Cor sólida sem modificar dados da conta ao abrir. As 12 composições de Fluidos (identificador histórico `lava`) continuam disponíveis, assim como Bolhas, Gradiente, Estrelas e Arcos de cor. APIs e registros existentes preservados.
+Bolhas: removidas as elipses claras decorativas que pareciam bolhas extras; sombreado radial nas massas principais e sombra externa após a fusão, preservando a união/separação. Sem alteração de permissões, APIs ou dados.

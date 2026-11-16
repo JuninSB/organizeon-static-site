@@ -24,12 +24,14 @@ export function MaterialBanner({ seed, color, material }: { seed: string; color:
       <filter id={`${id}-merge`} x="-30%" y="-70%" width="160%" height="240%" colorInterpolationFilters="sRGB"><feGaussianBlur stdDeviation="7"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"/></filter>
       <filter id={`${id}-soft`} x="-40%" y="-60%" width="180%" height="220%"><feGaussianBlur stdDeviation="26"/></filter>
       <linearGradient id={`${id}-heat`} x2="0" y2="1"><stop stopColor="#ffed9d"/><stop offset=".35" stopColor="#ff9b31"/><stop offset=".7" stopColor="#e74716"/><stop offset="1" stopColor="#7b180a"/></linearGradient>
+      <radialGradient id={`${id}-bubble-shade`} cx=".32" cy=".24" r=".8"><stop stopColor={tone.light}/><stop offset=".3" stopColor={tone.body}/><stop offset=".75" stopColor={tone.body}/><stop offset="1" stopColor={tone.shade}/></radialGradient>
+      <filter id={`${id}-bubble-depth`} x="-25%" y="-45%" width="150%" height="190%" colorInterpolationFilters="sRGB"><feDropShadow dx="0" dy="5" stdDeviation="4" floodColor="#000" floodOpacity=".35"/></filter>
       <linearGradient id={`${id}-spectrum`}><stop stopColor="#fb7185"/><stop offset=".2" stopColor="#fbbf24"/><stop offset=".4" stopColor="#a3e635"/><stop offset=".6" stopColor="#22d3ee"/><stop offset=".8" stopColor="#818cf8"/><stop offset="1" stopColor="#e879f9"/></linearGradient>
     </defs>
     <rect width="440" height="120" fill={material === 'lava' ? '#150e0c' : material === 'stars' ? '#080d20' : tone.shade}/>
     {material === 'bubbles' && <g data-renderer="merging-metaballs">
-      <g filter={url('merge')} fill={tone.body}>{Array.from({length:10},(_,i)=><circle key={i} cx={random(i)*500-30} cy={random(i+11)*130} r={20+random(i+22)*25} className="oo-material-motion" style={motion(i%2 ? 'oo-blob-orbit' : 'oo-blob-cross',i,9)}/>)}</g>
-      <g opacity=".22" fill={tone.light}>{[0,1,2].map(i=><ellipse key={i} cx={80+i*150} cy={30+i*16} rx="17" ry="5" className="oo-material-motion" style={motion('oo-blob-orbit',i,9)}/>)}</g>
+      <g filter={url('bubble-depth')}><g filter={url('merge')} fill={url('bubble-shade')}>{Array.from({length:10},(_,i)=><circle key={i} cx={random(i)*500-30} cy={random(i+11)*130} r={20+random(i+22)*25} className="oo-material-motion" style={motion(i%2 ? 'oo-blob-orbit' : 'oo-blob-cross',i,9)}/>)}</g></g>
+
     </g>}
     {material === 'gradient' && <g data-renderer="diffused-color-mesh" filter={url('soft')}>{[0,1,2,3].map(i=><ellipse key={i} cx={i*145} cy={i%2?120:0} rx="135" ry="90" fill={lavaPalette(color,i/3).light} opacity={.45+i*.1} className="oo-material-motion" style={motion('oo-mesh-drift',i,14)}/>)}</g>}
     {material === 'stars' && <g data-renderer="parallax-starfield">

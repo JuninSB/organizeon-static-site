@@ -31,7 +31,7 @@ it('uses independent material structures instead of routing every theme through 
   const html=renderToStaticMarkup(<LavaBanner seed="account-one" color="#34d399" material={material}/>);
   expect(html).toContain(`data-renderer="${renderer}"`);
   expect(html).not.toContain('oo-lava-depth');
-  if(material==='bubbles'){expect(html).toContain('22 -10');expect(html).toContain('oo-blob-cross');}
+  if(material==='bubbles'){expect(html).toContain('22 -10');expect(html).toContain('oo-blob-cross');expect(html).toContain('feDropShadow');expect(html).not.toContain('<ellipse');}
   if(material==='slime')expect(html).toContain('oo-gel-stretch');
  }
 });

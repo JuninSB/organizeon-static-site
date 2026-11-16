@@ -34,7 +34,7 @@ export function ProfileFieldEditor({
   onCancel: () => void;
   onRerolled?: (profile: Profile) => void;
 }) {
-  const [draft, setDraft] = useState({...profile, bannerStyle: profile.bannerStyle === "slime" || profile.bannerStyle === "magma" ? "solid" as const : profile.bannerStyle}),
+  const [draft, setDraft] = useState<Profile>({...profile, bannerStyle: profile.bannerStyle === "slime" || profile.bannerStyle === "magma" ? "solid" as const : profile.bannerStyle}),
     [photo, setPhoto] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
