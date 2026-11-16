@@ -1,7 +1,7 @@
 {
-  "version": "v2-2a88c594f7a718bd",
-  "generatedAt": "2026-11-16T23:39:15.205Z",
-  "totalBytes": 13530648,
+  "version": "v2-a3eb17fe19b679f7",
+  "generatedAt": "2026-11-16T23:48:13.100Z",
+  "totalBytes": 13526616,
   "files": [
     {
       "path": "404.html",
@@ -11,7 +11,7 @@
     {
       "path": "admin.html",
       "size": 731,
-      "sha256": "4c0a20a12ce9caa8e87edcef10b348684a0586b41e4f63e42ddd334f411b7c38"
+      "sha256": "7ff17e38b11ed6458b2e98b2f401252c78b1aedfbfb544efb3cfdc5b1620e7e7"
     },
     {
       "path": "admin.js",
@@ -775,8 +775,8 @@
     },
     {
       "path": "ui-dist/client-ui.js",
-      "size": 1160521,
-      "sha256": "aa2bc7fdf6af544c5600152efcdba2d79ecaa39af2741c12dfeeb5bec1d5bb68"
+      "size": 1158505,
+      "sha256": "4b2078c813841ecbaadbb9d711a8d274f4355adbf38b4c5598436affe8ea4e82"
     },
     {
       "path": "ui-dist/client-ui.css",
@@ -785,8 +785,8 @@
     },
     {
       "path": "ui-dist/admin-ui.js",
-      "size": 1586907,
-      "sha256": "dddae7f8e8ed6a7101e077240cfea1a4ab64b5d713a297c3da2595131f8a2a25"
+      "size": 1584891,
+      "sha256": "30771dc7d997c8d33a3e6dc109136934ce121baba90a3d512fd8ce2732a01ee4"
     },
     {
       "path": "ui-dist/admin-ui.css",

@@ -25125,6 +25125,42 @@ function nR({ seed: e, color: t, material: n }) {
 						})
 					]
 				}),
+				/* @__PURE__ */ (0, iR.jsxs)("radialGradient", {
+					id: `${r}-bubble-shade`,
+					cx: ".32",
+					cy: ".24",
+					r: ".8",
+					children: [
+						/* @__PURE__ */ (0, iR.jsx)("stop", { stopColor: i.light }),
+						/* @__PURE__ */ (0, iR.jsx)("stop", {
+							offset: ".3",
+							stopColor: i.body
+						}),
+						/* @__PURE__ */ (0, iR.jsx)("stop", {
+							offset: ".75",
+							stopColor: i.body
+						}),
+						/* @__PURE__ */ (0, iR.jsx)("stop", {
+							offset: "1",
+							stopColor: i.shade
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, iR.jsx)("filter", {
+					id: `${r}-bubble-depth`,
+					x: "-25%",
+					y: "-45%",
+					width: "150%",
+					height: "190%",
+					colorInterpolationFilters: "sRGB",
+					children: /* @__PURE__ */ (0, iR.jsx)("feDropShadow", {
+						dx: "0",
+						dy: "5",
+						stdDeviation: "4",
+						floodColor: "#000",
+						floodOpacity: ".35"
+					})
+				}),
 				/* @__PURE__ */ (0, iR.jsxs)("linearGradient", {
 					id: `${r}-spectrum`,
 					children: [
@@ -25157,85 +25193,22 @@ function nR({ seed: e, color: t, material: n }) {
 				height: "120",
 				fill: n === "lava" ? "#150e0c" : n === "stars" ? "#080d20" : i.shade
 			}),
-			n === "slime" && /* @__PURE__ */ (0, iR.jsxs)("g", {
-				"data-renderer": "elastic-gel",
-				children: [
-					/* @__PURE__ */ (0, iR.jsx)("path", {
-						d: "M-20 -20 H460 V19 Q420 40 382 22 Q348 8 322 26 Q280 44 243 22 Q205 10 163 25 Q112 42 71 20 Q20 6 -20 30Z",
-						fill: s("gel")
-					}),
-					[
-						0,
-						1,
-						2,
-						3,
-						4
-					].map((e) => {
-						let t = 28 + e * 94 + a(e) * 22, n = 45 + a(e + 5) * 45;
-						return /* @__PURE__ */ (0, iR.jsxs)("g", {
-							className: "oo-material-motion",
-							style: {
-								...o("oo-gel-stretch", e, 6),
-								transformOrigin: "50% 0%"
-							},
-							children: [
-								/* @__PURE__ */ (0, iR.jsx)("path", {
-									d: `M${t - 22} 8 C${t - 21} 27 ${t - 6} 28 ${t - 7} ${n - 16} C${t - 8} ${n - 5} ${t - 20} ${n - 1} ${t - 17} ${n + 13} C${t - 13} ${n + 34} ${t + 23} ${n + 31} ${t + 21} ${n + 12} C${t + 20} ${n - 1} ${t + 8} ${n - 4} ${t + 8} ${n - 17} C${t + 7} 30 ${t + 22} 25 ${t + 23} 8Z`,
-									fill: s("drip")
-								}),
-								/* @__PURE__ */ (0, iR.jsx)("path", {
-									d: `M${t - 5} 30 Q${t - 1} 46 ${t - 3} ${n - 13}`,
-									fill: "none",
-									stroke: i.light,
-									strokeWidth: "2.5",
-									strokeLinecap: "round",
-									opacity: ".7"
-								}),
-								/* @__PURE__ */ (0, iR.jsx)("ellipse", {
-									cx: t - 5,
-									cy: n + 11,
-									rx: "5",
-									ry: "3",
-									fill: "white",
-									opacity: ".28"
-								})
-							]
-						}, e);
-					}),
-					/* @__PURE__ */ (0, iR.jsx)("path", {
-						d: "M-10 114 Q40 93 93 111 T195 110 T305 112 T450 109 V140 H-10Z",
-						fill: s("gel")
-					})
-				]
-			}),
-			n === "bubbles" && /* @__PURE__ */ (0, iR.jsxs)("g", {
+			n === "bubbles" && /* @__PURE__ */ (0, iR.jsx)("g", {
 				"data-renderer": "merging-metaballs",
-				children: [/* @__PURE__ */ (0, iR.jsx)("g", {
-					filter: s("merge"),
-					fill: i.body,
-					children: Array.from({ length: 10 }, (e, t) => /* @__PURE__ */ (0, iR.jsx)("circle", {
-						cx: a(t) * 500 - 30,
-						cy: a(t + 11) * 130,
-						r: 20 + a(t + 22) * 25,
-						className: "oo-material-motion",
-						style: o(t % 2 ? "oo-blob-orbit" : "oo-blob-cross", t, 9)
-					}, t))
-				}), /* @__PURE__ */ (0, iR.jsx)("g", {
-					opacity: ".22",
-					fill: i.light,
-					children: [
-						0,
-						1,
-						2
-					].map((e) => /* @__PURE__ */ (0, iR.jsx)("ellipse", {
-						cx: 80 + e * 150,
-						cy: 30 + e * 16,
-						rx: "17",
-						ry: "5",
-						className: "oo-material-motion",
-						style: o("oo-blob-orbit", e, 9)
-					}, e))
-				})]
+				children: /* @__PURE__ */ (0, iR.jsx)("g", {
+					filter: s("bubble-depth"),
+					children: /* @__PURE__ */ (0, iR.jsx)("g", {
+						filter: s("merge"),
+						fill: s("bubble-shade"),
+						children: Array.from({ length: 10 }, (e, t) => /* @__PURE__ */ (0, iR.jsx)("circle", {
+							cx: a(t) * 500 - 30,
+							cy: a(t + 11) * 130,
+							r: 20 + a(t + 22) * 25,
+							className: "oo-material-motion",
+							style: o(t % 2 ? "oo-blob-orbit" : "oo-blob-cross", t, 9)
+						}, t))
+					})
+				})
 			}),
 			n === "gradient" && /* @__PURE__ */ (0, iR.jsx)("g", {
 				"data-renderer": "diffused-color-mesh",
@@ -25255,32 +25228,6 @@ function nR({ seed: e, color: t, material: n }) {
 					className: "oo-material-motion",
 					style: o("oo-mesh-drift", e, 14)
 				}, e))
-			}),
-			n === "lava" && /* @__PURE__ */ (0, iR.jsxs)("g", {
-				"data-renderer": "volcanic-crust",
-				children: [/* @__PURE__ */ (0, iR.jsx)("rect", {
-					width: "440",
-					height: "120",
-					fill: s("heat"),
-					className: "oo-material-motion",
-					style: o("oo-magma-heat", 0, 5)
-				}), Array.from({ length: 15 }, (e, t) => {
-					let n = t % 5 * 100 - 28 + (a(t + 101) - .5) * 22, r = Math.floor(t / 5) * 55 - 26 + (a(t + 102) - .5) * 18;
-					return /* @__PURE__ */ (0, iR.jsxs)("g", {
-						className: "oo-material-motion",
-						style: o("oo-crust-drift", t, 22),
-						children: [/* @__PURE__ */ (0, iR.jsx)("path", {
-							d: `M${n} ${r + 4} l55 -10 31 19 -4 24 -48 13 -37 -17Z`,
-							fill: t % 3 ? "#211816" : "#35231c",
-							stroke: "#6b3020",
-							strokeWidth: "1.3"
-						}), /* @__PURE__ */ (0, iR.jsx)("path", {
-							d: `M${n + 10} ${r + 14} l24 -7 27 8 -13 14 -29 2Z`,
-							fill: "#100d0c",
-							opacity: ".6"
-						})]
-					}, t);
-				})]
 			}),
 			n === "stars" && /* @__PURE__ */ (0, iR.jsxs)("g", {
 				"data-renderer": "parallax-starfield",
@@ -25358,6 +25305,7 @@ var sR = o((() => {}));
 // src/features/profile/lava-banner.tsx
 function cR({ seed: e, color: t, material: n }) {
 	let r = "oo-fluid-" + (0, lR.useId)().replace(/[^a-z0-9_-]/gi, "");
+	if (n === "slime" || n === "lava") return null;
 	if (n) return /* @__PURE__ */ (0, uR.jsx)(nR, {
 		seed: e,
 		color: t,
@@ -28265,7 +28213,10 @@ var ZU, QU, $U = o((() => {
 }));
 // src/features/profile/profile-field-editor.tsx
 function eW({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
-	let [a, o] = (0, tW.useState)(t), [s, c] = (0, tW.useState)(null), [l, u] = (0, tW.useState)(!1), [d, f] = (0, tW.useState)(""), p = (0, tW.useRef)(null);
+	let [a, o] = (0, tW.useState)({
+		...t,
+		bannerStyle: t.bannerStyle === "slime" || t.bannerStyle === "magma" ? "solid" : t.bannerStyle
+	}), [s, c] = (0, tW.useState)(null), [l, u] = (0, tW.useState)(!1), [d, f] = (0, tW.useState)(""), p = (0, tW.useRef)(null);
 	return /* @__PURE__ */ (0, nW.jsxs)("form", {
 		className: "grid gap-4",
 		onSubmit: async (t) => {
@@ -28334,10 +28285,8 @@ function eW({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 							e && [
 								"solid",
 								"lava",
-								"slime",
 								"bubbles",
 								"gradient",
-								"magma",
 								"stars",
 								"rainbow"
 							].includes(e) && o({
@@ -28348,13 +28297,11 @@ function eW({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 						children: [/* @__PURE__ */ (0, nW.jsx)(jU, { children: /* @__PURE__ */ (0, nW.jsx)(AU, { children: {
 							solid: "Cor sólida",
 							lava: "Fluidos — 12 composições",
-							slime: "Slime",
 							bubbles: "Bolhas",
 							gradient: "Gradiente",
-							magma: "Lava",
 							stars: "Estrelas",
 							rainbow: "Arcos de cor"
-						}[a.bannerStyle || "solid"] }) }), /* @__PURE__ */ (0, nW.jsxs)(MU, { children: [
+						}[(a.bannerStyle === "slime" || a.bannerStyle === "magma" ? "solid" : a.bannerStyle) || "solid"] }) }), /* @__PURE__ */ (0, nW.jsxs)(MU, { children: [
 							/* @__PURE__ */ (0, nW.jsx)(NU, {
 								value: "solid",
 								children: "Cor sólida"
@@ -28364,20 +28311,12 @@ function eW({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 								children: "Fluidos — 12 composições"
 							}),
 							/* @__PURE__ */ (0, nW.jsx)(NU, {
-								value: "slime",
-								children: "Slime"
-							}),
-							/* @__PURE__ */ (0, nW.jsx)(NU, {
 								value: "bubbles",
 								children: "Bolhas"
 							}),
 							/* @__PURE__ */ (0, nW.jsx)(NU, {
 								value: "gradient",
 								children: "Gradiente"
-							}),
-							/* @__PURE__ */ (0, nW.jsx)(NU, {
-								value: "magma",
-								children: "Lava"
 							}),
 							/* @__PURE__ */ (0, nW.jsx)(NU, {
 								value: "stars",
