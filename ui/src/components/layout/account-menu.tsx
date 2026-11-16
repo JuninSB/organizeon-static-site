@@ -2,7 +2,7 @@ import { MessagesLauncher } from "@/features/messages/messages-launcher";
 import { roleNames } from "@/utils/account-roles";
 import { ProfileBoundary } from "@/features/profile/profile-boundary";
 import { lazy, Suspense, useState } from "react";
-import { ChevronUp, UserRound, LogOut } from "lucide-react";
+import { ChevronUp, UserRound, LogOut, KeyRound } from "lucide-react";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -14,9 +14,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useProfile, refreshProfile } from "@/stores/profile-store";
+import { profileService, finishPasswordChange } from "@/services/profile-service";
 import { ProfileAvatar } from "@/features/profile/profile-avatar";
 const loadProfile = () => import("@/features/profile/profile-dialog");
 const ProfileDialog = lazy(loadProfile);
+const PasswordDialog = lazy(() =>
+  import("@/components/admin/password-dialog").then((module) => ({
+    default: module.PasswordDialog,
+  })),
+);
 /** Shared account identity; editing is authenticated by the service, never by role labels. */
 export function AccountMenu({
   username,
@@ -28,6 +34,7 @@ export function AccountMenu({
   onLogout?: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const profile = useProfile(username, role !== "guest");
   const label = roleNames[role] || role;
   const identity = (
@@ -104,6 +111,15 @@ export function AccountMenu({
             <UserRound />
             Perfil
           </DropdownMenuItem>
+          {role !== "guest" && (
+            <DropdownMenuItem
+              onClick={() => setPasswordOpen(true)}
+              className="text-orange-600 dark:text-orange-400 data-[highlighted]:text-orange-600 dark:data-[highlighted]:text-orange-400 [&_svg]:text-current"
+            >
+              <KeyRound />
+              Alterar senha
+            </DropdownMenuItem>
+          )}
           {onLogout && (
             <DropdownMenuItem onClick={onLogout} className="text-destructive">
               <LogOut />
@@ -112,6 +128,25 @@ export function AccountMenu({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      {passwordOpen && role !== "guest" && (
+        <ProfileBoundary onClose={() => setPasswordOpen(false)}>
+          <Suspense
+            fallback={
+              <p role="status" className="fixed bottom-4 right-4 rounded-md border bg-popover p-3 text-sm">
+                Carregando segurança da conta…
+              </p>
+            }
+          >
+            <PasswordDialog
+              request={{ username, self: true, submit: profileService.password }}
+              onClose={(saved) => {
+                setPasswordOpen(false);
+                if (saved) finishPasswordChange();
+              }}
+            />
+          </Suspense>
+        </ProfileBoundary>
+      )}
       {open && (
         <ProfileBoundary onClose={() => setOpen(false)}>
           <Suspense

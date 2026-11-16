@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { MotionRoot, MotionPane } from "@/core/motion";
-import { ArrowLeft, KeyRound, X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,12 +14,7 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from "@/components/ui/drawer";
-import { PasswordDialog } from "@/components/admin/password-dialog";
-import {
-  profileService,
-  finishPasswordChange,
-  type Profile,
-} from "@/services/profile-service";
+import type { Profile } from "@/services/profile-service";
 import { saveOptimisticProfile } from "@/stores/profile-store";
 import { ProfileCard, type ProfileField } from "./profile-card";
 import { ProfileFieldEditor } from "./profile-field-editor";
@@ -108,8 +103,7 @@ export default function ProfileDialog({
 }) {
   const compact = useCompactProfile();
   const [open, setOpen] = useState(true),
-    [editing, setEditing] = useState<ProfileField | null>(null),
-    [password, setPassword] = useState(false);
+    [editing, setEditing] = useState<ProfileField | null>(null);
   const title = editing ? titles[editing] : editable ? "Meu perfil" : "Perfil";
   return (
     <MotionRoot>
@@ -134,6 +128,7 @@ export default function ProfileDialog({
                 <ArrowLeft className="size-4" />
               </Button>
             )}
+            {!compact && (
             <Button
               type="button"
               variant="secondary"
@@ -144,6 +139,7 @@ export default function ProfileDialog({
             >
               <X className="size-4" />
             </Button>
+            )}
           </div>
 
           <MotionPane
@@ -180,40 +176,12 @@ export default function ProfileDialog({
                     frameless
                     onEdit={editable ? setEditing : undefined}
                   />
-                  {editable && (
-                    <section
-                      className="mx-5 mb-5 border-t border-border pt-3"
-                      aria-label="Segurança da conta"
-                    >
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="w-full justify-start"
-                        onClick={() => setPassword(true)}
-                      >
-                        <KeyRound className="size-4" />
-                        Alterar senha
-                      </Button>
-                    </section>
-                  )}
                 </>
               )}
             </div>
           </MotionPane>
         </div>
       </ProfileSurface>
-      {password && editable && (
-        <PasswordDialog
-          request={{ username, self: true, submit: profileService.password }}
-          onClose={(saved) => {
-            setPassword(false);
-            if (saved) {
-              onClose();
-              finishPasswordChange();
-            }
-          }}
-        />
-      )}
     </MotionRoot>
   );
 }

@@ -121,3 +121,13 @@ Referências: [React useOptimistic](https://react.dev/reference/react/useOptimis
 - Somente o backend foi reiniciado para carregar as alterações de mensagens; D3 recebeu assets e index atômico. Xiaomi e Survival permaneceram ativos. Nenhuma DM real nem solicitação Xiaomi foi enviada nos testes.
 - Rollback de backend e cópia consistente SQLite: `~/.local/share/organizeon/rollback/dm-responsive-20261116-174325/`. Restaurar apenas os arquivos fonte permite reverter mantendo dados novos; as colunas SQLite adicionadas são compatíveis com o código anterior. Não restaurar o banco sem avaliar mensagens recebidas depois da cópia.
 - Rollback do frontend D3: `~/organizeon/backend/staging/d3-responsive-rollback-20261116-175715/`. Restaurar index anterior e fontes preservando assets existentes; nenhuma mudança de proxy foi necessária.
+
+## Modal bottom sheets
+
+Perfil mobile, ações de mensagem e ações de conversa compartilham `components/ui/drawer.tsx` e `drawer.css`. O padrão se chama **modal bottom sheet**, implementado como Drawer Base UI/shadcn: entrada de baixo para cima, saída para baixo e arraste acompanhando o dedo. O perfil mobile dispensa o X; continuam disponíveis arraste, toque no fundo e Escape. No desktop, o perfil mantém o botão de fechar do diálogo.
+
+A montagem lazy do perfil já aberto não produzia `data-starting-style`, portanto a transição não tinha um estado inicial. O contrato compartilhado usa `@starting-style` para fornecer esse primeiro quadro sem aguardar rede ou atrasar foco. Estados de saída/arraste continuam sob controle do Base UI e `prefers-reduced-motion` desativa as transições. O teste de navegador mede deslocamento vertical real; não se limita à existência de uma classe CSS.
+
+Referências: [shadcn Drawer](https://ui.shadcn.com/docs/components/base/drawer), [Base UI animações](https://base-ui.com/react/handbook/animation), [MDN starting-style](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@starting-style).
+
+A ação **Alterar senha** fica no menu compartilhado da conta, entre Perfil e Sair da sessão, com destaque laranja e disponível a qualquer conta autenticada. Ela não fica mais dentro do perfil. O diálogo de segurança é carregado sob demanda e continua exigindo senha atual, nova senha e confirmação; somente o backend confirma a mudança e a revogação de sessões.

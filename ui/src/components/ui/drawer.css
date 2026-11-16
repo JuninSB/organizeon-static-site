@@ -11,6 +11,16 @@
 .oo-drawer-popup[data-ending-style] {
   transform: translateY(100%);
 }
+/* Lazily mounted, already-open drawers have no Base UI starting attribute.
+   Starting styles supply the missing first frame without delaying focus or content. */
+@starting-style {
+  .oo-drawer-popup[data-open] {
+    transform: translateY(100%);
+  }
+  .oo-drawer-backdrop[data-open] {
+    opacity: 0;
+  }
+}
 .oo-drawer-popup[data-swiping] {
   transition-duration: 0ms;
 }
