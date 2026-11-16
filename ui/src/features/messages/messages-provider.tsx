@@ -1,3 +1,4 @@
+import { MotionRoot } from "@/core/motion";
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import {
   Dialog,
@@ -24,7 +25,7 @@ export function MessagesProvider({
     if (valid) return messagesStore.start(username!);
   }, [username, valid]);
   return (
-    <>
+    <MotionRoot>
       {children}
       {valid && (
         <>
@@ -62,6 +63,6 @@ export function MessagesProvider({
           <MessagesNotifications />
         </>
       )}
-    </>
+    </MotionRoot>
   );
 }

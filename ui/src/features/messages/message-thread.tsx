@@ -1,5 +1,7 @@
+import { m } from "@/core/motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
+  ArrowLeft,
   Archive,
   BellOff,
   Bell,
@@ -136,6 +138,9 @@ export function MessageThread({
     else void perform(() => messagesStore.action(message, action));
   }
   const me = state.inbox?.me;
+  const lastOwnIndex = list
+    .map((message) => message.sender.username)
+    .lastIndexOf(me?.username || "");
   if (!me) return null;
   return (
     <section
@@ -143,6 +148,16 @@ export function MessageThread({
       aria-label={`Conversa com ${conversation.peer.profile.displayName}`}
     >
       <header className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          aria-label="Voltar às conversas"
+          onClick={() => messagesStore.back()}
+        >
+          <ArrowLeft className="size-4" />
+        </Button>
         <button
           type="button"
           aria-label={`Abrir perfil de ${conversation.peer.profile.displayName}`}
@@ -201,6 +216,12 @@ export function MessageThread({
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => messagesStore.view("settings")}>
+              Configurações de mensagens
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => messagesStore.close()}>
+              Fechar mensagens
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() =>
                 void perform(() =>
@@ -380,7 +401,15 @@ export function MessageThread({
             const person =
               message.sender.username === me.username ? me : conversation.peer;
             return (
-              <div key={message.id}>
+              <m.div
+                key={message.id}
+                initial={
+                  Date.now() - new Date(message.createdAt).getTime() < 10000
+                    ? { opacity: 0, y: 6 }
+                    : false
+                }
+                animate={{ opacity: 1, y: 0 }}
+              >
                 {(!previous ||
                   new Date(previous.createdAt).toLocaleDateString("pt-BR") !==
                     day) && (
@@ -391,6 +420,19 @@ export function MessageThread({
                   </div>
                 )}
                 <MessageRow
+                  compact={
+                    !!previous &&
+                    previous.sender.username === message.sender.username &&
+                    !message.reply &&
+                    !message.pinned &&
+                    !message.bookmarked &&
+                    !message.editedAt &&
+                    !previous.deleted &&
+                    new Date(message.createdAt).getTime() -
+                      new Date(previous.createdAt).getTime() <
+                      300000
+                  }
+                  showReceipt={index === lastOwnIndex}
                   message={message}
                   person={person}
                   own={message.sender.username === me.username}
@@ -406,7 +448,7 @@ export function MessageThread({
                   }
                   quickReaction={state.inbox?.settings.quickReaction || "👍"}
                 />
-              </div>
+              </m.div>
             );
           })
         )}

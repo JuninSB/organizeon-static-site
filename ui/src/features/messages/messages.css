@@ -1,0 +1,63 @@
+/* Shared DM surfaces: independent from generic Button borders and variants. */
+.oo-dm-action-group {
+  overflow: hidden;
+  border-radius: 18px;
+  background: rgb(var(--card));
+}
+.oo-dm-action-group .oo-dm-action-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  padding: 12px 16px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.oo-dm-action-row + .oo-dm-action-row::before {
+  content: "";
+  position: absolute;
+  left: 52px;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: rgb(var(--border));
+}
+.oo-dm-action-row:hover,
+.oo-dm-action-row:active {
+  background: rgb(var(--accent) / 0.55);
+}
+.oo-dm-action-row:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: -3px;
+}
+.oo-dm-action-group .oo-dm-action-row svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.oo-dm-action-row[data-destructive] {
+  color: rgb(var(--destructive));
+}
+.oo-dm-actions .oo-dm-reaction {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: 14px;
+  background: rgb(var(--secondary));
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+}
+.oo-dm-actions .oo-dm-reaction:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+}

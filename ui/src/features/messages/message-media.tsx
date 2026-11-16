@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { m } from "@/core/motion";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Download, File, Image, LoaderCircle, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dmService } from "@/services/messages-service";
@@ -9,6 +10,16 @@ function bytes(value: number) {
     : Math.max(1, Math.round(value / 1024)) + " KB";
 }
 export function MessageMedia({ attachment }: { attachment: DmAttachment }) {
+  const host = useRef<HTMLDivElement>(null),
+    alive = useRef(true),
+    inFlight = useRef(false),
+    autoTried = useRef(false);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   const [url, setUrl] = useState<string | null>(null),
     [loading, setLoading] = useState(false),
     [error, setError] = useState("");
@@ -20,8 +31,9 @@ export function MessageMedia({ attachment }: { attachment: DmAttachment }) {
   );
   const type = attachment.mime.split("/")[0],
     preview = ["image", "video", "audio"].includes(type);
-  async function load() {
-    if (loading) return;
+  const load = useCallback(async () => {
+    if (inFlight.current || url) return;
+    inFlight.current = true;
     setLoading(true);
     setError("");
     try {
@@ -32,6 +44,10 @@ export function MessageMedia({ attachment }: { attachment: DmAttachment }) {
       const object = URL.createObjectURL(
         new Blob([array], { type: attachment.mime }),
       );
+      if (!alive.current) {
+        URL.revokeObjectURL(object);
+        return;
+      }
       if (preview) setUrl(object);
       else {
         const a = document.createElement("a");
@@ -45,17 +61,45 @@ export function MessageMedia({ attachment }: { attachment: DmAttachment }) {
         e instanceof Error ? e.message : "Não foi possível abrir o arquivo.",
       );
     } finally {
-      setLoading(false);
+      inFlight.current = false;
+      if (alive.current) setLoading(false);
     }
-  }
+  }, [attachment.id, attachment.mime, attachment.name, preview, url]);
+  useEffect(() => {
+    if (
+      type !== "image" ||
+      attachment.size > 1048576 ||
+      !host.current ||
+      autoTried.current
+    )
+      return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries.some((entry) => entry.isIntersecting) &&
+          !autoTried.current
+        ) {
+          autoTried.current = true;
+          void load();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "100px" },
+    );
+    observer.observe(host.current);
+    return () => observer.disconnect();
+  }, [attachment.size, type, load]);
   return (
     <div
-      className="mt-2 w-fit max-w-full rounded-md border border-border bg-muted/40 p-2"
+      ref={host}
+      className="mt-2 w-fit max-w-full overflow-hidden rounded-xl bg-card"
       data-no-swipe
     >
       {url ? (
         type === "image" ? (
-          <img
+          <m.img
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             src={url}
             alt={attachment.name}
             loading="lazy"
@@ -72,7 +116,7 @@ export function MessageMedia({ attachment }: { attachment: DmAttachment }) {
           variant="ghost"
           disabled={loading}
           onClick={() => void load()}
-          className="h-auto max-w-full justify-start py-2"
+          className="h-auto max-w-full justify-start p-3"
         >
           {loading ? (
             <LoaderCircle className="size-4 animate-spin" />

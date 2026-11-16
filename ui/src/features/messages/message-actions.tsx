@@ -1,4 +1,12 @@
-import { useRef } from "react";
+import { m } from "@/core/motion";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { messagesStore, useMessagesState } from "@/stores/messages-store";
+import "./messages.css";
+import { useRef, useState } from "react";
 import {
   Copy,
   Reply,
@@ -46,6 +54,9 @@ export function MessageActions({
   onAction: (action: MessageAction, message: DmMessage) => void;
   onReact: (message: DmMessage, emoji: string) => void;
 }) {
+  const prefs = useMessagesState().inbox?.settings;
+  const [picker, setPicker] = useState(false),
+    [error, setError] = useState("");
   const held = useRef<{ message: DmMessage; own: boolean } | null>(null);
   const pending = useRef<(() => void) | null>(null);
   if (message) held.current = { message, own };
@@ -137,59 +148,114 @@ export function MessageActions({
         }
       }}
     >
-      <DrawerContent>
-        <header className="mb-3 flex items-center justify-between gap-3">
-          <DrawerTitle className="text-sm font-medium">
-            Ações da mensagem
-          </DrawerTitle>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Fechar ações da mensagem"
-            onClick={onClose}
-          >
-            <X className="size-4" />
-          </Button>
-          <DrawerDescription className="sr-only">
-            Puxe para baixo para fechar ou escolha uma ação.
-          </DrawerDescription>
-        </header>
-        <div className="mb-4 grid grid-cols-6 gap-2">
+      <DrawerContent className="oo-dm-actions">
+        <DrawerTitle className="sr-only">Ações da mensagem</DrawerTitle>
+        <DrawerDescription className="sr-only">
+          Puxe para baixo para fechar ou escolha uma ação.
+        </DrawerDescription>
+        <m.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-3 grid grid-cols-6 gap-2"
+        >
           {quickReactions.slice(0, 6).map((emoji) => (
-            <Button
+            <m.button
               key={emoji}
               type="button"
-              variant="secondary"
-              className="h-11 rounded-lg text-xl"
+              whileTap={{ scale: 0.9 }}
+              className="oo-dm-reaction"
               aria-label={`Reagir com ${emoji}`}
               onClick={() => {
                 if (current) choose(() => onReact(current, emoji));
               }}
             >
               {emoji}
-            </Button>
+            </m.button>
           ))}
-        </div>
-        <div className="grid gap-3">
-          {groups.map((options, index) => (
-            <div key={index} className="overflow-hidden rounded-lg bg-muted/50">
-              {options.map(({ id, label, icon: Icon, description }, i) => (
+        </m.div>
+        <div
+          className="mb-5 flex min-h-8 items-center justify-center gap-1.5 text-xs text-muted-foreground"
+          data-base-ui-swipe-ignore
+        >
+          <span>Toque duas vezes para {prefs?.quickReaction || "👍"}</span>
+          <Popover open={picker} onOpenChange={setPicker}>
+            <PopoverTrigger
+              render={
                 <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-7 px-1"
+                />
+              }
+            >
+              Alterar
+            </PopoverTrigger>
+            <PopoverContent side="top" className="oo-dm-actions w-64">
+              <p className="mb-3 text-sm font-medium">Reação ao toque duplo</p>
+              <div className="grid grid-cols-6 gap-2">
+                {quickReactions.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    aria-label={`Usar ${emoji} no toque duplo`}
+                    aria-pressed={prefs?.quickReaction === emoji}
+                    className="oo-dm-reaction"
+                    onClick={() => {
+                      void messagesStore
+                        .settings({ quickReaction: emoji })
+                        .then(() => setPicker(false))
+                        .catch((e) => setError(e.message));
+                    }}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="ml-auto"
+            aria-label="Fechar ações da mensagem"
+            onClick={onClose}
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
+        {error && (
+          <p role="alert" className="mb-3 text-xs text-destructive">
+            {error}
+          </p>
+        )}
+        <div className="grid gap-4">
+          {groups.map((options, index) => (
+            <m.div
+              key={index}
+              className="oo-dm-action-group"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, delay: index * 0.025 }}
+            >
+              {options.map(({ id, label, icon: Icon, description }) => (
+                <m.button
                   key={id}
                   type="button"
-                  variant="ghost"
                   title={description}
-                  className={`h-12 w-full justify-start gap-3 rounded-none px-3 ${i ? "border-t border-border/60" : ""} ${id === "remove" ? "text-destructive" : ""}`}
+                  className="oo-dm-action-row"
+                  data-destructive={id === "remove" || undefined}
+                  whileTap={{ scale: 0.985 }}
                   onClick={() => {
                     if (current) choose(() => onAction(id, current));
                   }}
                 >
-                  <Icon className="size-4 shrink-0" />
+                  <Icon />
                   {label}
-                </Button>
+                </m.button>
               ))}
-            </div>
+            </m.div>
           ))}
         </div>
       </DrawerContent>

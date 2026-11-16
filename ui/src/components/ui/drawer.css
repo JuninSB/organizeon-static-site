@@ -1,7 +1,7 @@
 .oo-drawer-popup {
   max-height: 85svh;
   transform: translateY(var(--drawer-swipe-movement-y, 0px));
-  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .oo-drawer-scroll {
   max-height: calc(85svh - 1.75rem);
@@ -16,7 +16,7 @@
 }
 .oo-drawer-backdrop {
   opacity: calc(1 - var(--drawer-swipe-progress, 0));
-  transition: opacity 180ms ease-out;
+  transition: opacity 200ms ease-out;
 }
 .oo-drawer-backdrop[data-starting-style],
 .oo-drawer-backdrop[data-ending-style] {

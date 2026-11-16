@@ -10,11 +10,13 @@ export function ProfileCard({
   role,
   profile,
   onEdit,
+  frameless = false,
 }: {
   username: string;
   role: string;
   profile: Profile;
   onEdit?: (field: ProfileField) => void;
+  frameless?: boolean;
 }) {
   const pencil = (field: ProfileField, label: string) =>
     onEdit && (
@@ -29,15 +31,33 @@ export function ProfileCard({
       </Button>
     );
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
+    <div
+      className={
+        frameless
+          ? "overflow-hidden"
+          : "overflow-hidden rounded-xl border border-border bg-card"
+      }
+    >
       <div
-        className="h-20 border-b border-border bg-muted"
+        className={`${frameless ? "h-28" : "h-20 border-b border-border"} bg-card`}
+        style={
+          frameless
+            ? {
+                background: `color-mix(in srgb, ${profile.nameColor} 18%, rgb(var(--card)))`,
+              }
+            : undefined
+        }
         aria-hidden="true"
       />
       <div className="px-5 pb-5 sm:px-6 sm:pb-6">
         <div className="-mt-10 mb-4 flex items-end justify-between gap-3">
-          <div className="rounded-2xl bg-card p-1">
-            <ProfileAvatar profile={profile} className="size-20" />
+          <div
+            className={`${frameless ? "rounded-full bg-popover" : "rounded-2xl bg-card"} p-1`}
+          >
+            <ProfileAvatar
+              profile={profile}
+              className={frameless ? "size-24" : "size-20"}
+            />
           </div>
           {pencil("photo", "Editar foto de perfil")}
         </div>

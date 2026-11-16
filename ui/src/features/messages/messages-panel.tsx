@@ -1,11 +1,8 @@
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { AnimatePresence } from "motion/react";
+import { m } from "@/core/motion";
+import { ConversationRow } from "./conversation-row";
+import { MotionPane } from "@/core/motion";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Inbox,
@@ -14,6 +11,7 @@ import {
   MessageCirclePlus,
   RefreshCw,
   Settings2,
+  Search,
   X,
 } from "lucide-react";
 import {
@@ -26,7 +24,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ProfileAvatar } from "@/features/profile/profile-avatar";
 import { useProfile } from "@/stores/profile-store";
 import { messagesStore, useMessagesState } from "@/stores/messages-store";
 import { roleNames } from "@/utils/account-roles";
@@ -56,22 +53,6 @@ function useViewport() {
   }, []);
   return size;
 }
-function Pane({ children }: { children: ReactNode }) {
-  const [ready, setReady] = useState(
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setReady(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
-  return (
-    <div
-      className={`h-full min-h-0 min-w-0 transition-[opacity,transform] duration-150 motion-reduce:transition-none ${ready ? "translate-x-0 opacity-100" : "translate-x-2 opacity-0"}`}
-    >
-      {children}
-    </div>
-  );
-}
 function PersonProfile({
   person,
   own,
@@ -97,6 +78,7 @@ function PersonProfile({
 export default function MessagesPanel() {
   const state = useMessagesState(),
     viewport = useViewport();
+  const [listSearchOpen, setListSearchOpen] = useState(false);
   const [query, setQuery] = useState(""),
     [person, setPerson] = useState<DmPerson | null>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
@@ -132,7 +114,9 @@ export default function MessagesPanel() {
             maxWidth: viewport.width,
             height: Math.max(
               180,
-              viewport.width < 640 ? viewport.height : Math.min(768, viewport.height - 32),
+              viewport.width < 640
+                ? viewport.height
+                : Math.min(768, viewport.height - 32),
             ),
             top: viewport.top + viewport.height / 2,
           }}
@@ -160,7 +144,9 @@ export default function MessagesPanel() {
             swipe.current = null;
           }}
         >
-          <DialogHeader className="shrink-0 border-b border-border px-3 py-2">
+          <DialogHeader
+            className={`${selected ? "hidden md:flex" : "flex"} shrink-0 border-b border-border px-3 py-2`}
+          >
             <div className="flex items-center gap-2">
               {!showList && (
                 <Button
@@ -214,6 +200,19 @@ export default function MessagesPanel() {
                   <h2 className="text-sm font-medium">Suas conversas</h2>
                   <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Pesquisar conversas"
+                    aria-expanded={listSearchOpen}
+                    onClick={() => {
+                      setListSearchOpen(!listSearchOpen);
+                      setQuery("");
+                    }}
+                  >
+                    <Search className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
                     size="icon-sm"
                     variant="ghost"
                     aria-label="Nova mensagem direta"
@@ -222,17 +221,31 @@ export default function MessagesPanel() {
                     <MessageCirclePlus className="size-4" />
                   </Button>
                 </div>
-                <Input
-                  aria-label="Pesquisar conversa"
-                  placeholder="Pesquisar conversa…"
-                  className="h-8"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                />
+                <AnimatePresence initial={false}>
+                  {listSearchOpen && (
+                    <m.div
+                      key="inbox-search"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      {" "}
+                      <Input
+                        autoFocus
+                        aria-label="Pesquisar conversa"
+                        placeholder="Pesquisar conversa…"
+                        className="h-8"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                      />
+                    </m.div>
+                  )}
+                </AnimatePresence>
                 <Button
                   type="button"
                   variant={state.view === "requests" ? "secondary" : "ghost"}
-                  className="w-full justify-start"
+                  className="w-full justify-start rounded-xl bg-card"
                   onClick={() => messagesStore.view("requests")}
                 >
                   <Inbox className="size-4" />
@@ -271,38 +284,13 @@ export default function MessagesPanel() {
                   </div>
                 ) : (
                   list.map((c) => (
-                    <button
+                    <ConversationRow
                       key={c.id}
-                      type="button"
-                      aria-label={`Conversa com ${c.peer.profile.displayName}`}
-                      onClick={() => messagesStore.select(c.id)}
-                      className={`mb-1 flex w-full min-w-0 items-center gap-2.5 rounded-md p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${state.selectedId === c.id ? "bg-accent" : "hover:bg-muted"}`}
-                    >
-                      <ProfileAvatar
-                        profile={c.peer.profile}
-                        className="size-9"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">
-                          {c.peer.profile.displayName}
-                        </span>
-                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                          {c.lastMessage
-                            ? (c.lastMessage.sender.username === state.username
-                                ? "Você: "
-                                : "") +
-                              (c.lastMessage.deleted
-                                ? "Mensagem apagada"
-                                : c.lastMessage.content || "Arquivo")
-                            : "Conversa aceita"}
-                        </span>
-                      </span>
-                      {c.unread > 0 && (
-                        <Badge variant="secondary" className="tabular-nums">
-                          {c.unread > 99 ? "99+" : c.unread}
-                        </Badge>
-                      )}
-                    </button>
+                      conversation={c}
+                      username={state.username}
+                      selected={state.selectedId === c.id}
+                      onOpen={() => messagesStore.select(c.id)}
+                    />
                   ))
                 )}
               </div>
@@ -326,38 +314,43 @@ export default function MessagesPanel() {
             <main
               className={`${showList ? "hidden md:block" : "block"} min-h-0 min-w-0 flex-1`}
             >
-              <Pane key={state.selectedId || state.view}>
-                {selected ? (
-                  <MessageThread
-                    key={selected.id}
-                    conversation={selected}
-                    onProfile={setPerson}
-                  />
-                ) : state.view === "requests" ? (
-                  <RequestsList onProfile={setPerson} />
-                ) : state.view === "new" ? (
-                  <NewConversation />
-                ) : state.view === "settings" ? (
-                  <MessagesSettings />
-                ) : (
-                  <div className="grid h-full place-content-center justify-items-center gap-3 p-8 text-center">
-                    <MessageCircle className="size-10 text-muted-foreground" />
-                    <h2 className="text-lg font-semibold">
-                      Suas mensagens, em qualquer serviço
-                    </h2>
-                    <p className="max-w-xs text-sm text-muted-foreground">
-                      Escolha uma conversa ou adicione alguém pelo @usuário.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => messagesStore.view("new")}
-                    >
-                      Nova DM
-                    </Button>
-                  </div>
-                )}
-              </Pane>
+              <AnimatePresence mode="wait" initial={false}>
+                <MotionPane
+                  className="h-full min-h-0 min-w-0"
+                  key={state.selectedId || state.view}
+                >
+                  {selected ? (
+                    <MessageThread
+                      key={selected.id}
+                      conversation={selected}
+                      onProfile={setPerson}
+                    />
+                  ) : state.view === "requests" ? (
+                    <RequestsList onProfile={setPerson} />
+                  ) : state.view === "new" ? (
+                    <NewConversation />
+                  ) : state.view === "settings" ? (
+                    <MessagesSettings />
+                  ) : (
+                    <div className="grid h-full place-content-center justify-items-center gap-3 p-8 text-center">
+                      <MessageCircle className="size-10 text-muted-foreground" />
+                      <h2 className="text-lg font-semibold">
+                        Suas mensagens, em qualquer serviço
+                      </h2>
+                      <p className="max-w-xs text-sm text-muted-foreground">
+                        Escolha uma conversa ou adicione alguém pelo @usuário.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => messagesStore.view("new")}
+                      >
+                        Nova DM
+                      </Button>
+                    </div>
+                  )}
+                </MotionPane>
+              </AnimatePresence>
             </main>
           </div>
         </DialogContent>

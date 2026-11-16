@@ -88,3 +88,15 @@ Validação deste refinamento: TypeScript e builds cliente/admin/D3 passaram; os
 A validação adicional encontrou uma perda de atualização quando o polling consumia eventos de edição em segundo plano. O store agora mantém as mensagens em cache marcadas como pendentes até recarregá-las com sucesso; esses marcadores são apagados ao sair da conta. Um teste de regressão simula consumir o evento com a página oculta e voltar sem receber o mesmo evento novamente. O compositor também foca o campo de edição depois de montar a instância correta, após a saída do Drawer.
 
 Para executar o teste de navegador em outro checkout, `DM_BACKEND_ROOT` pode apontar para as fontes do backend extraídas do arquivo de recuperação.
+
+## Acabamento visual e Motion
+
+Motion (`motion/react`, com LazyMotion/domAnimation e componentes `m`) está centralizado em `ui/src/core/motion.tsx`. A política global respeita a preferência de movimento reduzido. As trocas de páginas/campos usam AnimatePresence e transições curtas; grupos e reações têm feedback de entrada e toque. A Base UI continua sendo a única responsável pelo arraste e pela saída do Drawer, evitando dois mecanismos disputando o mesmo transform.
+
+O menu agora possui superfícies semânticas `card`, cantos de 18px e divisórias internas depois da coluna de ícones. As linhas usam botões semânticos específicos; a borda do Button genérico não se propaga para cada opção. O título técnico fica acessível a leitores de tela e a linha de reações ganha acesso à preferência de toque duplo.
+
+No celular, o perfil abre em Drawer e usa uma superfície contínua, sem card dentro de outro card. Nome, foto, descrição e troca de senha preservam os contratos e permissões anteriores. As conversas exibem horários reais e pesquisa recolhida por padrão. Mensagens consecutivas próximas são agrupadas, e o recibo aparece somente na última mensagem enviada visível. O cabeçalho da conversa substitui o cabeçalho repetido das DMs em telas pequenas.
+
+Imagens privadas de até 1 MiB carregam quando entram na área visível; mídias maiores continuam sob interação. URLs Blob são revogadas ao sair, e respostas tardias após desmontar não são exibidas. Não houve mudança no backend nem no armazenamento das mensagens.
+
+Validação do Motion: o teste de navegador registrou opacidades intermediárias reais durante a abertura dos grupos, além de verificar o arraste nativo, as ações, o perfil editável, o recorte da foto e a prévia autenticada de imagem. Capturas mobile e desktop foram inspecionadas. Os testes unitários passaram após repetir isoladamente o teste de arquivos D2 que excedeu o prazo durante os builds concorrentes. O lint das fontes do D3 não apresentou erros; há um aviso anterior sobre a cópia deliberada de um Set no store. O lint sem caminho também percorre arquivos gerados/dependências e não deve ser usado para corrigir bibliotecas externas.

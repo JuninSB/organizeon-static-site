@@ -9,8 +9,9 @@ export const DrawerDescription = Primitive.Description;
 export function DrawerContent({
   children,
   className,
+  contentClassName,
   ...props
-}: Primitive.Popup.Props) {
+}: Primitive.Popup.Props & { contentClassName?: string }) {
   const container = usePortalContainer();
   return (
     <Primitive.Portal container={container ?? undefined}>
@@ -22,7 +23,7 @@ export function DrawerContent({
         <Primitive.Popup
           data-slot="drawer-content"
           className={cn(
-            "oo-drawer-popup pointer-events-auto w-full max-w-lg rounded-t-xl border border-b-0 border-border bg-popover text-sm text-popover-foreground outline-none",
+            "oo-drawer-popup pointer-events-auto w-full max-w-lg rounded-t-[24px] bg-popover text-sm text-popover-foreground outline-none",
             className,
           )}
           {...props}
@@ -34,7 +35,7 @@ export function DrawerContent({
           >
             <div className="h-1 w-10 rounded-full bg-muted-foreground/40" />
           </div>
-          <Primitive.Content className="oo-drawer-scroll overflow-y-auto overscroll-contain px-4 pb-4">
+          <Primitive.Content className={cn("oo-drawer-scroll overflow-y-auto overscroll-contain px-4 pb-4", contentClassName)}>
             {children}
           </Primitive.Content>
         </Primitive.Popup>

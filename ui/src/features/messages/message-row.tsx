@@ -46,6 +46,8 @@ export function MessageRow({
   onProfile,
   onReact,
   quickReaction,
+  compact = false,
+  showReceipt = true,
 }: {
   message: DmMessage;
   person: DmPerson;
@@ -57,6 +59,8 @@ export function MessageRow({
   onProfile: (person: DmPerson) => void;
   onReact: (m: DmMessage, emoji: string) => void;
   quickReaction: string;
+  compact?: boolean;
+  showReceipt?: boolean;
 }) {
   const actions = () => {
       if (!message.deleted) onActions(message);
@@ -70,11 +74,16 @@ export function MessageRow({
     <article
       {...gesture.handlers}
       data-message-id={message.id}
-      className="group relative flex min-w-0 gap-2.5 rounded-md px-2 py-2 hover:bg-muted/40"
+      className={`group relative flex min-w-0 gap-3 rounded-md px-3 ${compact ? "py-0.5" : "pb-1 pt-3"} hover:bg-accent/20`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onDoubleClick={(event) => {
-        if ((event.target as Element).closest("button,a,input,textarea,video,audio")) return;
+        if (
+          (event.target as Element).closest(
+            "button,a,input,textarea,video,audio",
+          )
+        )
+          return;
         if (!message.deleted) onReact(message, quickReaction);
       }}
       style={{
@@ -85,16 +94,20 @@ export function MessageRow({
         transition: gesture.offset ? "none" : "transform 150ms ease",
       }}
     >
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="mt-0.5 size-9 shrink-0 rounded-full p-0"
-        aria-label={`Abrir perfil de ${person.profile.displayName}`}
-        onClick={() => onProfile(person)}
-      >
-        <ProfileAvatar profile={person.profile} className="size-9" />
-      </Button>
+      {!compact ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="mt-0.5 size-9 shrink-0 rounded-full p-0"
+          aria-label={`Abrir perfil de ${person.profile.displayName}`}
+          onClick={() => onProfile(person)}
+        >
+          <ProfileAvatar profile={person.profile} className="size-9" />
+        </Button>
+      ) : (
+        <span className="w-9 shrink-0" aria-hidden="true" />
+      )}
       <div className="min-w-0 flex-1">
         {message.reply && (
           <div className="mb-1 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
@@ -105,46 +118,48 @@ export function MessageRow({
             </span>
           </div>
         )}
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 pr-6">
-          <button
-            type="button"
-            className="max-w-full truncate rounded text-sm font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            style={{
-              color:
-                person.profile.nameColor.toUpperCase() === "#FAFAFA"
-                  ? undefined
-                  : person.profile.nameColor,
-            }}
-            onClick={() => onMention(person.username)}
-          >
-            {person.profile.displayName}
-          </button>
-          <time
-            dateTime={message.createdAt}
-            className="text-[10px] text-muted-foreground"
-            title={new Date(message.createdAt).toLocaleString("pt-BR")}
-          >
-            {new Date(message.createdAt).toLocaleTimeString("pt-BR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </time>
-          {message.editedAt && !message.deleted && (
-            <span className="text-[10px] text-muted-foreground">editada</span>
-          )}
-          {message.pinned && (
-            <Pin
-              aria-label="Mensagem fixada"
-              className="size-3 text-muted-foreground"
-            />
-          )}
-          {message.bookmarked && (
-            <Bookmark
-              aria-label="Mensagem salva"
-              className="size-3 text-muted-foreground"
-            />
-          )}
-        </div>
+        {!compact && (
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 pr-6">
+            <button
+              type="button"
+              className="max-w-full truncate rounded text-sm font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              style={{
+                color:
+                  person.profile.nameColor.toUpperCase() === "#FAFAFA"
+                    ? undefined
+                    : person.profile.nameColor,
+              }}
+              onClick={() => onMention(person.username)}
+            >
+              {person.profile.displayName}
+            </button>
+            <time
+              dateTime={message.createdAt}
+              className="text-[10px] text-muted-foreground"
+              title={new Date(message.createdAt).toLocaleString("pt-BR")}
+            >
+              {new Date(message.createdAt).toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </time>
+            {message.editedAt && !message.deleted && (
+              <span className="text-[10px] text-muted-foreground">editada</span>
+            )}
+            {message.pinned && (
+              <Pin
+                aria-label="Mensagem fixada"
+                className="size-3 text-muted-foreground"
+              />
+            )}
+            {message.bookmarked && (
+              <Bookmark
+                aria-label="Mensagem salva"
+                className="size-3 text-muted-foreground"
+              />
+            )}
+          </div>
+        )}
         {message.forwarded && !message.deleted && (
           <p className="mt-0.5 text-[10px] text-muted-foreground">
             Encaminhada
@@ -180,7 +195,7 @@ export function MessageRow({
             ))}
           </div>
         )}
-        {own && !message.deleted && (
+        {own && showReceipt && !message.deleted && (
           <p className="mt-1 flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
             {read && <CheckCheck className="size-3" />}
             {read ? "Lida" : "Enviada"}
