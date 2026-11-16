@@ -1,6 +1,16 @@
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 
+// Version admin assets by their content; the HTML itself is then hashed normally.
+const adminHtmlUrl = new URL('../admin.html', import.meta.url);
+let adminHtml = await readFile(adminHtmlUrl, 'utf8');
+for (const extension of ['js', 'css']) {
+  const bytes = await readFile(new URL(`../ui-dist/admin-ui.${extension}`, import.meta.url));
+  const version = createHash('sha256').update(bytes).digest('hex').slice(0, 12);
+  adminHtml = adminHtml.replace(new RegExp(`(\\./ui-dist/admin-ui\\.${extension})(?:\\?v=[^"\\s]*)?`, 'g'), `$1?v=${version}`);
+}
+await writeFile(adminHtmlUrl, adminHtml);
+
 // Preserve the published list: clients depend on existing paths remaining available.
 const manifest = JSON.parse(await readFile(new URL('../download-manifest.json', import.meta.url), 'utf8'));
 for (const path of ['ui-dist/client-ui.js', 'ui-dist/client-ui.css', 'ui-dist/admin-ui.js', 'ui-dist/admin-ui.css']) {

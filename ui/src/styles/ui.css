@@ -103,8 +103,7 @@
   border: 1px solid rgb(var(--border));
   box-shadow: 0 24px 64px rgb(0 0 0 / .32);
 }
-.organizeon-ui [data-slot="dialog-content"] { transform: none; translate: -50% -50%; }
-.organizeon-ui [data-slot="dialog-content"][data-open],
+.organizeon-ui .oo-dialog-popup { transform: translate(-50%, -50%); }
 .organizeon-ui .d3-sheet-content[data-open],
 .organizeon-ui [data-slot="select-content"][data-open],
 .organizeon-ui [data-slot="dropdown-menu-content"][data-open] {
@@ -112,7 +111,6 @@
 }
 .organizeon-ui [data-slot="dialog-overlay"][data-open],
 .organizeon-ui [data-slot="sheet-overlay"][data-open] { animation: ui-fade-in 150ms ease-out; }
-.organizeon-ui [data-slot="dialog-content"][data-closed],
 .organizeon-ui .d3-sheet-content[data-closed],
 .organizeon-ui [data-slot="select-content"][data-closed],
 .organizeon-ui [data-slot="dropdown-menu-content"][data-closed] {
@@ -164,3 +162,7 @@
  --sidebar-accent: 244 244 245; --sidebar-accent-foreground: 24 24 27;
  --sidebar-border: 228 228 231; --sidebar-ring: 161 161 170;
 }
+
+/* Dialog geometry stays fixed while opacity changes. */
+.organizeon-ui .oo-dialog-popup[data-open] { animation: ui-fade-in 160ms ease-out; }
+.organizeon-ui .oo-dialog-popup[data-closed] { animation: ui-fade-out 120ms ease-in; }

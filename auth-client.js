@@ -1163,7 +1163,9 @@ function restartClientAtMain() {
 }
 
 function openDashboardWindow() {
-  const dashboardUrl = new URL("admin.html", document.baseURI).href;
+  const dashboardLocation = new URL("admin.html", document.baseURI);
+  dashboardLocation.searchParams.set("v", window.__ORGANIZEON_CLIENT_VERSION__ || "contracts-20261116-1");
+  const dashboardUrl = dashboardLocation.href;
   const dashboardOrigin = new URL(dashboardUrl).origin;
   dashboardPanelCleanup?.();
 
@@ -1200,9 +1202,7 @@ function openDashboardWindow() {
     }
     removeDashboard();
     if (event.data.openSidebar) {
-      document
-        .getElementById("organizeon-account-navigation")
-        ?.classList.add("open");
+      document.getElementById("organizeon-account-navigation-react")?.shadowRoot?.querySelector('button[aria-label="Abrir menu"]')?.click();
     }
   };
   dashboardPanelCleanup = removeDashboard;
@@ -1268,6 +1268,9 @@ async function showGameCatalog() {
   const catalogHost = document.createElement("div"); catalogHost.id = "organizeon-game-catalog-host";
   catalogHost.style.cssText = "position:fixed;inset:0;z-index:2147483646";
   const catalogShadow = catalogHost.attachShadow({mode:"open"});
+  const catalogStyles=document.createElement('link');catalogStyles.rel='stylesheet';catalogStyles.href=catalogCSS;catalogStyles.dataset.organizeonUi='client';
+  const catalogStylesReady=new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Tempo limite ao carregar estilos do catálogo.')),15000);catalogStyles.onload=()=>{clearTimeout(timer);resolve();};catalogStyles.onerror=()=>{clearTimeout(timer);reject(Error('Falha ao carregar estilos do catálogo.'));};});
+  catalogShadow.append(catalogStyles);
   const previousOverflow = document.body.style.overflow;
   const wrapper = document.createElement("section");
   wrapper.id = "organizeon-game-catalog";
@@ -1879,6 +1882,7 @@ async function showGameCatalog() {
   frame.addEventListener("load", installEmbeddedGameInputGuard);
 
   try {
+    await catalogStylesReady;
     const response = await fetch(
       assetUrl("games/catalog.json"),
       { cache: "no-cache" },
@@ -1924,6 +1928,7 @@ async function showGameCatalog() {
     empty.textContent =
       "Não foi possível carregar o catálogo. Verifique a conexão e tente novamente.";
     grid.appendChild(empty);
+    const back=document.createElement('button');back.textContent='Voltar ao OrganizeOn';back.onclick=close;back.style.cssText='padding:12px;background:#27272a;color:#fafafa;border:0;border-radius:8px';grid.append(back);
     console.error("Falha ao abrir catálogo de jogos:", error);
   }
 

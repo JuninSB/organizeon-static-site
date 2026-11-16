@@ -34,3 +34,17 @@ O manifesto inclui também `admin-ui.js` e `admin-ui.css`. Rebuild exige regener
 A homepage e a pesquisa original do Fern não devem ser substituídas por uma homepage própria. A tentativa de `HomePage` foi removida: cobria a página e impedia ver Configurações ao navegar pela sidebar. Busca, engine de proxy e páginas originais continuam sob o módulo indicado em `config.js`. A sidebar usa `navigateClientRoute` para Início e Configurações.
 
 O catálogo adicional agora mora em um ShadowRoot próprio. `ensureDocumentStylesheet` instala o CSS na árvore real de cada componente; nunca pressupor `document.head` para componentes em Shadow DOM. A geração de render do catálogo invalida leituras de cache antigas quando filtros mudam ou a tela fecha, evitando atualização de cards já desmontados.
+
+### Contratos compartilhados de navegação e posicionamento
+
+`components/layout/client-sidebar.tsx` utiliza os primitives Sidebar/SidebarProvider reais. A navegação do cliente não possui uma implementação paralela baseada apenas em Sheet. `components/layout/account-menu.tsx` é compartilhado entre cliente, D2 e admin: avatar, nome, nível e ação contextual usam a mesma estrutura. O admin mantém a ação de retornar ao cliente; a saída da conta continua no perfil do cliente.
+
+A lista de categorias possui um viewport próprio com largura limitada e conteúdo `w-max`, sem permitir que o grid da página cresça pelo tamanho intrínseco das tabs. As rolagens da página e da lista são independentes.
+
+`lib/style-ready.ts` impede o primeiro render de portais antes de carregar o CSS. Diálogos usam um transform estável para centralização e animam apenas opacity. Nunca animar o mesmo transform responsável pelo posicionamento. Verificar os primeiros frames, não somente o estado final.
+
+Regressão de navegador: `PLAYWRIGHT_MODULE=/caminho/para/playwright node ui/e2e/contracts.cjs` (ou instalar Playwright no ambiente de teste). Verifica scroll real do viewport de categorias, ausência de overflow no documento, perfil/sidebar e posição do diálogo ao longo de 15 frames. Não altera dados reais. As capturas são escritas em `/tmp`.
+
+O admin versiona os próprios bundles pelo hash de conteúdo em `scripts/update-manifest.mjs`; a URL do iframe recebe a versão do cliente. Isso evita apresentar uma combinação de HTML novo e JavaScript antigo em cache. Na publicação do D2, renovar também a query dos imports no HTML servido pelo backend.
+
+Validação desta correção: viewport de 390px, área das categorias de 358px, documento limitado a 390px; gesto de toque deslocou a lista em 736px. O diálogo permaneceu centrado em (195,425) durante 15 frames. O teste com runtime original confirmou a busca e Configurações; o service worker não foi validado nesse host sintético (bloqueado pelo ambiente de teste).

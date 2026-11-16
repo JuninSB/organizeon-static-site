@@ -1,3 +1,4 @@
+import { afterStyles } from "@/lib/style-ready";
 import { ConnectionStatus } from "@/components/client/connection-status";
 import { createRoot, type Root } from "react-dom/client";
 import { flushSync } from "react-dom";
@@ -24,12 +25,13 @@ function ensureDocumentStylesheet(href: string, host?: HTMLElement) {
   const tree = host?.getRootNode();
   const scope = tree instanceof ShadowRoot ? tree : document;
   const existing = scope.querySelector<HTMLLinkElement>('link[data-organizeon-ui="client"]');
-  if (existing) return;
+  if (existing) return existing;
   const stylesheet = document.createElement("link");
   stylesheet.rel = "stylesheet";
   stylesheet.href = href;
   stylesheet.dataset.organizeonUi = "client";
   if (scope instanceof ShadowRoot) scope.append(stylesheet); else document.head.append(stylesheet);
+  return stylesheet;
 }
 
 export function mountGameCard(host: HTMLElement, game: GameCardData, stylesheetHref: string) {
@@ -71,10 +73,10 @@ export function unmountPreferenceCard(host: HTMLElement) {
 
 export function mountClientDialog(host: HTMLElement, dialog: ReactNode, stylesheetHref: string) {
   host.classList.add("organizeon-ui", "organizeon-overlay-root", "dark");
-  ensureDocumentStylesheet(stylesheetHref, host);
+  const stylesheet = ensureDocumentStylesheet(stylesheetHref, host);
   const root = createRoot(host);
-  flushSync(() => root.render(<div className="organizeon-ui dark"><PortalContextProvider container={host}>{dialog}</PortalContextProvider></div>));
-  return () => root.unmount();
+  const cancel = afterStyles(stylesheet, () => flushSync(() => root.render(<div className="organizeon-ui dark"><PortalContextProvider container={host}>{dialog}</PortalContextProvider></div>)));
+  return () => { cancel(); root.unmount(); };
 }
 
 export function mountGameCreditsDialog(host: HTMLElement, game: { name: string; attribution?: string; copyright?: string; license?: string; source?: string; sourceLabel?: string }, onClose: () => void, stylesheetHref: string) {
@@ -152,8 +154,8 @@ export function mountNavigation(host: HTMLElement, props: SurfaceProps, styleshe
   container.className = "organizeon-ui organizeon-overlay-root dark";
   shadow.append(stylesheet, container);
   const root = createRoot(container);
-  flushSync(() => root.render(<PortalContextProvider container={container}><ClientSurface {...props} /></PortalContextProvider>));
-  return () => { root.unmount(); shadow.replaceChildren(); };
+  const cancel = afterStyles(stylesheet, () => flushSync(() => root.render(<PortalContextProvider container={container}><TooltipProvider><ClientSurface {...props} /></TooltipProvider></PortalContextProvider>)));
+  return () => { cancel(); root.unmount(); shadow.replaceChildren(); };
 }
 
 export function mountD2Login(host: HTMLElement, onSubmit: (username: string, password: string) => Promise<void>, stylesheetHref: string) {
@@ -206,11 +208,14 @@ export function dismissClientToast(id?: string) { toast.dismiss(id); }
 export function mountReactiveSurface(host: HTMLElement, props: SurfaceProps, stylesheetHref: string) {
  const shadow = host.attachShadow({ mode: 'open' });
  const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = stylesheetHref;
+ const loading=document.createElement('div');loading.textContent='Carregando interface…';loading.style.cssText='display:grid;place-items:center;min-height:100svh;background:#09090b;color:#a1a1aa;font:14px system-ui';
  const container = document.createElement('div'); container.className = 'organizeon-ui dark';
- shadow.append(link, container); const root = createRoot(container);
- const update = (next: SurfaceProps) => flushSync(() => root.render(<PortalContextProvider container={container}><TooltipProvider><ClientSurface {...next}/></TooltipProvider></PortalContextProvider>));
- update(props);
- return { update, unmount: () => { root.unmount(); shadow.replaceChildren(); } };
+ shadow.append(link, loading, container); const root = createRoot(container);
+ let ready=false;let current=props;
+ const update = (next: SurfaceProps) => {current=next;if(ready)flushSync(() => root.render(<PortalContextProvider container={container}><TooltipProvider><ClientSurface {...current}/></TooltipProvider></PortalContextProvider>));};
+ const cancel=afterStyles(link,()=>{ready=true;loading.remove();update(current);});
+ link.addEventListener('error',()=>{loading.textContent='Não foi possível carregar os estilos da interface.';},{once:true});
+ return { update, unmount: () => { cancel();root.unmount();shadow.replaceChildren(); } };
 }
 export function showConnectionToast(title: string, detail: string, percent: number | null, duration: number) {
  toast.custom(id => <ConnectionStatus title={title} detail={detail} percent={percent} onClose={() => toast.dismiss(id)}/>, { id: 'connection-status', duration: duration > 0 ? duration : Infinity });

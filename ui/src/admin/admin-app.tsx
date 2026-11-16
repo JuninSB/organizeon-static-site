@@ -1,10 +1,10 @@
+import { AccountMenu } from "@/components/layout/account-menu";
 import { useEffect, useRef, useState } from "react";
 import {
   Activity, ArrowLeft, ChevronDown, Cpu, Database, Gauge, LayoutDashboard, RefreshCw, Server,
-  ShieldCheck, TerminalSquare, Users,
+  TerminalSquare, Users,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -114,12 +114,12 @@ export function AdminApp() {
     <div className="organizeon-ui dark organizeon-admin-root min-h-svh bg-background text-foreground">
       <SidebarProvider defaultOpen>
         <Sidebar collapsible="icon" variant="sidebar">
-          <SidebarHeader className="px-3 pb-3 pt-4"><div className="flex min-h-10 items-center gap-2.5 px-2 text-sm font-semibold tracking-tight"><span className="grid size-7 place-items-center rounded-md border bg-card"><LayoutDashboard className="size-4" /></span><span>OrganizeOn <span className="font-normal text-muted-foreground">Admin</span></span></div></SidebarHeader>
+          <SidebarHeader className="px-3 pb-3 pt-4"><div className="flex min-h-10 items-center gap-2.5 px-2 text-sm font-semibold tracking-tight"><img className="size-7 shrink-0" src="https://organizeon.com.br/d3/assets/organizeon-icon.png" alt=""/><span>OrganizeOn <span className="font-normal text-muted-foreground">Admin</span></span></div></SidebarHeader>
           <SidebarSeparator />
           <SidebarContent><SidebarGroup><SidebarGroupLabel>Administração</SidebarGroupLabel><SidebarMenu>{navigation.filter(item => !account || (!item.permission || account.permissions.includes(item.permission)) && (item.value !== "services" || account.permissions.some(permission => permission.startsWith("services.")))).map(({ value, label, icon: Icon, permission }) => <SidebarMenuItem key={value} id={value === "services" ? "services-nav" : undefined}>
             <AdminNavigation value={value} label={label} icon={Icon} permission={permission} active={view === value}/>
           </SidebarMenuItem>)}</SidebarMenu></SidebarGroup></SidebarContent>
-          <SidebarFooter className="px-3 pb-3"><Separator /><div className="flex items-center gap-2 px-2 pt-2 text-xs text-muted-foreground"><ShieldIcon /><span id="account-name" className="truncate">{account?.username || "—"}</span><Badge id="account-role" variant="secondary" className="ml-auto">{account?.role || "—"}</Badge></div></SidebarFooter>
+          <SidebarFooter className="px-2 pb-3"><AccountMenu username={account?.username || 'Conta'} role={account?.role || 'user'} onReturn={() => document.getElementById('back-link')?.click()}/></SidebarFooter>
         </Sidebar>
         <SidebarInset className="min-w-0 bg-background">
           <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur-sm sm:px-6">
@@ -182,5 +182,3 @@ export function AdminApp() {
     </div>
   </TooltipProvider></PortalContextProvider>;
 }
-
-function ShieldIcon() { return <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />; }
