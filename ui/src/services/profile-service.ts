@@ -8,6 +8,7 @@ export type Profile = {
   goldBadge?: boolean;
   bannerSeed?: string;
   bannerRerollAvailableAt?: string | null;
+  bannerRerollUnlimited?: boolean;
   showGoldBadge?: boolean;
   bannerStyle?: "solid" | "lava";
 };

@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-export const LAVA_PATTERNS = ["fall", "spiral", "cascade", "drift", "counterflow", "orbit", "stretch", "wave", "helix", "rain", "tumble", "slowflow"] as const;
+export const LAVA_PATTERNS = ["silk", "vortex", "dunes", "diagonal", "folds", "aurora", "marble", "waves", "helix", "cascade", "storm", "mist"] as const;
 function seedValue(seed: string, index: number) {
   const part = seed.slice(index * 4, index * 4 + 4);
   if (/^[a-f0-9]{4}$/i.test(part)) return Number.parseInt(part, 16) / 65535;
@@ -9,26 +9,23 @@ function seedValue(seed: string, index: number) {
   hash ^= hash >>> 13; hash = Math.imul(hash, 0xc2b2ae35); hash ^= hash >>> 16;
   return (hash >>> 0) / 4294967295;
 }
-/** Account seed chooses one of 12 paths and independently varies every moving mass. */
+/** Account seed chooses one of 12 paths and independently varies every continuous surface. */
 export function lavaPattern(seed: string) {
   const family = LAVA_PATTERNS[Math.min(11, Math.floor(seedValue(seed, 0) * 12))];
   return {
     family,
-    blobs: Array.from({ length: 6 }, (_, index) => {
+    layers: Array.from({ length: 6 }, (_, index) => {
       const value = (offset: number) => seedValue(seed, index * 7 + offset + 1);
       const duration = 7 + value(1) * 10;
       return {
-        cx: 30 + index * 68 + value(0) * 20,
-        rx: 20 + value(2) * 17,
-        ry: 21 + value(3) * 19,
         tone: value(4),
         style: {
-          animationName: `oo-lava-${family}`,
+          animationName: `oo-fluid-${family}`,
           animationDuration: `${duration.toFixed(3)}s`,
           animationDelay: `${(-((index / 6 + value(5) * .15) % 1) * duration).toFixed(3)}s`,
-          transformOrigin: `${30 + index * 68 + value(0) * 20}px 0px`,
-          "--blob-drift": `${(-35 + value(6) * 70).toFixed(3)}px`,
-          "--blob-turn": `${(70 + value(4) * 280).toFixed(3)}deg`,
+          transformOrigin: "220px 60px",
+          "--flow-drift": `${(-35 + value(6) * 70).toFixed(3)}px`,
+          "--flow-turn": `${(-14 + value(4) * 28).toFixed(3)}deg`,
         } as CSSProperties,
       };
     }),

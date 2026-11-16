@@ -1,32 +1,29 @@
 import { useId } from "react";
-import { lavaPalette, lavaPattern } from "./profile-banner";
-/** Bounded SVG metaballs: alpha threshold makes touching masses join into viscous necks. */
+import { LAVA_PATTERNS, lavaPalette, lavaPattern } from "./profile-banner";
+import { fluidPath } from "./fluid-paths";
+/** Full-frame layered fabric, marble and wave surfaces with directional shading. */
 export function LavaBanner({ seed, color }: { seed: string; color: string }) {
-  const id = "oo-lava-" + useId().replace(/[^a-z0-9_-]/gi, "");
-  const { family, blobs } = lavaPattern(seed);
-  const base = lavaPalette(color, .5);
+  const id = "oo-fluid-" + useId().replace(/[^a-z0-9_-]/gi, "");
+  const { family, layers } = lavaPattern(seed);
+  const base = lavaPalette(color, .5), familyIndex = LAVA_PATTERNS.indexOf(family);
   return <svg className="oo-lava-field" aria-hidden="true" data-pattern={family} viewBox="0 0 440 120" preserveAspectRatio="none">
     <defs>
-      <filter id={`${id}-goo`} x="-15%" y="-60%" width="130%" height="220%" colorInterpolationFilters="sRGB">
-        <feGaussianBlur stdDeviation="5" />
-        <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
+      <linearGradient id={`${id}-base`} x2="1" y2="1"><stop stopColor={base.body}/><stop offset=".5" stopColor={base.shade}/><stop offset="1" stopColor={base.light}/></linearGradient>
+      <filter id={`${id}-flow`} filterUnits="userSpaceOnUse" x="-50" y="-35" width="540" height="190" colorInterpolationFilters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency={family === "storm" ? ".012 .022" : ".005 .012"} numOctaves="1" seed={familyIndex+1} result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale={family === "marble" ? 26 : family === "storm" ? 22 : 7} xChannelSelector="R" yChannelSelector="G"/>
+        <feGaussianBlur stdDeviation={family === "mist" ? 10 : .35}/>
+        <feColorMatrix type="saturate" values="1.08"/>
       </filter>
-      <linearGradient id={`${id}-body`} x2="0" y2="1">
-        <stop stopColor={base.shade} /><stop offset=".5" stopColor={base.body} /><stop offset="1" stopColor={base.shade} />
-      </linearGradient>
-      {blobs.map((blob, index) => { const tone = lavaPalette(color, blob.tone); return <radialGradient key={index} id={`${id}-depth-${index}`} cx=".28" cy=".2" r=".82">
-        <stop stopColor={tone.light} /><stop offset=".35" stopColor={tone.body} /><stop offset=".8" stopColor={tone.shade} /><stop offset="1" stopColor={tone.shade} stopOpacity="0" />
-      </radialGradient>; })}
-      <mask id={`${id}-mask`} maskUnits="userSpaceOnUse" x="0" y="0" width="440" height="120" style={{maskType:"alpha"}}>
-        <g filter={`url(#${id}-goo)`} fill="white">
-          <ellipse cx="100" cy="-21" rx="145" ry="34" /><ellipse cx="320" cy="142" rx="170" ry="39" />
-          {blobs.map((blob,index)=><g key={index} className="oo-lava-blob" style={blob.style}><ellipse cx={blob.cx} cy="0" rx={blob.rx} ry={blob.ry} /></g>)}
-        </g>
-      </mask>
+      {layers.map((layer,index)=>{const tone=lavaPalette(color,(layer.tone-.5)*2+.5);return <linearGradient key={index} id={`${id}-fold-${index}`} x1={family === "aurora" ? "0" : ".25"} y1="0" x2={family === "cascade" ? "1" : ".7"} y2="1">
+        <stop stopColor={tone.shade}/><stop offset=".13" stopColor={tone.body}/><stop offset=".3" stopColor={tone.light}/><stop offset=".51" stopColor={tone.body}/><stop offset=".85" stopColor={tone.shade}/><stop offset="1" stopColor={tone.body}/>
+      </linearGradient>;})}
     </defs>
-    <g mask={`url(#${id}-mask)`}>
-      <rect width="440" height="120" fill={`url(#${id}-body)`} />
-      {blobs.map((blob,index)=><g key={index} className="oo-lava-blob oo-lava-depth" style={blob.style}><ellipse cx={blob.cx} cy="0" rx={blob.rx} ry={blob.ry} fill={`url(#${id}-depth-${index})`} /></g>)}
+    <rect width="440" height="120" fill={`url(#${id}-base)`}/>
+    <g filter={`url(#${id}-flow)`}>
+      {layers.map((layer,index)=><g key={index} className="oo-fluid-layer oo-lava-depth" style={layer.style} opacity={family === "mist" ? .42 : family === "aurora" ? .65 : .88}>
+        <path d={fluidPath(family,index,layer.tone)} fill={`url(#${id}-fold-${index})`}/>
+      </g>)}
     </g>
   </svg>;
 }

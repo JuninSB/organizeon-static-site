@@ -2,17 +2,19 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { resolve } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
+import { fluidPath } from "@/features/profile/fluid-paths";
 import { LavaBanner } from "@/features/profile/lava-banner";
 import { LAVA_PATTERNS, lavaPattern } from "@/features/profile/profile-banner";
 const seedFor=(index)=>Math.floor((index+.5)/12*65535).toString(16).padStart(4,'0')+'112233445566778899aabbccddeeff';
-it('defines twelve distinct motion families, stable per-account masses and isolated SVG masks',()=>{
+it('defines twelve distinct motion families, stable per-account surfaces and isolated SVG filters',()=>{
  const css=readFileSync(resolve(process.cwd(), "src/features/profile/profile-banner.css"), "utf8");
  expect(new Set(LAVA_PATTERNS).size).toBe(12);
+ expect(new Set(LAVA_PATTERNS.map(family=>fluidPath(family,2,.5))).size).toBe(12);
  const seeds=LAVA_PATTERNS.map((_,index)=>seedFor(index));
  expect(seeds.map(seed=>lavaPattern(seed).family)).toEqual([...LAVA_PATTERNS]);
- for(const family of LAVA_PATTERNS)expect(css).toContain('@keyframes oo-lava-'+family);
- expect(lavaPattern(seeds[0])).toEqual(lavaPattern(seeds[0]));expect(lavaPattern('account-one').blobs).not.toEqual(lavaPattern('account-two').blobs);
+ for(const family of LAVA_PATTERNS)expect(css).toContain('@keyframes oo-fluid-'+family);
+ expect(lavaPattern(seeds[0])).toEqual(lavaPattern(seeds[0]));expect(lavaPattern('account-one').layers).not.toEqual(lavaPattern('account-two').layers);
  const cards=<div className="grid">{seeds.map((seed,index)=><section key={seed}><h2>{LAVA_PATTERNS[index]}</h2><div className="oo-profile-banner" style={{height:150,background:'#0c1714'}}><LavaBanner seed={seed} color="#34D399" /></div></section>)}</div>;
- const html=renderToStaticMarkup(cards);const ids=[...html.matchAll(/<filter id="([^"]+)"/g)].map(match=>match[1]);expect(new Set(ids).size).toBe(12);expect(html).toContain('feGaussianBlur');expect(html).toContain('feColorMatrix');
+ const html=renderToStaticMarkup(cards);const ids=[...html.matchAll(/<filter id="([^"]+)"/g)].map(match=>match[1]);expect(new Set(ids).size).toBe(12);expect(html).toContain('feGaussianBlur');expect(html).toContain('feColorMatrix');expect(html).not.toContain('<ellipse');expect(html).toContain('<path');
  writeFileSync('/tmp/organizeon-lava-patterns.html','<!doctype html><html><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:24px;background:#09090b;color:#fafafa;font:14px system-ui}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}section{border:1px solid #27272a;border-radius:10px;overflow:hidden}h2{margin:0;padding:10px 14px;font-size:14px;font-weight:500}'+css+'</style>'+html+'</html>');
 });

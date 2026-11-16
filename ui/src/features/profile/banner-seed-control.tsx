@@ -8,16 +8,16 @@ import { bannerCooldown, formatBannerCooldown } from "./banner-cooldown";
 export function BannerSeedControl({ profile, disabled, onUpdated }: { profile: Profile; disabled?: boolean; onUpdated: (profile: Profile) => void }) {
   const [now, setNow] = useState(Date.now), [busy, setBusy] = useState(false);
   const [error, setError] = useState(""), [copied, setCopied] = useState(false);
-  const remaining = bannerCooldown(profile.bannerRerollAvailableAt, now);
+  const remaining = profile.bannerRerollUnlimited ? 0 : bannerCooldown(profile.bannerRerollAvailableAt, now);
   useEffect(() => {
     setNow(Date.now());
-    if (!bannerCooldown(profile.bannerRerollAvailableAt)) return;
+    if (profile.bannerRerollUnlimited || !bannerCooldown(profile.bannerRerollAvailableAt)) return;
     const timer = setInterval(() => {
       setNow(Date.now());
       if (!bannerCooldown(profile.bannerRerollAvailableAt)) clearInterval(timer);
     }, 1000);
     return () => clearInterval(timer);
-  }, [profile.bannerRerollAvailableAt]);
+  }, [profile.bannerRerollAvailableAt, profile.bannerRerollUnlimited]);
   useEffect(() => setCopied(false), [profile.bannerSeed]);
   return <section className="space-y-3 rounded-lg border border-border p-3" aria-label="Seed e reroll do fundo">
     <label className="grid gap-2 text-sm">Seed do fundo
@@ -36,12 +36,12 @@ export function BannerSeedControl({ profile, disabled, onUpdated }: { profile: P
         try {
           const current = await profileService.get();
           onUpdated(current);setNow(Date.now());
-          confirmed = current.bannerSeed !== profile.bannerSeed && bannerCooldown(current.bannerRerollAvailableAt) > 0;
+          confirmed = current.bannerSeed !== profile.bannerSeed && (current.bannerRerollUnlimited || bannerCooldown(current.bannerRerollAvailableAt) > 0);
         } catch {}
         if (!confirmed) setError(error instanceof Error ? error.message : "Não foi possível gerar outra seed.");
       } finally {setBusy(false);}
     }}><RotatingIcon icon={RefreshCw} active={busy} />{busy ? "Gerando fundo…" : "Gerar nova seed"}</Button>
-    <p className="text-xs text-muted-foreground">{remaining > 0 ? <>Novo reroll em <time dateTime={profile.bannerRerollAvailableAt || undefined}>{formatBannerCooldown(remaining)}</time>.</> : "Alteração imediata. Uma nova seed a cada 24 horas."}</p>
+    <p className="text-xs text-muted-foreground">{remaining > 0 ? <>Novo reroll em <time dateTime={profile.bannerRerollAvailableAt || undefined}>{formatBannerCooldown(remaining)}</time>.</> : profile.bannerRerollUnlimited ? "Owner: reroll sem cooldown." : "Alteração imediata. Uma nova seed a cada 24 horas."}</p>
     {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
   </section>;
 }

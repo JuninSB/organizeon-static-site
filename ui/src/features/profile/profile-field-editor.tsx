@@ -68,7 +68,7 @@ export function ProfileFieldEditor({
         <div className="oo-profile-banner h-28 rounded-lg border border-border bg-card" role="img" aria-label="Prévia do fundo" style={{background:`color-mix(in srgb, ${draft.nameColor} 18%, rgb(var(--card)))`}}>
           {draft.bannerStyle === "lava" && <LavaBanner seed={draft.bannerSeed || "preview"} color={draft.nameColor} />}
         </div>
-        <BannerSeedControl profile={draft} disabled={busy} onUpdated={(next) => {setDraft(current => ({...current,bannerSeed:next.bannerSeed,bannerRerollAvailableAt:next.bannerRerollAvailableAt}));onRerolled?.(next);}} />
+        <BannerSeedControl profile={draft} disabled={busy} onUpdated={(next) => {setDraft(current => ({...current,bannerSeed:next.bannerSeed,bannerRerollAvailableAt:next.bannerRerollAvailableAt,bannerRerollUnlimited:next.bannerRerollUnlimited}));onRerolled?.(next);}} />
         <label className="flex items-center gap-3 text-sm"><Checkbox checked={draft.showGoldBadge !== false} disabled={busy} onCheckedChange={(value) => setDraft({ ...draft, showGoldBadge: !!value })} />Exibir emblema dourado no perfil</label>
         <label className="grid gap-2 text-sm">Fundo do perfil
           <Select value={draft.bannerStyle || "solid"} disabled={busy} onValueChange={(value) => {if(value === "solid" || value === "lava")setDraft({ ...draft, bannerStyle: value });}}>
