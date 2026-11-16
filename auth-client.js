@@ -479,172 +479,38 @@ window.organizeonStatus = Object.freeze({
 
 function configureAccountNavigation(account) {
   if (!account) return;
-  const normalized = {
-    username: account.username,
-    role: account.role,
-    permissions: Array.isArray(account.permissions)
-      ? account.permissions
-      : [],
-  };
+  const normalized = { username: account.username, role: account.role, permissions: Array.isArray(account.permissions) ? account.permissions : [] };
   window.organizeonAccount = Object.freeze(normalized);
-
-  const previousNavigation = document.getElementById("organizeon-account-navigation-react");
-  previousNavigation?.__cleanup?.();
-  previousNavigation?.remove();
-  document.getElementById("organizeon-account-navigation")?.remove();
-  const navigation = document.createElement("div");
-  navigation.id = "organizeon-account-navigation";
-  const canOpenDashboard =
-    normalized.permissions.includes("admin.dashboard");
-  const isGuest = normalized.role === "guest";
-  navigation.innerHTML = `
-    <style>
-      #organizeon-account-navigation { position: fixed; inset: 0 auto auto 0; z-index: 2147483645; color: #fafafa; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-      #organizeon-account-navigation * { box-sizing: border-box; }
-      #organizeon-account-navigation .trigger { position: fixed; top: 12px; left: 12px; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #27272a; border-radius: 8px; cursor: pointer; color: #fafafa; background: #18181b; }
-      #organizeon-account-navigation .glyph { display: grid; grid-template-columns: 5px 15px; gap: 5px; align-items: center; width: 25px; }
-      #organizeon-account-navigation .glyph i { height: 2px; border-radius: 2px; background: currentColor; }
-      #organizeon-account-navigation .glyph i:nth-child(odd) { width: 4px; height: 4px; }
-      #organizeon-account-navigation .drawer { position: fixed; inset: 0 auto 0 0; width: min(288px, 86vw); overflow-y: auto; padding: 68px 12px 20px; transform: translateX(-105%); border-right: 1px solid #27272a; background: #111113; transition: transform .2s ease; }
-      #organizeon-account-navigation .backdrop { position: fixed; inset: 0; visibility: hidden; opacity: 0; border: 0; background: rgba(0,0,0,.55); transition: opacity .2s ease, visibility .2s; }
-      #organizeon-account-navigation.open .backdrop { visibility: visible; opacity: 1; }
-      #organizeon-account-navigation.open .drawer { transform: translateX(0); }
-      #organizeon-account-navigation .account { margin: 0 8px 20px; color: #a1a1aa; font-size: 12px; }
-      #organizeon-account-navigation .account strong { display: block; margin-bottom: 3px; color: #fafafa; font-size: 14px; }
-      #organizeon-account-navigation .item { width: 100%; min-height: 44px; margin: 2px 0; padding: 0 12px; display: flex; align-items: center; gap: 11px; border: 0; border-radius: 7px; cursor: pointer; color: #d4d4d8; background: transparent; text-align: left; font-weight: 550; }
-      #organizeon-account-navigation .item-icon { width: 18px; height: 18px; flex: 0 0 18px; }
-      #organizeon-account-navigation .item:hover, #organizeon-account-navigation .item:focus-visible { color: #fafafa; background: #27272a; }
-      #organizeon-account-navigation .item.logout { color: #fca5a5; }
-      #organizeon-account-navigation .badge { margin-left: auto; padding: 3px 8px; border: 1px solid #3f3f46; border-radius: 6px; color: #a1a1aa; font-size: 10px; }
-      @media (prefers-reduced-motion: reduce) { #organizeon-account-navigation .drawer, #organizeon-account-navigation .backdrop { transition: none; } }
-    </style>
-    <button class="trigger" type="button" aria-label="Abrir menu">
-      <span class="glyph"><i></i><i></i><i></i><i></i></span>
-    </button>
-    <button class="backdrop" type="button" aria-label="Fechar menu"></button>
-    <aside class="drawer">
-      <div class="account">
-        <strong></strong>
-        <span></span>
-      </div>
-      <button class="item main" type="button">⌂ <span>Início</span></button>
-      <button class="item games" type="button">
-        <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M7 8h10a4 4 0 0 1 3.9 4.9l-.7 3.2a2.4 2.4 0 0 1-4.4.7L14.7 14H9.3l-1.1 2.8a2.4 2.4 0 0 1-4.4-.7l-.7-3.2A4 4 0 0 1 7 8Z"></path>
-          <path d="M8 11v4M6 13h4M16 12h.01M18 14h.01"></path>
-        </svg>
-        <span>Jogos</span>
-      </button>
-      <button class="item settings" type="button">⚙ <span>Configurações</span></button>
-      ${isGuest ? "" : '<button class="item data" type="button">▤ <span>Dados</span></button>'}
-      <button class="item proxy-server" type="button">
-        ⇄ <span>${isGuest ? "Proxy externo" : "Proxy Server"}</span>
-        <small class="badge proxy-badge"></small>
-      </button>
-      ${
-        canOpenDashboard
-          ? '<button class="item dashboard" type="button">◫ <span>Dashboard</span><small class="badge">ADMIN</small></button>'
-          : ""
-      }
-      <button class="item logout" type="button">⇥ <span>Sair</span></button>
-    </aside>
-  `;
-  navigation.querySelector(".account strong").textContent =
-    normalized.username;
-  navigation.querySelector(".account span").textContent =
-    ({
-      owner: "Owner",
-      ultra_admin: "Ultra Admin",
-      admin: "Administrador",
-      user: "Usuário",
-      guest: "Convidado · somente GitHub",
-    })[normalized.role] || "Usuário";
-  const selectedProxy = getSelectedProxyServer();
-  const proxyBadge = navigation.querySelector(".proxy-badge");
-  if (proxyBadge) {
-    proxyBadge.textContent = selectedProxy.beta ? "BETA" : "ATIVO";
-  }
-  navigation.querySelector(".trigger").addEventListener("click", () => {
-    navigation.classList.toggle("open");
-  });
-  navigation.querySelector(".backdrop").addEventListener("click", () => {
-    navigation.classList.remove("open");
-  });
-  navigation.querySelector(".main").addEventListener("click", () => {
-    navigation.classList.remove("open");
-    navigateClientRoute("/");
-  });
-  navigation.querySelector(".games").addEventListener("click", () => {
-    navigation.classList.remove("open");
-    showGameCatalog();
-  });
-  navigation.querySelector(".settings").addEventListener("click", () => {
-    navigation.classList.remove("open");
-    navigateClientRoute("/settings");
-  });
-  navigation.querySelector(".data")?.addEventListener("click", () => {
-    navigation.classList.remove("open");
-    showDataPanel();
-  });
-  navigation
-    .querySelector(".proxy-server")
-    ?.addEventListener("click", () => {
-      navigation.classList.remove("open");
-      showProxyServerDialog();
-    });
-  navigation
-    .querySelector(".dashboard")
-    ?.addEventListener("click", () => {
-      openDashboardWindow();
-      navigation.classList.remove("open");
-    });
-  navigation.querySelector(".logout").addEventListener("click", () => {
-    const confirmed = window.confirm(
-      isGuest
-        ? "Deseja sair do modo convidado?"
-        : "Deseja realmente sair desta conta?",
-    );
-    if (!confirmed) return;
-    window.organizeonAuth.logout();
-  });
-  document.body.appendChild(navigation);
-  const uiBase = new URL(window.__groveBase || "./", document.baseURI);
-  const uiScript = new URL("ui-dist/client-ui.js", uiBase);
-  const uiStyles = new URL("ui-dist/client-ui.css", uiBase);
-  const version = window.__ORGANIZEON_CLIENT_VERSION__;
-  if (version) {
-    uiScript.searchParams.set("v", version);
-    uiStyles.searchParams.set("v", version);
-  }
-  void import(uiScript.href).then((module) => {
-    if (!navigation.isConnected) return;
-    const host = document.createElement("div");
-    host.id = "organizeon-account-navigation-react";
-    Object.assign(host.style, { position: "fixed", inset: "0", zIndex: "2147483645", pointerEvents: "none" });
-    document.body.appendChild(host);
-    try {
-      host.__cleanup = module.mountNavigation(host, {
-        type: "account", username: normalized.username, role: normalized.role,
-        guest: isGuest, canOpenDashboard,
-        proxyLabel: selectedProxy.beta ? "BETA" : "ATIVO",
-        onNavigate: (action) => {
-          if (action === "home") navigateClientRoute("/");
-          if (action === "games") void showGameCatalog();
-          if (action === "settings") navigateClientRoute("/settings");
-          if (action === "data") void showDataPanel();
-          if (action === "proxy") showProxyServerDialog();
-          if (action === "dashboard") openDashboardWindow();
-          if (action === "logout") window.organizeonAuth.logout();
-        },
-      }, uiStyles.href);
-      const link = host.shadowRoot.querySelector('link[rel="stylesheet"]');
-      link.addEventListener("load", () => navigation.remove(), { once: true });
-      link.addEventListener("error", () => { host.__cleanup?.(); host.remove(); }, { once: true });
-    } catch (error) {
-      host.remove();
-      console.error("Falha ao montar a navegação:", error);
-    }
-  }).catch((error) => console.error("Falha ao carregar a navegação:", error));
+  const previous=document.getElementById('organizeon-account-navigation-react');previous?.__cleanup?.();previous?.remove();
+  document.getElementById('organizeon-account-navigation')?.remove();
+  const host=document.createElement('div');host.id='organizeon-account-navigation-react';
+  host.style.cssText='position:fixed;inset:0;z-index:2147483645;pointer-events:none';document.body.append(host);
+  const failed=error=>{
+    if(!host.isConnected)return;
+    host.__cleanup?.();host.__cleanup=null;
+    const root=host.shadowRoot || host;root.replaceChildren();
+    const retry=document.createElement('button');retry.textContent='Menu indisponível · Tentar novamente';
+    retry.style.cssText='position:fixed;top:12px;left:12px;pointer-events:auto;padding:12px;border:1px solid #27272a;border-radius:8px;background:#111113;color:#fafafa;font:14px system-ui';
+    retry.onclick=()=>configureAccountNavigation(normalized);root.append(retry);
+    console.error('Falha ao carregar navegação:',error);
+  };
+  void loadClientUI().then(({ui,css})=>{
+    if(!host.isConnected)return;
+    host.__cleanup=ui.mountNavigation(host, {
+      type:'account',username:normalized.username,role:normalized.role,guest:normalized.role==='guest',
+      canOpenDashboard:normalized.permissions.includes('admin.dashboard'),proxyLabel:getSelectedProxyServer().beta?'BETA':'ATIVO',
+      onNavigate:(action)=>{
+        if (action === "home") navigateClientRoute("/");
+        if (action === "settings") navigateClientRoute("/settings");
+        if(action==='games')void showGameCatalog();
+        if(action==='data')void showDataPanel();
+        if(action==='proxy')void showProxyServerDialog();
+        if(action==='dashboard')openDashboardWindow();
+        if(action==='logout')void window.organizeonAuth.logout();
+      },
+    },css);
+    host.shadowRoot.querySelector('link[rel="stylesheet"]').addEventListener('error',()=>failed(Error('Estilos da navegação indisponíveis.')),{once:true});
+  }).catch(failed);
 }
 
 function navigateClientRoute(route) {

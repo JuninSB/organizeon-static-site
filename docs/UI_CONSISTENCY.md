@@ -48,3 +48,5 @@ Regressão de navegador: `PLAYWRIGHT_MODULE=/caminho/para/playwright node ui/e2e
 O admin versiona os próprios bundles pelo hash de conteúdo em `scripts/update-manifest.mjs`; a URL do iframe recebe a versão do cliente. Isso evita apresentar uma combinação de HTML novo e JavaScript antigo em cache. Na publicação do D2, renovar também a query dos imports no HTML servido pelo backend.
 
 Validação desta correção: viewport de 390px, área das categorias de 358px, documento limitado a 390px; gesto de toque deslocou a lista em 736px. O diálogo permaneceu centrado em (195,425) durante 15 frames. O teste com runtime original confirmou a busca e Configurações; o service worker não foi validado nesse host sintético (bloqueado pelo ambiente de teste).
+
+A montagem da sidebar do cliente não cria mais um drawer HTML antigo como fallback. Em falha de módulo/CSS, mostra somente uma ação neutra para tentar carregar a navegação novamente; o conteúdo do Fern permanece disponível. Isso evita duas implementações concorrentes e o flash do menu antigo.
