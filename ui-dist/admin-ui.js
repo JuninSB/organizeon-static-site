@@ -25414,19 +25414,21 @@ function zA({ render: e, isActive: t = !1, variant: n = "default", size: r = "de
 }
 q_(), Yy(), zv();
 function BA() {
-	let e = Sv(), t = (e.inbox?.conversations.reduce((e, t) => e + t.unread, 0) || 0) + (e.inbox?.requests.filter((e) => e.direction === "incoming").length || 0);
+	let e = Sv(), { setOpenMobile: t } = TA(), n = (e.inbox?.conversations.reduce((e, t) => e + t.unread, 0) || 0) + (e.inbox?.requests.filter((e) => e.direction === "incoming").length || 0);
 	return /* @__PURE__ */ (0, Y.jsxs)(zA, {
 		"aria-label": "Mensagens diretas",
 		tooltip: "Mensagens diretas",
-		onClick: () => Rv.open(),
+		onClick: () => {
+			t(!1), Rv.open();
+		},
 		children: [
 			/* @__PURE__ */ (0, Y.jsx)(Ag, {}),
 			/* @__PURE__ */ (0, Y.jsx)("span", { children: "Mensagens" }),
-			t > 0 && /* @__PURE__ */ (0, Y.jsx)(qy, {
+			n > 0 && /* @__PURE__ */ (0, Y.jsx)(qy, {
 				variant: "secondary",
 				className: "ml-auto tabular-nums group-data-[collapsible=icon]:hidden",
-				"aria-label": `${t} mensagens ou solicitações não lidas`,
-				children: t > 99 ? "99+" : t
+				"aria-label": `${n} mensagens ou solicitações não lidas`,
+				children: n > 99 ? "99+" : n
 			})
 		]
 	});

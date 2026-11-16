@@ -25684,19 +25684,21 @@ function jj({ render: e, isActive: t = !1, variant: n = "default", size: r = "de
 }
 Dr(), Gb(), Iy();
 function Mj() {
-	let e = by(), t = (e.inbox?.conversations.reduce((e, t) => e + t.unread, 0) || 0) + (e.inbox?.requests.filter((e) => e.direction === "incoming").length || 0);
+	let e = by(), { setOpenMobile: t } = _j(), n = (e.inbox?.conversations.reduce((e, t) => e + t.unread, 0) || 0) + (e.inbox?.requests.filter((e) => e.direction === "incoming").length || 0);
 	return /* @__PURE__ */ (0, X.jsxs)(jj, {
 		"aria-label": "Mensagens diretas",
 		tooltip: "Mensagens diretas",
-		onClick: () => Q.open(),
+		onClick: () => {
+			t(!1), Q.open();
+		},
 		children: [
 			/* @__PURE__ */ (0, X.jsx)(en, {}),
 			/* @__PURE__ */ (0, X.jsx)("span", { children: "Mensagens" }),
-			t > 0 && /* @__PURE__ */ (0, X.jsx)(Ub, {
+			n > 0 && /* @__PURE__ */ (0, X.jsx)(Ub, {
 				variant: "secondary",
 				className: "ml-auto tabular-nums group-data-[collapsible=icon]:hidden",
-				"aria-label": `${t} mensagens ou solicitações não lidas`,
-				children: t > 99 ? "99+" : t
+				"aria-label": `${n} mensagens ou solicitações não lidas`,
+				children: n > 99 ? "99+" : n
 			})
 		]
 	});

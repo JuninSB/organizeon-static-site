@@ -1,9 +1,10 @@
 import { MessageCircle } from "lucide-react";
-import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { messagesStore, useMessagesState } from "@/stores/messages-store";
 export function MessagesLauncher() {
   const state = useMessagesState();
+  const { setOpenMobile } = useSidebar();
   const count =
     (state.inbox?.conversations.reduce((n, c) => n + c.unread, 0) || 0) +
     (state.inbox?.requests.filter((c) => c.direction === "incoming").length ||
@@ -12,7 +13,7 @@ export function MessagesLauncher() {
     <SidebarMenuButton
       aria-label="Mensagens diretas"
       tooltip="Mensagens diretas"
-      onClick={() => messagesStore.open()}
+      onClick={() => { setOpenMobile(false); messagesStore.open(); }}
     >
       <MessageCircle />
       <span>Mensagens</span>

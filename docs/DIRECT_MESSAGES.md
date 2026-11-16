@@ -40,3 +40,23 @@ Arquivos: até 8 MiB por arquivo, quatro anexos por mensagem, 256 MiB por conta 
 Testes de domínio e HTTP cobrem consentimento, bloqueio, idempotência, ACL de terceira conta, autoria, anexos, encaminhamento, notificações, filtros, persistência após reabrir o banco e permissões de arquivo. Foram executados também no Android isoladamente com contas fictícias. `ui/e2e/messages.cjs` usa backend SQLite real em memória e duas contas fictícias, sem enviar DMs reais.
 
 A publicação deve manter backend compatível primeiro, publicar bundles/manifest do cliente, atualizar versão das referências D2 somente após os assets públicos estarem disponíveis e sobrepor assets D3 preservando hashes anteriores. Backup pequeno de `server.mjs` e dos índices/templates permite rollback. Reiniciar somente o serviço da API quando seu código mudar; Xiaomi, SSH, túnel e demais serviços não precisam de reinício.
+
+## Resultado da entrega — 16/11/2026
+
+- Backend: 30 testes passaram; os sete testes específicos de DMs também passaram no Android real, em staging isolado.
+- Interface compartilhada: 10 testes passaram. O primeiro executor em processos separados sofreu timeout na inicialização; repetição com `--pool=vmThreads --maxWorkers=1` passou integralmente.
+- D3: nove testes passaram. Builds do cliente, admin e D3 passaram; TypeScript validado.
+- Integridade do cliente/manifest/download: 13 testes passaram.
+- Playwright com backend real em memória: solicitação, aceite, envio/recebimento, @ no cursor, resposta por gesto, segurar para ações, notificações X/Abrir, voltar/fechar por gesto e alternância 390/1280 px passaram. Capturas mobile e desktop inspecionadas. A alternância revelou e corrigiu a sidebar mobile que permanecia aberta atrás das DMs.
+- Regressão de perfil: cliente e D2 passaram, incluindo transporte Bearer, edição parcial, cancelamento e recorte da foto.
+- Assets públicos conferidos por SHA-256. D2/D3 login responderam 200 pelo servidor. API de DMs sem sessão respondeu 401.
+- Não foram enviadas mensagens para contas reais. Permissão/entrega de notificações do sistema, som físico e comportamento de todos os teclados Android não foram validados em aparelho físico.
+
+### Recuperação desta instalação
+
+No servidor, os arquivos pequenos de rollback estão em `~/organizeon/backend/staging/`:
+
+- `dm-rollback.path` informa a pasta com o `server.mjs` anterior. Restaurar esse arquivo e reiniciar apenas `organizeon-backend` reverte as rotas novas; preservar o SQLite privado.
+- `d2-before-dm-f0f34bf.html` contém o template anterior do D2.
+- `d3-dm-rollback-20261116-115522/` contém índice e fontes anteriores do D3. Os hashes antigos dos assets foram preservados, permitindo restaurar o índice sem apagar assets.
+- Git mantém commits separados de fontes e bundles. Reverter os commits correspondentes e publicar novamente restaura o cliente. Nenhum backup integral foi recriado.
