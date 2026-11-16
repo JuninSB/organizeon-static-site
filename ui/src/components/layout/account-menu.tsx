@@ -1,3 +1,5 @@
+import {MessagesLauncher} from "@/features/messages/messages-launcher";
+import {roleNames} from "@/utils/account-roles";
 import { ProfileBoundary } from "@/features/profile/profile-boundary";
 import { lazy, Suspense, useState } from "react";
 import { ChevronUp, UserRound, LogOut } from "lucide-react";
@@ -14,14 +16,6 @@ import {
 import { useProfile, refreshProfile } from "@/stores/profile-store";
 import { ProfileAvatar } from "@/features/profile/profile-avatar";
 const ProfileDialog = lazy(() => import("@/features/profile/profile-dialog"));
-export const roleNames: Record<string, string> = {
-  owner: "Owner",
-  ultra_admin: "Ultra admin",
-  super_admin: "Super admin",
-  admin: "Admin",
-  user: "Usuário",
-  guest: "Convidado",
-};
 /** Shared account identity; editing is authenticated by the service, never by role labels. */
 export function AccountMenu({
   username,
@@ -56,6 +50,7 @@ export function AccountMenu({
   );
   return (
     <>
+      {role!=="guest"&&/^[A-Za-z0-9_.-]{3,32}$/.test(username)&&<MessagesLauncher/>}
       <DropdownMenu>
         <DropdownMenuTrigger
           render={

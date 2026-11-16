@@ -1,3 +1,4 @@
+import {MessagesProvider} from "@/features/messages/messages-provider";
 import { useState } from 'react';
 import { Cloud, Gamepad2, Home, Settings2, Shield, Signal } from 'lucide-react';
 import { AccountMenu } from './account-menu';
@@ -14,5 +15,5 @@ function ClientNavigation({account,confirmLogout}:{account:AccountProps;confirmL
 }
 export function AccountSurface(account:AccountProps) {
  const [logoutOpen,setLogoutOpen]=useState(false);
- return <SidebarProvider defaultOpen={false} className="pointer-events-none min-h-0"><ClientNavigation account={account} confirmLogout={()=>setLogoutOpen(true)}/><SidebarTrigger className="pointer-events-auto fixed left-3 top-3 z-40 border bg-background" aria-label="Abrir menu"/><Dialog open={logoutOpen} onOpenChange={setLogoutOpen}><DialogContent className="sm:max-w-sm"><DialogHeader><DialogTitle>Encerrar sessão?</DialogTitle><DialogDescription>{account.guest?'Deseja sair do modo convidado?':'Deseja realmente sair desta conta?'}</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={()=>setLogoutOpen(false)}>Cancelar</Button><Button variant="destructive" onClick={()=>account.onNavigate('logout')}>Sair</Button></DialogFooter></DialogContent></Dialog></SidebarProvider>;
+ return <MessagesProvider username={account.guest?null:account.username}><SidebarProvider defaultOpen={false} className="pointer-events-none min-h-0"><ClientNavigation account={account} confirmLogout={()=>setLogoutOpen(true)}/><SidebarTrigger className="pointer-events-auto fixed left-3 top-3 z-40 border bg-background" aria-label="Abrir menu"/><Dialog open={logoutOpen} onOpenChange={setLogoutOpen}><DialogContent className="sm:max-w-sm"><DialogHeader><DialogTitle>Encerrar sessão?</DialogTitle><DialogDescription>{account.guest?'Deseja sair do modo convidado?':'Deseja realmente sair desta conta?'}</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={()=>setLogoutOpen(false)}>Cancelar</Button><Button variant="destructive" onClick={()=>account.onNavigate('logout')}>Sair</Button></DialogFooter></DialogContent></Dialog></SidebarProvider></MessagesProvider>;
 }

@@ -1,3 +1,4 @@
+import {MessagesProvider} from "@/features/messages/messages-provider";
 import {AdminReauthDialog} from "@/components/admin/admin-reauth-dialog";
 import { PasswordDialog, type PasswordRequest } from "@/components/admin/password-dialog";
 import { TerminalPanel } from "@/components/admin/terminal-panel";
@@ -128,7 +129,7 @@ export function AdminApp() {
 
   const portalContainer = document.getElementById("organizeon-admin-root");
   if (!portalContainer) throw new Error("Raiz do painel administrativo ausente.");
-  return <PortalContextProvider container={portalContainer}><TooltipProvider>
+  return <PortalContextProvider container={portalContainer}><TooltipProvider><MessagesProvider username={account?.username}>
     <div className="organizeon-ui dark organizeon-admin-root min-h-svh bg-background text-foreground">
       <SidebarProvider defaultOpen>
         <Sidebar collapsible="icon" variant="sidebar">
@@ -197,5 +198,5 @@ export function AdminApp() {
       {adminVerification&&<AdminReauthDialog verify={adminVerification.verify} onClose={accepted=>{adminVerificationResolver.current?.(accepted);adminVerificationResolver.current=null;setAdminVerification(null);}}/>}
         <div id="toast" className="hidden" aria-hidden="true" />
     </div>
-  </TooltipProvider></PortalContextProvider>;
+  </MessagesProvider></TooltipProvider></PortalContextProvider>;
 }

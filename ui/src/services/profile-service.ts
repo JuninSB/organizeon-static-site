@@ -1,12 +1,4 @@
-const messages: Record<string, string> = {
-  invalid_profile: "Confira o nome, a descrição e a foto do perfil.",
-  invalid_current_password: "A senha atual está incorreta.",
-  invalid_password: "A nova senha deve ter pelo menos 8 caracteres.",
-  password_confirmation_mismatch: "As novas senhas não coincidem.",
-  too_many_attempts: "Muitas tentativas. Aguarde antes de tentar novamente.",
-  unauthorized: "Sua sessão expirou. Entre novamente.",
-  request_too_large: "A foto excede o tamanho permitido.",
-};
+import { accountRequest } from "./account-api";
 export type Profile = {
   displayName: string;
   nameColor: string;
@@ -21,73 +13,12 @@ export const defaultProfile = (username: string): Profile => ({
   avatarShape: "circle",
   avatar: null,
 });
-type ProfileTransport = (
-  kind: "profile" | "password",
-  options: RequestInit,
-) => Promise<any>;
-let transport: ProfileTransport | undefined;
-/** Applications may supply their existing authenticated request adapter. */
-export function configureProfileTransport(next: ProfileTransport) {
-  transport = next;
-  return () => {
-    if (transport === next) transport = undefined;
-  };
-}
-function endpoint(kind: "profile" | "password") {
-  if (/^\/d[23](\/|$)/.test(location.pathname))
-    return location.pathname.slice(0, 3) + "/api/" + kind;
-  const config = (
-    window as Window & {
-      __ORGANIZEON_CONFIG__?: { apiOrigin?: string; apiPrefix?: string };
-    }
-  ).__ORGANIZEON_CONFIG__;
-  return (
-    (config?.apiOrigin || "https://api.organizeon.com.br") +
-    (config?.apiPrefix || "/827e7h3heuw823eh") +
-    "/account/" +
-    kind
-  );
-}
-async function request(
-  kind: "profile" | "password",
-  options: RequestInit = {},
-) {
-  const headers = new Headers(options.headers);
-  headers.set("Accept", "application/json");
-  if (options.body) headers.set("Content-Type", "application/json");
-  if (transport) {
-    try {
-      return await transport(kind, { ...options, headers });
-    } catch (error) {
-      const code = error instanceof Error ? error.message : "";
-      throw Error(
-        messages[code] || code || "Não foi possível salvar. Tente novamente.",
-      );
-    }
-  }
-  const token = localStorage.getItem("organizeon-access-token");
-  if (token && !/^\/d[23](\/|$)/.test(location.pathname))
-    headers.set("Authorization", "Bearer " + token);
-  const response = await fetch(endpoint(kind), {
-    ...options,
-    headers,
-    signal: AbortSignal.timeout(10000),
-    credentials: "include",
-    cache: "no-store",
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw Error(
-      messages[data.error] || "Não foi possível salvar. Tente novamente.",
-    );
-  }
-  return data;
-}
 export const profileService = {
-  get: async (): Promise<Profile> => (await request("profile")).profile,
+  get: async (): Promise<Profile> =>
+    (await accountRequest("/account/profile")).profile,
   save: async (profile: Partial<Profile>): Promise<Profile> =>
     (
-      await request("profile", {
+      await accountRequest("/account/profile", {
         method: "PATCH",
         body: JSON.stringify(profile),
       })
@@ -97,7 +28,10 @@ export const profileService = {
     newPassword: string;
     confirmPassword: string;
   }) => {
-    await request("password", { method: "POST", body: JSON.stringify(values) });
+    await accountRequest("/account/password", {
+      method: "POST",
+      body: JSON.stringify(values),
+    });
   },
 };
 

@@ -1077,6 +1077,7 @@ function openDashboardWindow() {
 }
 
 async function openQuickApp(app, navigate) {
+  if (app?.id === "chat") return true;
   if (app?.id === "games") {
     showGameCatalog();
     return true;
@@ -1086,7 +1087,6 @@ async function openQuickApp(app, navigate) {
     "gfn",
     "bw",
     "roblox",
-    "chat",
     "play",
   ]);
   if (

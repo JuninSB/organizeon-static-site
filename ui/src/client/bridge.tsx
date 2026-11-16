@@ -1,4 +1,4 @@
-import { configureProfileTransport } from "@/services/profile-service";
+import { configureAccountTransport } from "@/services/account-api";
 import { afterStyles } from "@/lib/style-ready";
 import { ConnectionStatus } from "@/components/client/connection-status";
 import { createRoot, type Root } from "react-dom/client";
@@ -323,12 +323,12 @@ export function mountD2Dashboard(
   const container = document.createElement("div");
   container.className = "organizeon-ui dark";
   shadow.append(stylesheet, container);
-  const releaseProfileTransport = configureProfileTransport((kind, options) => {
+  const releaseProfileTransport = configureAccountTransport((path, options) => {
     const headers: Record<string, string> = {};
     new Headers(options.headers).forEach((value, key) => {
       headers[key] = value;
     });
-    return props.request(`/account/${kind}`, { ...options, headers });
+    return props.request(path, { ...options, headers });
   });
   const root = createRoot(container);
   flushSync(() =>

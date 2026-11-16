@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { KeyRound, LogOut, MoreHorizontal, Pencil, Ticket, Trash2, UserRound } from 'lucide-react';
-import { roleNames } from '@/components/layout/account-menu';
+import { roleNames } from '@/utils/account-roles';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

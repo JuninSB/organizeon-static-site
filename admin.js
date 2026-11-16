@@ -164,6 +164,8 @@ initialize().catch((error) => {
 });
 
 async function initialize() {
+  const sessionResponse=await rawApi('/auth/session');
+  if(sessionResponse.ok){const session=await sessionResponse.json();if(session.username&&Array.isArray(session.permissions)){state.account=session;window.OrganizeOnAdminUI.setAccount(session);}}
   const response = await api("/admin/status");
   if (response.status === 401 || response.status === 403) {
     throw new Error("forbidden");
