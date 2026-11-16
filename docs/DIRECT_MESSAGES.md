@@ -112,3 +112,12 @@ Em Configurações de mensagens, **Mostrar textos de envio** vem desativado. A p
 Favoritar, fixar, silenciar e editar o perfil podem atualizar imediatamente com reversão em falhas. Confirmações de envio, leitura pelo destinatário, senha, permissões administrativas e autorização Xiaomi continuam dependentes de respostas reais. Filas e revisões impedem respostas antigas de substituir alterações recentes.
 
 Referências: [React useOptimistic](https://react.dev/reference/react/useOptimistic), [TanStack rollback](https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates), [SWR mutation](https://swr.vercel.app/docs/mutation), [Discord anexos](https://support.discord.com/hc/en-us/articles/25444343291031-File-Attachments-FAQ). A implementação usa os stores existentes, sem adicionar outra biblioteca de estado.
+
+### Validação e publicação — 16/11/2026
+
+- 18 testes de UI/stores, 31 de backend e 13 do cliente passaram; os 8 testes de mensagens passaram também no Android em ambiente isolado.
+- Build TypeScript/Vite do cliente, admin e D3 concluído. Playwright validou envio entre contas fictícias, recebimento, menções, menus de toque, gestos, favoritos/fixação, perfil móvel ampliado e ausência de overflow. A abertura do perfil foi testada com a resposta de rede suspensa.
+- GitHub Pages publicou `5c03466`; os hashes dos quatro bundles públicos conferiram. D2 utiliza `dm-outbox-20261116`; D3 utiliza `index-Dxlupgeb.js`. Ambos os logins retornaram 200 após a atualização.
+- Somente o backend foi reiniciado para carregar as alterações de mensagens; D3 recebeu assets e index atômico. Xiaomi e Survival permaneceram ativos. Nenhuma DM real nem solicitação Xiaomi foi enviada nos testes.
+- Rollback de backend e cópia consistente SQLite: `~/.local/share/organizeon/rollback/dm-responsive-20261116-174325/`. Restaurar apenas os arquivos fonte permite reverter mantendo dados novos; as colunas SQLite adicionadas são compatíveis com o código anterior. Não restaurar o banco sem avaliar mensagens recebidas depois da cópia.
+- Rollback do frontend D3: `~/organizeon/backend/staging/d3-responsive-rollback-20261116-175715/`. Restaurar index anterior e fontes preservando assets existentes; nenhuma mudança de proxy foi necessária.
