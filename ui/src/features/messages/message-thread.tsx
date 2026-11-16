@@ -59,6 +59,7 @@ export function MessageThread({
     [forwardTarget, setForwardTarget] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
+    [searchOpen, setSearchOpen] = useState(false),
     [query, setQuery] = useState(""),
     [search, setSearch] = useState(""),
     [filter, setFilter] = useState("all"),
@@ -112,6 +113,15 @@ export function MessageThread({
     messagesStore.setDraft(conversation.id, { reply: message });
     composer.current?.focus();
   }
+  function closeSearch() {
+    setSearchOpen(false);
+    setQuery("");
+    setSearch("");
+    setFilter("all");
+    setFiltered(null);
+    setSearching(false);
+    bottom.current = true;
+  }
   function context(action: MessageAction, message: DmMessage) {
     if (action === "reply") reply(message);
     else if (action === "edit") {
@@ -160,6 +170,23 @@ export function MessageThread({
             {conversation.muted ? " · silenciada" : ""}
           </p>
         </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={
+            searchOpen ? "Fechar pesquisa da conversa" : "Pesquisar na conversa"
+          }
+          aria-expanded={searchOpen}
+          aria-controls="dm-conversation-search"
+          onClick={() => (searchOpen ? closeSearch() : setSearchOpen(true))}
+        >
+          {searchOpen ? (
+            <X className="size-4" />
+          ) : (
+            <Search className="size-4" />
+          )}
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -218,51 +245,64 @@ export function MessageThread({
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
-      <div className="shrink-0 border-b border-border px-3 py-2">
-        <label className="flex min-w-0 items-center gap-2">
-          <Search className="size-4 shrink-0 text-muted-foreground" />
-          <Input
-            aria-label="Pesquisar nesta conversa"
-            className="h-8"
-            placeholder="Pesquisar nesta conversa…"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          {query && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Limpar pesquisa"
-              onClick={() => setQuery("")}
-            >
-              <X className="size-3" />
-            </Button>
-          )}
-        </label>
-        <nav
-          aria-label="Filtrar mensagens"
-          className="mt-2 overflow-x-auto touch-pan-x"
+      {searchOpen && (
+        <div
+          id="dm-conversation-search"
+          className="shrink-0 border-b border-border px-3 py-2"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              closeSearch();
+            }
+          }}
         >
-          <div className="flex w-max min-w-full gap-1">
-            {filters.map(([value, label]) => (
+          <label className="flex min-w-0 items-center gap-2">
+            <Search className="size-4 shrink-0 text-muted-foreground" />
+            <Input
+              autoFocus
+              aria-label="Pesquisar nesta conversa"
+              className="h-8"
+              placeholder="Pesquisar nesta conversa…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            {query && (
               <Button
-                key={value}
                 type="button"
-                variant={filter === value ? "secondary" : "ghost"}
-                size="sm"
-                aria-pressed={filter === value}
-                onClick={() => {
-                  bottom.current = true;
-                  setFilter(value);
-                }}
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Limpar pesquisa"
+                onClick={() => setQuery("")}
               >
-                {label}
+                <X className="size-3" />
               </Button>
-            ))}
-          </div>
-        </nav>
-      </div>
+            )}
+          </label>
+          <nav
+            aria-label="Filtrar mensagens"
+            className="mt-2 overflow-x-auto touch-pan-x"
+          >
+            <div className="flex w-max min-w-full gap-1">
+              {filters.map(([value, label]) => (
+                <Button
+                  key={value}
+                  type="button"
+                  variant={filter === value ? "secondary" : "ghost"}
+                  size="sm"
+                  aria-pressed={filter === value}
+                  onClick={() => {
+                    bottom.current = true;
+                    setFilter(value);
+                  }}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </nav>
+        </div>
+      )}
       <div
         ref={scroller}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 py-2"

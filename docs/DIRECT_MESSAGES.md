@@ -60,3 +60,25 @@ No servidor, os arquivos pequenos de rollback estão em `~/organizeon/backend/st
 - `d2-before-dm-f0f34bf.html` contém o template anterior do D2.
 - `d3-dm-rollback-20261116-115522/` contém índice e fontes anteriores do D3. Os hashes antigos dos assets foram preservados, permitindo restaurar o índice sem apagar assets.
 - Git mantém commits separados de fontes e bundles. Reverter os commits correspondentes e publicar novamente restaura o cliente. Nenhum backup integral foi recriado.
+
+## Refinamento de interação — 16/11/2026
+
+A pesquisa da conversa começa oculta. A lupa no cabeçalho abre o campo e os filtros; fechar pela lupa/X ou Escape limpa os filtros e restaura o histórico. A pesquisa da lista de conversas permanece independente.
+
+O menu ao segurar uma mensagem usa `components/ui/drawer.tsx` e `drawer.css`, com o Drawer nativo da Base UI: movimento acompanhando o toque, cancelamento de arraste curto, fechamento ao puxar para baixo, Escape, clique fora e botão de fechar. As ações aguardam a saída do modal antes de focar o compositor ou abrir outro diálogo. Os grupos seguem a referência visual, e o menu preserva seu conteúdo durante a animação de saída.
+
+| Ação | Comportamento |
+| --- | --- |
+| Reagir | Alterna a reação da própria conta; o total é compartilhado. |
+| Editar mensagem | Abre a edição do texto da própria mensagem. |
+| Responder | Prepara uma resposta com referência à mensagem original. |
+| Encaminhar | Seleciona outra conversa e envia uma cópia marcada como encaminhada. |
+| Copiar texto | Copia o texto para a área de transferência. |
+| Marcar como não lida | Marca a conversa a partir dessa mensagem para a própria conta. |
+| Fixar / desafixar | Gerencia as mensagens fixadas para os participantes da conversa. |
+| Salvar / remover dos salvos | Gerencia os favoritos pessoais da conta. |
+| Apagar mensagem | Pede confirmação antes de apagar a própria mensagem para os participantes. |
+
+Referências consultadas: [Drawer Base UI](https://base-ui.com/react/components/drawer), [respostas](https://support.discord.com/hc/en-us/articles/360057382374-Replies-FAQ), [fixadas](https://support.discord.com/hc/en-us/articles/221421867-Pin-Messages-FAQ), [salvos e lembretes](https://support.discord.com/hc/en-us/articles/26442819646999-Message-Bookmarks-and-Reminders), [encaminhamento](https://support.discord.com/hc/en-us/articles/24640649961367-Message-Forwarding) e [atalhos para marcar não lida](https://discord.com/blog/how-to-navigate-discord-using-only-your-keyboard).
+
+Em Users, a troca de senha permanece no menu de três pontos de cada conta; o atalho separado foi removido. O fluxo de senha atual/nova/confirmação e as permissões existentes foram preservados.

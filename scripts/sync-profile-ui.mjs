@@ -22,6 +22,8 @@ const files = [
   "utils/account-roles.ts",
   "utils/unique-id.ts",
   "components/ui/popover.tsx",
+  "components/ui/drawer.tsx",
+  "components/ui/drawer.css",
   "components/ui/checkbox.tsx",
   "components/ui/portal-context.tsx",
   "features/messages/message-actions.tsx",
