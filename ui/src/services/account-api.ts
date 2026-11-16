@@ -33,6 +33,8 @@ const messages: Record<string, string> = {
   dm_invalid_attachment: "Não foi possível usar este anexo.",
   dm_empty_message: "Escreva uma mensagem ou adicione um arquivo.",
   dm_operation_failed: "Não foi possível concluir. Tente novamente.",
+  gold_badge_required: "Este recurso requer o emblema dourado.",
+  banner_reroll_cooldown: "Aguarde o cooldown para gerar outra seed.",
   forbidden: "Você não tem acesso a esta ação.",
 };
 export class AccountApiError extends Error {

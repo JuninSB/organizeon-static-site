@@ -163,6 +163,7 @@ export default function ProfileDialog({
                     key={editing}
                     field={editing}
                     profile={shownProfile}
+                    onRerolled={(next) => updateProfile(username,next)}
                     onCancel={() => setEditing(null)}
                     onSave={async (patch) => {
                       setEditing(null);

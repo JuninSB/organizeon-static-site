@@ -7,6 +7,7 @@ export type Profile = {
   avatar: string | null;
   goldBadge?: boolean;
   bannerSeed?: string;
+  bannerRerollAvailableAt?: string | null;
   showGoldBadge?: boolean;
   bannerStyle?: "solid" | "lava";
 };
@@ -18,6 +19,7 @@ export const defaultProfile = (username: string): Profile => ({
   avatar: null,
 });
 export const profileService = {
+  rerollBanner: async (): Promise<Profile> => (await accountRequest("/dm/awards/gold-badge/reroll", {method:"POST"})).profile,
   grantGoldBadge: async (username: string): Promise<Profile> =>
     (await accountRequest("/dm/people/" + encodeURIComponent(username) + "/gold-badge", { method: "POST" })).profile,
   get: async (): Promise<Profile> =>

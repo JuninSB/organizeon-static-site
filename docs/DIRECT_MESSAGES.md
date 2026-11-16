@@ -152,7 +152,7 @@ O emblema é uma concessão independente do cargo. Só um owner autenticado pode
 
 A concessão persiste `goldBadge` fora das preferências editáveis, com emissor e data privados. O perfil público inclui apenas a elegibilidade e aparência. Ela libera `bannerStyle=lava` e exibição opcional do emblema. O símbolo oficial usa as variantes clara/escura conforme o tema de quem visualiza. O emblema fica no agrupamento ao lado do avatar; a edição de aparência permite ocultá-lo sem perder a elegibilidade.
 
-`bannerSeed` é derivado do identificador público imutável da conta. `profile-banner.ts` determina geometria, ritmo, fase e rotação estáveis por conta; `nameColor` define a cor. O efeito usa SVG limitado ao banner, máscara de metaballs com blur/limiar de alfa, massas com iluminação radial e movimento por CSS, com pausa em `prefers-reduced-motion`. Não usa canvas, timers de renderização ou sorteio a cada abertura.
+A seed inicial é derivada do identificador público imutável da conta; rerolls autorizados usam uma seed aleatória persistida no servidor. `profile-banner.ts` determina geometria, ritmo, fase e rotação estáveis por conta; `nameColor` define a cor. O efeito usa SVG limitado ao banner, máscara de metaballs com blur/limiar de alfa, massas com iluminação radial e movimento por CSS, com pausa em `prefers-reduced-motion`. Não usa canvas, timers de renderização ou sorteio a cada abertura.
 
 A concessão deixa uma notificação pendente persistente na conta, inclusive offline. O inbox autenticado expõe essa pendência somente ao titular; `POST /dm/awards/gold-badge/claim` a confirma uma única vez para uma sessão visível. O aviso usa o emblema oficial e abre o próprio perfil. É uma notificação de conta, sem criar conversa ou mensagem artificial; a preferência de avisos de DMs não suprime esse recebimento. Concessões repetidas são idempotentes e não criam novos avisos.
 
@@ -182,6 +182,16 @@ A revisão substitui manchas de gradiente por massas que se fundem e se separam.
 | tumble | Queda com giros e deformação |
 | slowflow | Fluxo lento com massas maiores e retorno |
 
-Há 12 famílias, com parâmetros próprios por conta dentro de cada família. O mesmo identificador mantém sua combinação entre sessões. Emblema, permissões e notificações não mudam nesta revisão.
+Há 12 famílias, com parâmetros próprios por conta dentro de cada família. A mesma seed mantém sua combinação entre sessões, até um reroll autorizado. Emblema, permissões e notificações não mudam nesta revisão.
 
 Referências técnicas consultadas: [Codrops GooeyCursor](https://github.com/codrops/GooeyCursor), [feColorMatrix no SVG](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/feColorMatrix). O código do efeito é próprio; nenhuma biblioteca gráfica foi adicionada.
+
+## Seed visível e reroll com cooldown
+
+Na edição de aparência, quem tem o emblema pode ver/copiar a seed e gerar outra. A prévia mostra o fundo resultante. O primeiro reroll é liberado imediatamente; os seguintes exigem **24 horas corridas**, independentemente de login, tema ou dia do calendário.
+
+`POST /dm/awards/gold-badge/reroll` usa somente a conta autenticada, verifica o emblema persistido e gera 16 bytes aleatórios no servidor. Não aceita seed, usuário ou horário escolhidos pelo cliente. A seed inicial continua derivada da conta; depois do reroll, `profileBanner` guarda seed, data da geração e próxima liberação. A resposta pública inclui `bannerSeed` e `bannerRerollAvailableAt`, ambos somente leitura em `PATCH /account/profile`.
+
+Durante o cooldown o backend retorna 429, `Retry-After` e `retryAt`, inclusive após reinício ou pedidos simultâneos. A persistência de contas usa fila de gravação e rename atômico para não disputar o mesmo arquivo temporário com edições concorrentes. O reroll não altera cargos, senhas, tokens, emblemas ou notificações.
+
+A interface aguarda confirmação real antes de trocar a seed. Se a resposta se perder, faz uma leitura de reconciliação e não repete o POST automaticamente. A contagem regressiva roda localmente enquanto a edição estiver aberta, com limpeza do intervalo. Cancelar a edição reverte opções ainda não salvas, mas um reroll já confirmado é imediato e conserva seu cooldown.

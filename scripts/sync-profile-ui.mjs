@@ -7,12 +7,15 @@ if (!target)
   throw Error("Usage: node scripts/sync-profile-ui.mjs /path/to/d3/src");
 const files = [
   "components/layout/account-menu.tsx",
+  "components/layout/rotating-icon.tsx",
   "components/admin/password-dialog.tsx",
   "features/profile/gold-badge.tsx",
   "features/profile/grant-gold-badge.tsx",
   "features/profile/profile-banner.css",
   "features/profile/profile-banner.ts",
   "features/profile/lava-banner.tsx",
+  "features/profile/banner-cooldown.ts",
+  "features/profile/banner-seed-control.tsx",
   "features/profile/profile-avatar.tsx",
   "features/profile/profile-boundary.tsx",
   "features/profile/avatar-editor.tsx",
