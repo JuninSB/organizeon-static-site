@@ -25025,6 +25025,10 @@ var eR, tR = o((() => {
 function nR(e, t, n) {
 	let r = -70 + t * 38 + n * 20, i = -130 + t * 105 + n * 25, a = "L 640 300 L -180 300 Z";
 	switch (e) {
+		case "slime": return `M -180 ${r - 50} Q 0 ${r - 60},40 ${r + 35} Q 65 ${r + 150},90 ${r + 30} Q 140 ${r - 80},220 ${r + 20} Q 260 ${r + 140},300 ${r + 15} Q 360 ${r - 70},640 ${r} ${a}`;
+		case "lava": return `M -180 ${r} C 40 ${r - 120},60 ${r + 140},170 ${r + 15} S 290 ${r - 90},340 ${r + 50} S 490 ${r + 100},640 ${r - 70} ${a}`;
+		case "gradient": return `M -180 ${r - 80} C 80 ${r - 140},290 ${r + 100},640 ${r - 20} ${a}`;
+		case "rainbow": return `M -180 ${r} Q 220 ${r - 220},640 ${r} L 640 ${r + 35} Q 220 ${r - 180},-180 ${r + 35} Z`;
 		case "silk": return `M -180 ${r} C 30 ${r + 120},110 ${r - 115},265 ${r + 15} S 510 ${r + 115},640 ${r - 40} ${a}`;
 		case "vortex": return `M -180 ${r - 100} C 430 ${r - 140},610 ${r + 170},200 ${r + 150} C -30 ${r + 125},-15 ${r - 20},170 ${r + 10} C 410 ${r + 40},330 ${r + 125},190 ${r + 65} C 90 ${r + 15},50 ${r + 100},350 ${r + 140} L 640 300 L -180 300 Z`;
 		case "dunes": return `M -180 ${r} C 80 ${r - 35},150 ${r + 70},305 ${r + 5} S 510 ${r - 60},640 ${r + 25} ${a}`;
@@ -25041,34 +25045,40 @@ function nR(e, t, n) {
 }
 var rR = o((() => {}));
 // src/features/profile/lava-banner.tsx
-function iR({ seed: e, color: t }) {
-	let n = "oo-fluid-" + (0, aR.useId)().replace(/[^a-z0-9_-]/gi, ""), { family: r, layers: i } = ZL(e), a = $L(t, .5), o = eR.indexOf(r);
+function iR({ seed: e, color: t, material: n }) {
+	let r = "oo-fluid-" + (0, aR.useId)().replace(/[^a-z0-9_-]/gi, ""), i = ZL(e), a = n || i.family, o = i.layers.map((e) => ({
+		...e,
+		style: {
+			...e.style,
+			animationName: `oo-fluid-${n || i.family}`
+		}
+	})), s = $L(t, .5), c = eR.indexOf(a);
 	return /* @__PURE__ */ (0, oR.jsxs)("svg", {
 		className: "oo-lava-field",
 		"aria-hidden": "true",
-		"data-pattern": r,
+		"data-pattern": a,
 		viewBox: "0 0 440 120",
 		preserveAspectRatio: "none",
 		children: [
 			/* @__PURE__ */ (0, oR.jsxs)("defs", { children: [
 				/* @__PURE__ */ (0, oR.jsxs)("linearGradient", {
-					id: `${n}-base`,
+					id: `${r}-base`,
 					x2: "1",
 					y2: "1",
 					children: [
-						/* @__PURE__ */ (0, oR.jsx)("stop", { stopColor: a.body }),
+						/* @__PURE__ */ (0, oR.jsx)("stop", { stopColor: s.body }),
 						/* @__PURE__ */ (0, oR.jsx)("stop", {
 							offset: ".5",
-							stopColor: a.shade
+							stopColor: s.shade
 						}),
 						/* @__PURE__ */ (0, oR.jsx)("stop", {
 							offset: "1",
-							stopColor: a.light
+							stopColor: s.light
 						})
 					]
 				}),
 				/* @__PURE__ */ (0, oR.jsxs)("filter", {
-					id: `${n}-flow`,
+					id: `${r}-flow`,
 					filterUnits: "userSpaceOnUse",
 					x: "-50",
 					y: "-35",
@@ -25078,73 +25088,85 @@ function iR({ seed: e, color: t }) {
 					children: [
 						/* @__PURE__ */ (0, oR.jsx)("feTurbulence", {
 							type: "fractalNoise",
-							baseFrequency: r === "storm" ? ".012 .022" : ".005 .012",
+							baseFrequency: a === "storm" ? ".012 .022" : ".005 .012",
 							numOctaves: "1",
-							seed: o + 1,
+							seed: c + 1,
 							result: "noise"
 						}),
 						/* @__PURE__ */ (0, oR.jsx)("feDisplacementMap", {
 							in: "SourceGraphic",
 							in2: "noise",
-							scale: r === "marble" ? 26 : r === "storm" ? 22 : 7,
+							scale: a === "marble" ? 26 : a === "storm" ? 22 : 7,
 							xChannelSelector: "R",
 							yChannelSelector: "G"
 						}),
-						/* @__PURE__ */ (0, oR.jsx)("feGaussianBlur", { stdDeviation: r === "mist" ? 10 : .35 }),
+						/* @__PURE__ */ (0, oR.jsx)("feGaussianBlur", { stdDeviation: a === "mist" ? 10 : .35 }),
 						/* @__PURE__ */ (0, oR.jsx)("feColorMatrix", {
 							type: "saturate",
 							values: "1.08"
 						})
 					]
 				}),
-				i.map((e, i) => {
-					let a = $L(t, (e.tone - .5) * 2 + .5);
+				o.map((e, n) => {
+					let i = $L(t, (e.tone - .5) * 2 + .5);
 					return /* @__PURE__ */ (0, oR.jsxs)("linearGradient", {
-						id: `${n}-fold-${i}`,
-						x1: r === "aurora" ? "0" : ".25",
+						id: `${r}-fold-${n}`,
+						x1: a === "aurora" ? "0" : ".25",
 						y1: "0",
-						x2: r === "cascade" ? "1" : ".7",
+						x2: a === "cascade" ? "1" : ".7",
 						y2: "1",
 						children: [
-							/* @__PURE__ */ (0, oR.jsx)("stop", { stopColor: a.shade }),
+							/* @__PURE__ */ (0, oR.jsx)("stop", { stopColor: i.shade }),
 							/* @__PURE__ */ (0, oR.jsx)("stop", {
 								offset: ".13",
-								stopColor: a.body
+								stopColor: i.body
 							}),
 							/* @__PURE__ */ (0, oR.jsx)("stop", {
 								offset: ".3",
-								stopColor: a.light
+								stopColor: i.light
 							}),
 							/* @__PURE__ */ (0, oR.jsx)("stop", {
 								offset: ".51",
-								stopColor: a.body
+								stopColor: i.body
 							}),
 							/* @__PURE__ */ (0, oR.jsx)("stop", {
 								offset: ".85",
-								stopColor: a.shade
+								stopColor: i.shade
 							}),
 							/* @__PURE__ */ (0, oR.jsx)("stop", {
 								offset: "1",
-								stopColor: a.body
+								stopColor: i.body
 							})
 						]
-					}, i);
+					}, n);
 				})
 			] }),
 			/* @__PURE__ */ (0, oR.jsx)("rect", {
 				width: "440",
 				height: "120",
-				fill: `url(#${n}-base)`
+				fill: `url(#${r}-base)`
 			}),
-			/* @__PURE__ */ (0, oR.jsx)("g", {
-				filter: `url(#${n}-flow)`,
-				children: i.map((e, t) => /* @__PURE__ */ (0, oR.jsx)("g", {
+			a === "bubbles" || a === "stars" ? /* @__PURE__ */ (0, oR.jsx)("g", { children: o.map((e, t) => /* @__PURE__ */ (0, oR.jsx)("g", {
+				className: "oo-fluid-layer",
+				style: e.style,
+				children: /* @__PURE__ */ (0, oR.jsx)("circle", {
+					cx: 35 + t * 73,
+					cy: 25 + t % 3 * 34,
+					r: a === "stars" ? 2 : 12 + e.tone * 13,
+					fill: a === "stars" ? s.light : "none",
+					stroke: s.light,
+					strokeWidth: "1.5",
+					opacity: ".65"
+				})
+			}, t)) }) : /* @__PURE__ */ (0, oR.jsx)("g", {
+				filter: `url(#${r}-flow)`,
+				children: o.map((e, t) => /* @__PURE__ */ (0, oR.jsx)("g", {
 					className: "oo-fluid-layer oo-lava-depth",
 					style: e.style,
-					opacity: r === "mist" ? .42 : r === "aurora" ? .65 : .88,
+					opacity: a === "mist" ? .42 : a === "aurora" ? .65 : .88,
 					children: /* @__PURE__ */ (0, oR.jsx)("path", {
-						d: nR(r, t, e.tone),
-						fill: `url(#${n}-fold-${t})`
+						d: nR(a, t, e.tone),
+						fill: `url(#${r}-fold-${t})`
 					})
 				}, t))
 			})
@@ -25202,7 +25224,7 @@ function hR({ username: e, role: t, profile: n, onEdit: r, frameless: i = !1 }) 
 	return /* @__PURE__ */ (0, gR.jsxs)("div", {
 		className: i ? "overflow-hidden" : "overflow-hidden rounded-xl border border-border bg-card",
 		children: [/* @__PURE__ */ (0, gR.jsxs)("div", {
-			"data-lava": n.goldBadge && n.bannerStyle === "lava" ? "" : void 0,
+			"data-lava": n.goldBadge && n.bannerStyle !== "solid" && n.bannerStyle ? "" : void 0,
 			className: `oo-profile-banner ${i ? "h-28" : "h-20 border-b border-border"} bg-card`,
 			style: i ? {
 				...QL(n.bannerSeed || e),
@@ -25212,9 +25234,10 @@ function hR({ username: e, role: t, profile: n, onEdit: r, frameless: i = !1 }) 
 				...QL(n.bannerSeed || e),
 				"--profile-color": n.nameColor
 			},
-			children: [n.goldBadge && n.bannerStyle === "lava" && /* @__PURE__ */ (0, gR.jsx)(iR, {
+			children: [n.goldBadge && n.bannerStyle !== "solid" && !!n.bannerStyle && /* @__PURE__ */ (0, gR.jsx)(iR, {
 				seed: n.bannerSeed || e,
-				color: n.nameColor
+				color: n.nameColor,
+				material: n.bannerStyle === "lava" ? void 0 : n.bannerStyle === "magma" ? "lava" : n.bannerStyle
 			}), n.goldBadge && r && /* @__PURE__ */ (0, gR.jsx)("div", {
 				className: "absolute right-3 top-3",
 				children: a("appearance", "Editar aparência")
@@ -27974,9 +27997,10 @@ function XU({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 					role: "img",
 					"aria-label": "Prévia do fundo",
 					style: { background: `color-mix(in srgb, ${a.nameColor} 18%, rgb(var(--card)))` },
-					children: a.bannerStyle === "lava" && /* @__PURE__ */ (0, QU.jsx)(iR, {
+					children: a.bannerStyle !== "solid" && !!a.bannerStyle && /* @__PURE__ */ (0, QU.jsx)(iR, {
 						seed: a.bannerSeed || "preview",
-						color: a.nameColor
+						color: a.nameColor,
+						material: a.bannerStyle === "lava" ? void 0 : a.bannerStyle === "magma" ? "lava" : a.bannerStyle
 					})
 				}),
 				/* @__PURE__ */ (0, QU.jsx)(HU, {
@@ -28008,18 +28032,63 @@ function XU({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 						value: a.bannerStyle || "solid",
 						disabled: l,
 						onValueChange: (e) => {
-							(e === "solid" || e === "lava") && o({
+							e && [
+								"solid",
+								"lava",
+								"slime",
+								"bubbles",
+								"gradient",
+								"magma",
+								"stars",
+								"rainbow"
+							].includes(e) && o({
 								...a,
 								bannerStyle: e
 							});
 						},
-						children: [/* @__PURE__ */ (0, QU.jsx)(DU, { children: /* @__PURE__ */ (0, QU.jsx)(EU, { children: a.bannerStyle === "lava" ? "Lava animada" : "Cor sólida" }) }), /* @__PURE__ */ (0, QU.jsxs)(OU, { children: [/* @__PURE__ */ (0, QU.jsx)(kU, {
-							value: "solid",
-							children: "Cor sólida"
-						}), /* @__PURE__ */ (0, QU.jsx)(kU, {
-							value: "lava",
-							children: "Lava animada"
-						})] })]
+						children: [/* @__PURE__ */ (0, QU.jsx)(DU, { children: /* @__PURE__ */ (0, QU.jsx)(EU, { children: {
+							solid: "Cor sólida",
+							lava: "Fluidos — 12 composições",
+							slime: "Slime",
+							bubbles: "Bolhas",
+							gradient: "Gradiente",
+							magma: "Lava",
+							stars: "Estrelas",
+							rainbow: "Arcos de cor"
+						}[a.bannerStyle || "solid"] }) }), /* @__PURE__ */ (0, QU.jsxs)(OU, { children: [
+							/* @__PURE__ */ (0, QU.jsx)(kU, {
+								value: "solid",
+								children: "Cor sólida"
+							}),
+							/* @__PURE__ */ (0, QU.jsx)(kU, {
+								value: "lava",
+								children: "Fluidos — 12 composições"
+							}),
+							/* @__PURE__ */ (0, QU.jsx)(kU, {
+								value: "slime",
+								children: "Slime"
+							}),
+							/* @__PURE__ */ (0, QU.jsx)(kU, {
+								value: "bubbles",
+								children: "Bolhas"
+							}),
+							/* @__PURE__ */ (0, QU.jsx)(kU, {
+								value: "gradient",
+								children: "Gradiente"
+							}),
+							/* @__PURE__ */ (0, QU.jsx)(kU, {
+								value: "magma",
+								children: "Lava"
+							}),
+							/* @__PURE__ */ (0, QU.jsx)(kU, {
+								value: "stars",
+								children: "Estrelas"
+							}),
+							/* @__PURE__ */ (0, QU.jsx)(kU, {
+								value: "rainbow",
+								children: "Arcos de cor"
+							})
+						] })]
 					})]
 				})
 			] }),
