@@ -101,6 +101,33 @@ document
   .addEventListener("click", openCreateUser);
 document.addEventListener('submit', event => { if (event.target.id === 'user-form') void createUser(event); });
 window.addEventListener('organizeon:admin-view', event => showView(event.detail));
+let logoutPending = false;
+window.addEventListener('organizeon:admin-logout', () => { void logoutAccount(); });
+async function logoutAccount() {
+  if (logoutPending) return;
+  logoutPending = true;
+  try {
+    if (!await window.OrganizeOnAdminUI.confirm(
+      'Deseja encerrar sua sessão?', 'Sair da conta', 'Sair',
+    )) return;
+    const response = await api('/auth/logout', { method: 'POST', body: '{}' });
+    if (!response.ok && response.status !== 401) throw new Error(await apiError(response));
+    disconnectTerminal();
+    state.monitorSocket?.close();
+    state.logSocket?.close();
+    localStorage.removeItem(tokenKey);
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'organizeon:open-main', loggedOut: true }, '*');
+    } else {
+      window.location.replace(new URL('./', document.baseURI).href);
+    }
+  } catch (error) {
+    showToast(error.message || 'Não foi possível encerrar a sessão.');
+  } finally {
+    logoutPending = false;
+  }
+}
+
 document
   .getElementById("terminal-connect")
   .addEventListener("click", connectTerminal);
@@ -196,7 +223,6 @@ async function loadServices() {
       api: "API, autenticação, dashboard e proxy web.",
       relay: "Relay dedicado usado pelo Eaglercraft.",
       tunnel: "Túnel que publica os serviços e domínios pela Cloudflare.",
-      suroi: "Servidor dedicado do Suroi.",
       survival: "Servidor dedicado do OrganizeOn Survival.",
     })[service.id] || "Serviço dedicado do projeto.";
     const meta = document.createElement("small");

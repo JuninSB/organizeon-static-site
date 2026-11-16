@@ -1,7 +1,7 @@
 {
-  "version": "v2-6e7ab5d3de55df59",
-  "generatedAt": "2026-11-16T02:48:59.991Z",
-  "totalBytes": 12693154,
+  "version": "v2-8919812bcb6e9081",
+  "generatedAt": "2026-11-16T03:07:25.142Z",
+  "totalBytes": 12693872,
   "files": [
     {
       "path": "404.html",
@@ -11,12 +11,12 @@
     {
       "path": "admin.html",
       "size": 731,
-      "sha256": "9355b4c1f729caf1426b60cfa07e200b470372ef8522708fbb511633fda3f490"
+      "sha256": "38c0f7479134184516df29b90fb4d5186c7c98b9354643dffaa24a19cf006249"
     },
     {
       "path": "admin.js",
-      "size": 35824,
-      "sha256": "6356f4be37756a01657d82f9b9704c0a10adc6a0c0688532002a1311bc8d6e44"
+      "size": 36769,
+      "sha256": "c134e9e3163ca09d4fd272bafea910cd3306120083c7ff06a02ddce234887b65"
     },
     {
       "path": "assets/jdht-a-B22Nviop.woff2",
@@ -629,11 +629,6 @@
       "sha256": "ea2fb2d95b4013bd56663702e53e996bd72d5470e9b2d3b31759265b8e23b8ba"
     },
     {
-      "path": "games/covers/suroi.svg",
-      "size": 959,
-      "sha256": "b045ed316fc9897748ddf452fc61de6417fd6a6e8587e38fb4d0b0244217c3eb"
-    },
-    {
       "path": "games/covers/tetris-flash.jpg",
       "size": 29585,
       "sha256": "6a6abe06639c188fcc4d2418d4f4e3fc74737122c89f642074ea5b29274d742d"
@@ -790,8 +785,8 @@
     },
     {
       "path": "ui-dist/admin-ui.js",
-      "size": 1187559,
-      "sha256": "183b6db8a08d5c1ec11d948049596832db198ee447ba1968854bf72c6d26c1a3"
+      "size": 1188291,
+      "sha256": "564074263a939e1bb256af7fe71f7cdb8da39ce7e5ddcc4c7a27825bcf2a7e1b"
     },
     {
       "path": "ui-dist/admin-ui.css",

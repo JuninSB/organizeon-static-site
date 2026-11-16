@@ -31884,23 +31884,44 @@ ${s.join("\n")}
 	};
 })), IE = /* @__PURE__ */ c({});
 async function LE() {
-	let e = await vD("/admin/status");
+	if (!jD) {
+		jD = !0;
+		try {
+			if (!await window.OrganizeOnAdminUI.confirm("Deseja encerrar sua sessão?", "Sair da conta", "Sair")) return;
+			let e = await yD("/auth/logout", {
+				method: "POST",
+				body: "{}"
+			});
+			if (!e.ok && e.status !== 401) throw Error(await bD(e));
+			dD(), $.monitorSocket?.close(), $.logSocket?.close(), localStorage.removeItem(DD), window.parent === window ? window.location.replace(new URL("./", document.baseURI).href) : window.parent.postMessage({
+				type: "organizeon:open-main",
+				loggedOut: !0
+			}, "*");
+		} catch (e) {
+			xD(e.message || "Não foi possível encerrar a sessão.");
+		} finally {
+			jD = !1;
+		}
+	}
+}
+async function RE() {
+	let e = await yD("/admin/status");
 	if (e.status === 401 || e.status === 403) throw Error("forbidden");
 	let t = await e.json();
-	$.account = t.account, $.monitoring = t.monitoring, window.OrganizeOnAdminUI.setAccount(t.account), document.getElementById("monitor-toggle").hidden = !t.account.permissions.includes("admin.monitoring"), document.getElementById("monitor-activate").hidden = !t.account.permissions.includes("admin.monitoring"), HE(t.monitoring);
+	$.account = t.account, $.monitoring = t.monitoring, window.OrganizeOnAdminUI.setAccount(t.account), document.getElementById("monitor-toggle").hidden = !t.account.permissions.includes("admin.monitoring"), document.getElementById("monitor-activate").hidden = !t.account.permissions.includes("admin.monitoring"), UE(t.monitoring);
 }
-function RE(e) {
+function zE(e) {
 	window.OrganizeOnAdminUI?.setView(e), document.querySelectorAll(".view").forEach((t) => {
 		t.hidden = t.id !== `view-${e}`;
 	}), document.querySelectorAll("[data-view]").forEach((t) => {
 		t.classList.toggle("active", t.dataset.view === e);
-	}), e === "users" && nD(), e === "services" && zE(), e === "terminal" && gD(), e === "logs" && ZE();
+	}), e === "users" && rD(), e === "services" && BE(), e === "terminal" && _D(), e === "logs" && QE();
 }
-async function zE() {
+async function BE() {
 	let e = document.getElementById("services-grid"), t = document.getElementById("services-refresh");
 	t.disabled = !0, t.textContent = "↻ Consultando…";
-	let n = await vD("/admin/services");
-	if (t.disabled = !1, t.textContent = "↻ Atualizar status", !n.ok) return bD(await yD(n));
+	let n = await yD("/admin/services");
+	if (t.disabled = !1, t.textContent = "↻ Atualizar status", !n.ok) return xD(await bD(n));
 	let { services: r = [] } = await n.json();
 	if (r.length) e.replaceChildren(...r.map((e) => {
 		let t = document.createElement("article");
@@ -31916,22 +31937,21 @@ async function zE() {
 			api: "API, autenticação, dashboard e proxy web.",
 			relay: "Relay dedicado usado pelo Eaglercraft.",
 			tunnel: "Túnel que publica os serviços e domínios pela Cloudflare.",
-			suroi: "Servidor dedicado do Suroi.",
 			survival: "Servidor dedicado do OrganizeOn Survival."
 		}[e.id] || "Serviço dedicado do projeto.";
 		let o = document.createElement("small");
 		o.className = "service-meta";
 		let s = [];
-		e.status?.pid && s.push(`PID ${e.status.pid}`), Number.isFinite(e.status?.uptimeSeconds) && s.push(`ligado há ${CD(e.status.uptimeSeconds)}`), o.textContent = s.join(" · ") || "Estado consultado diretamente no servidor";
+		e.status?.pid && s.push(`PID ${e.status.pid}`), Number.isFinite(e.status?.uptimeSeconds) && s.push(`ligado há ${wD(e.status.uptimeSeconds)}`), o.textContent = s.join(" · ") || "Estado consultado diretamente no servidor";
 		let c = document.createElement("div");
 		c.className = "service-actions";
 		for (let t of e.actions) {
-			let n = xD(BE(t), t === "stop" ? "button danger" : "button");
+			let n = SD(VE(t), t === "stop" ? "button danger" : "button");
 			n.disabled = t === "start" && e.status?.state === "running" || t === "stop" && e.status?.state === "stopped", n.addEventListener("click", async () => {
-				if (!await window.OrganizeOnAdminUI.confirm(`${BE(t)} ${e.label}?`)) return;
+				if (!await window.OrganizeOnAdminUI.confirm(`${VE(t)} ${e.label}?`)) return;
 				n.disabled = !0;
-				let r = await vD(`/admin/services/${encodeURIComponent(e.id)}/${t}`, { method: "POST" });
-				n.disabled = !1, bD(r.ok ? `${e.label}: comando ${BE(t).toLowerCase()} enviado.` : await yD(r)), r.ok && e.id !== "api" && window.setTimeout(zE, 900);
+				let r = await yD(`/admin/services/${encodeURIComponent(e.id)}/${t}`, { method: "POST" });
+				n.disabled = !1, xD(r.ok ? `${e.label}: comando ${VE(t).toLowerCase()} enviado.` : await bD(r)), r.ok && e.id !== "api" && window.setTimeout(BE, 900);
 			}), c.append(n);
 		}
 		return t.append(n, a, o, c), t;
@@ -31941,87 +31961,87 @@ async function zE() {
 		t.textContent = "Nenhum serviço foi liberado para esta conta.", e.replaceChildren(t);
 	}
 }
-function BE(e) {
+function VE(e) {
 	return {
 		start: "Ligar",
 		stop: "Desligar",
 		restart: "Reiniciar"
 	}[e] || e;
 }
-async function VE() {
-	$.monitorSocket ? qE() : GE();
+async function HE() {
+	$.monitorSocket ? JE() : KE();
 }
-function HE(e) {
-	$.monitoring = e, UE(e), document.getElementById("monitoring-off").hidden = e.active, document.getElementById("monitoring-content").hidden = !e.active;
+function UE(e) {
+	$.monitoring = e, WE(e), document.getElementById("monitoring-off").hidden = e.active, document.getElementById("monitoring-content").hidden = !e.active;
 	let t = document.getElementById("monitor-toggle");
 	(t.querySelector("[data-ui-label]") || t).textContent = $.monitorSocket ? "Parar monitoramento" : e.active ? "Acompanhar monitoramento" : "Ativar monitoramento", t.classList.toggle("danger", !!$.monitorSocket), t.classList.toggle("primary", !$.monitorSocket);
 	let n = document.getElementById("monitor-refresh");
 	if (n.disabled = $.monitorSocket?.readyState !== WebSocket.OPEN || $.monitorRefreshPending, (n.querySelector("[data-ui-label]") || n).textContent = $.monitorRefreshPending ? "Atualizando…" : "Atualizar", !e.active) return;
-	document.getElementById("cpu-value").textContent = `${e.cpu.percent.toFixed(1)}%`, document.getElementById("cpu-detail").textContent = `${e.cpu.cores} cores · ${e.cpu.model}`, document.getElementById("ram-value").textContent = `${e.ram.percent.toFixed(1)}%`, document.getElementById("ram-detail").textContent = `${SD(e.ram.usedBytes)} / ${SD(e.ram.totalBytes)}`, YE(e.requests);
-	let r = XE(e.requests);
-	document.getElementById("rpm-value").textContent = r.perMinute, document.getElementById("request-detail").textContent = `${r.totalSinceStart || 0} total · ${r.trackedFiveMinutes} em 5 min · ${r.averageResponseMs.toFixed(1)} ms médio`, document.getElementById("uptime-value").textContent = CD(e.uptimeSeconds), document.getElementById("process-detail").textContent = `Node RSS ${SD(e.ram.processRssBytes)} · ${e.viewers || 1} viewer(s)`, JE(e.history);
+	document.getElementById("cpu-value").textContent = `${e.cpu.percent.toFixed(1)}%`, document.getElementById("cpu-detail").textContent = `${e.cpu.cores} cores · ${e.cpu.model}`, document.getElementById("ram-value").textContent = `${e.ram.percent.toFixed(1)}%`, document.getElementById("ram-detail").textContent = `${CD(e.ram.usedBytes)} / ${CD(e.ram.totalBytes)}`, XE(e.requests);
+	let r = ZE(e.requests);
+	document.getElementById("rpm-value").textContent = r.perMinute, document.getElementById("request-detail").textContent = `${r.totalSinceStart || 0} total · ${r.trackedFiveMinutes} em 5 min · ${r.averageResponseMs.toFixed(1)} ms médio`, document.getElementById("uptime-value").textContent = wD(e.uptimeSeconds), document.getElementById("process-detail").textContent = `Node RSS ${CD(e.ram.processRssBytes)} · ${e.viewers || 1} viewer(s)`, YE(e.history);
 }
-function UE(e) {
+function WE(e) {
 	let t = e.service || {}, n = e.requests || {}, r = t.publicDomain || "Não configurado", i = t.domainStatus === "online";
-	document.getElementById("domain-value").textContent = r, document.getElementById("domain-detail").innerHTML = `<span class="status-dot${i ? "" : " unverified"}"></span>` + (i ? `Online · visto ${wD(t.domainLastSeenAt)}` : "Ainda não recebeu tráfego por esse domínio"), document.getElementById("service-status").textContent = t.status === "online" ? "Online" : "Indisponível", document.getElementById("service-detail").textContent = `${t.apiPrefix || TD.apiPrefix} · ${(t.transports || [
+	document.getElementById("domain-value").textContent = r, document.getElementById("domain-detail").innerHTML = `<span class="status-dot${i ? "" : " unverified"}"></span>` + (i ? `Online · visto ${TD(t.domainLastSeenAt)}` : "Ainda não recebeu tráfego por esse domínio"), document.getElementById("service-status").textContent = t.status === "online" ? "Online" : "Indisponível", document.getElementById("service-detail").textContent = `${t.apiPrefix || ED.apiPrefix} · ${(t.transports || [
 		"HTTP",
 		"WebSocket",
 		"WISP"
 	]).join(" / ")}`;
 	let a = t.publicPort || 443, o = t.internalPort || 5e3;
-	document.getElementById("ports-value").textContent = `${a} / ${o}`, document.getElementById("ports-detail").textContent = `HTTPS público ${a} · origem TCP ${o}`, document.getElementById("server-uptime-value").textContent = CD(e.uptimeSeconds || 0), document.getElementById("server-uptime-detail").textContent = `${n.totalSinceStart || 0} requests · ${n.webSocketUpgradesSinceStart || 0} WebSockets`, WE(t.routes || []);
+	document.getElementById("ports-value").textContent = `${a} / ${o}`, document.getElementById("ports-detail").textContent = `HTTPS público ${a} · origem TCP ${o}`, document.getElementById("server-uptime-value").textContent = wD(e.uptimeSeconds || 0), document.getElementById("server-uptime-detail").textContent = `${n.totalSinceStart || 0} requests · ${n.webSocketUpgradesSinceStart || 0} WebSockets`, GE(t.routes || []);
 }
-function WE(e) {
+function GE(e) {
 	window.OrganizeOnAdminUI.setRoutes(e);
 }
-function GE() {
-	let e = localStorage.getItem(ED), t = `${TD.apiOrigin.replace(/^http/, "ws")}${TD.apiPrefix}/monitoring/`, n = e ? `${t}${encodeURIComponent(e)}/` : t, r = new WebSocket(n);
-	$.monitorSocket = r, HE($.monitoring || {
+function KE() {
+	let e = localStorage.getItem(DD), t = `${ED.apiOrigin.replace(/^http/, "ws")}${ED.apiPrefix}/monitoring/`, n = e ? `${t}${encodeURIComponent(e)}/` : t, r = new WebSocket(n);
+	$.monitorSocket = r, UE($.monitoring || {
 		active: !1,
 		history: []
 	}), r.addEventListener("message", (e) => {
 		try {
 			let t = JSON.parse(e.data);
-			Math.max(0, ...(t.service?.routes || []).map((e) => new Date(e.checkedAt || 0).getTime() || 0)) >= $.monitorRefreshStartedAt && ($.monitorRefreshPending = !1), HE(t);
+			Math.max(0, ...(t.service?.routes || []).map((e) => new Date(e.checkedAt || 0).getTime() || 0)) >= $.monitorRefreshStartedAt && ($.monitorRefreshPending = !1), UE(t);
 		} catch {
-			bD("Snapshot de monitoramento inválido.");
+			xD("Snapshot de monitoramento inválido.");
 		}
 	}), r.addEventListener("open", () => {
-		HE($.monitoring);
+		UE($.monitoring);
 	}), r.addEventListener("close", () => {
-		$.monitorSocket === r && ($.monitorSocket = null, HE({
+		$.monitorSocket === r && ($.monitorSocket = null, UE({
 			...$.monitoring,
 			active: !1,
 			viewers: 0,
 			history: []
 		}));
 	}), r.addEventListener("error", () => {
-		$.monitorSocket === r && bD("Não foi possível ativar o monitoramento.");
+		$.monitorSocket === r && xD("Não foi possível ativar o monitoramento.");
 	});
-}
-function KE() {
-	let e = $.monitorSocket;
-	e && e.readyState === WebSocket.OPEN && ($.monitorRefreshPending = !0, $.monitorRefreshStartedAt = Date.now(), HE($.monitoring), e.send(JSON.stringify({ type: "refresh-routes" })), window.setTimeout(() => {
-		$.monitorRefreshPending && ($.monitorRefreshPending = !1, $.monitorRefreshStartedAt = 0, HE($.monitoring), bD("A atualização das rotas demorou mais que o esperado."));
-	}, 6500));
 }
 function qE() {
 	let e = $.monitorSocket;
-	$.monitorSocket = null, $.monitorRefreshPending = !1, $.monitorRefreshStartedAt = 0, e?.close(1e3, "Monitoring disabled"), HE({
+	e && e.readyState === WebSocket.OPEN && ($.monitorRefreshPending = !0, $.monitorRefreshStartedAt = Date.now(), UE($.monitoring), e.send(JSON.stringify({ type: "refresh-routes" })), window.setTimeout(() => {
+		$.monitorRefreshPending && ($.monitorRefreshPending = !1, $.monitorRefreshStartedAt = 0, UE($.monitoring), xD("A atualização das rotas demorou mais que o esperado."));
+	}, 6500));
+}
+function JE() {
+	let e = $.monitorSocket;
+	$.monitorSocket = null, $.monitorRefreshPending = !1, $.monitorRefreshStartedAt = 0, e?.close(1e3, "Monitoring disabled"), UE({
 		...$.monitoring,
 		active: !1,
 		viewers: 0,
 		history: []
 	});
 }
-function JE(e) {
-	tD(document.getElementById("resource-chart"), e, [{
+function YE(e) {
+	nD(document.getElementById("resource-chart"), e, [{
 		key: "cpuPercent",
 		color: "#5df0c8"
 	}, {
 		key: "ramPercent",
 		color: "#39c9ef"
-	}], 100), tD(document.getElementById("request-chart"), e.map((e) => ({
+	}], 100), nD(document.getElementById("request-chart"), e.map((e) => ({
 		...e,
 		selectedRequestsPerMinute: $.requestDomain === "all" ? e.requestsPerMinute : e.requestsPerMinuteByDomain?.[$.requestDomain] || 0
 	})), [{
@@ -32029,7 +32049,7 @@ function JE(e) {
 		color: "#67e8d1"
 	}], Math.max(5, ...e.map((e) => $.requestDomain === "all" ? e.requestsPerMinute : e.requestsPerMinuteByDomain?.[$.requestDomain] || 0)));
 }
-function YE(e) {
+function XE(e) {
 	if (window.OrganizeOnAdminUI) {
 		window.OrganizeOnAdminUI.setRequestDomains((e.byDomain || []).map((e) => e.domain), $.requestDomain);
 		return;
@@ -32042,7 +32062,7 @@ function YE(e) {
 		return t.value = e, t.textContent = e === "all" ? "Todos os domínios" : e, t;
 	})), t.value = $.requestDomain;
 }
-function XE(e) {
+function ZE(e) {
 	return $.requestDomain === "all" ? e : (e.byDomain || []).find((e) => e.domain === $.requestDomain) || {
 		perMinute: 0,
 		trackedFiveMinutes: 0,
@@ -32050,17 +32070,17 @@ function XE(e) {
 		averageResponseMs: 0
 	};
 }
-function ZE() {
+function QE() {
 	if ($.logSocket && $.logSocket.readyState <= WebSocket.OPEN) return;
-	let e = localStorage.getItem(ED), t = `${TD.apiOrigin.replace(/^http/, "ws")}${TD.apiPrefix}/logs/`, n = e ? `${t}${encodeURIComponent(e)}/` : t, r = new WebSocket(n);
+	let e = localStorage.getItem(DD), t = `${ED.apiOrigin.replace(/^http/, "ws")}${ED.apiPrefix}/logs/`, n = e ? `${t}${encodeURIComponent(e)}/` : t, r = new WebSocket(n);
 	$.logSocket = r, document.getElementById("logs-status").textContent = "Conectando…", r.addEventListener("open", () => {
 		document.getElementById("logs-status").textContent = "Conectado · atualização em tempo real";
 	}), r.addEventListener("message", (e) => {
 		if (!$.logsPaused) try {
 			let t = JSON.parse(e.data);
-			t.type === "snapshot" ? $.logs = t.entries || [] : t.type === "entry" && t.entry && ($.logs.push(t.entry), $.logs.length > 500 && ($.logs = $.logs.slice(-500))), $E();
+			t.type === "snapshot" ? $.logs = t.entries || [] : t.type === "entry" && t.entry && ($.logs.push(t.entry), $.logs.length > 500 && ($.logs = $.logs.slice(-500))), eD();
 		} catch {
-			bD("Evento de log inválido.");
+			xD("Evento de log inválido.");
 		}
 	}), r.addEventListener("close", () => {
 		$.logSocket === r && ($.logSocket = null), document.getElementById("logs-status").textContent = "Desconectado";
@@ -32068,10 +32088,10 @@ function ZE() {
 		document.getElementById("logs-status").textContent = "Falha ao conectar";
 	});
 }
-function QE() {
+function $E() {
 	$.logsPaused = !$.logsPaused, document.getElementById("logs-pause").textContent = $.logsPaused ? "Continuar" : "Pausar", document.getElementById("logs-status").textContent = $.logsPaused ? "Pausado localmente" : $.logSocket?.readyState === WebSocket.OPEN ? "Conectado · atualização em tempo real" : "Desconectado";
 }
-function $E() {
+function eD() {
 	let e = document.getElementById("logs-list");
 	if (!$.logs.length) {
 		let t = document.createElement("div");
@@ -32091,14 +32111,14 @@ function $E() {
 		let a = document.createElement("span");
 		a.className = "log-path", a.textContent = `${e.method || ""} ${e.path || e.message || ""}`.trim(), a.title = e.message || "";
 		let o = document.createElement("span");
-		return o.className = "log-meta", o.textContent = eD(e), t.append(n, r, i, a, o), t;
+		return o.className = "log-meta", o.textContent = tD(e), t.append(n, r, i, a, o), t;
 	})), t && (e.scrollTop = e.scrollHeight);
 }
-function eD(e) {
+function tD(e) {
 	let t = [];
-	return e.statusCode && t.push(`HTTP ${e.statusCode}`), Number.isFinite(e.durationMs) && t.push(`${e.durationMs.toFixed(0)} ms`), e.bytes && t.push(SD(e.bytes)), t.join(" · ") || "—";
+	return e.statusCode && t.push(`HTTP ${e.statusCode}`), Number.isFinite(e.durationMs) && t.push(`${e.durationMs.toFixed(0)} ms`), e.bytes && t.push(CD(e.bytes)), t.join(" · ") || "—";
 }
-function tD(e, t, n, r) {
+function nD(e, t, n, r) {
 	let i = window.devicePixelRatio || 1, a = Math.max(280, e.clientWidth);
 	e.width = a * i, e.height = 220 * i;
 	let o = e.getContext("2d");
@@ -32112,49 +32132,49 @@ function tD(e, t, n, r) {
 		i === 0 ? o.moveTo(s, c) : o.lineTo(s, c);
 	}), o.stroke();
 }
-async function nD() {
-	let e = await vD("/admin/users");
-	if (!e.ok) return bD("Não foi possível carregar as contas.");
+async function rD() {
+	let e = await yD("/admin/users");
+	if (!e.ok) return xD("Não foi possível carregar as contas.");
 	let t = await e.json();
-	$.permissions = t.permissions || [], $.grantablePermissions = t.grantablePermissions || t.permissions, $.roles = t.roles || ["user", "admin"], iD(), rD(t.users);
+	$.permissions = t.permissions || [], $.grantablePermissions = t.grantablePermissions || t.permissions, $.roles = t.roles || ["user", "admin"], aD(), iD(t.users);
 }
-function rD(e) {
+function iD(e) {
 	let t = async (e) => {
-		if (!e.ok) throw Error(await yD(e));
+		if (!e.ok) throw Error(await bD(e));
 		return e;
 	};
 	window.OrganizeOnAdminUI.setUsers({
 		users: e.map((e) => ({
 			...e,
-			canEdit: oD(e),
+			canEdit: sD(e),
 			isSelf: e.username === $.account.username
 		})),
 		permissions: $.permissions,
 		grantablePermissions: $.grantablePermissions,
 		roles: $.roles,
 		onSave: async (e, n) => {
-			await t(await vD(`/admin/users/${encodeURIComponent(e.username)}`, {
+			await t(await yD(`/admin/users/${encodeURIComponent(e.username)}`, {
 				method: "PATCH",
 				body: JSON.stringify(n)
-			})), bD("Conta atualizada."), await nD();
+			})), xD("Conta atualizada."), await rD();
 		},
 		onPassword: async (e) => {
 			let n = await window.OrganizeOnAdminUI.promptPassword(e.username);
-			n !== null && (await t(await vD(`/admin/users/${encodeURIComponent(e.username)}`, {
+			n !== null && (await t(await yD(`/admin/users/${encodeURIComponent(e.username)}`, {
 				method: "PATCH",
 				body: JSON.stringify({ password: n })
-			})), bD("Senha alterada; os tokens anteriores foram invalidados."), await nD());
+			})), xD("Senha alterada; os tokens anteriores foram invalidados."), await rD());
 		},
 		onCode: async (e) => {
-			let n = await (await t(await vD(`/admin/users/${encodeURIComponent(e.username)}/login-code`, { method: "POST" }))).json();
-			sD(e.username, n.code, n.expiresAt);
+			let n = await (await t(await yD(`/admin/users/${encodeURIComponent(e.username)}/login-code`, { method: "POST" }))).json();
+			cD(e.username, n.code, n.expiresAt);
 		},
 		onDelete: async (e) => {
-			await window.OrganizeOnAdminUI.confirm(`Excluir a conta ${e.username}?`) && (await t(await vD(`/admin/users/${encodeURIComponent(e.username)}`, { method: "DELETE" })), bD("Conta excluída."), await nD());
+			await window.OrganizeOnAdminUI.confirm(`Excluir a conta ${e.username}?`) && (await t(await yD(`/admin/users/${encodeURIComponent(e.username)}`, { method: "DELETE" })), xD("Conta excluída."), await rD());
 		}
 	});
 }
-function iD() {
+function aD() {
 	let e = document.getElementById("permission-checks");
 	if (e) {
 		e.replaceChildren();
@@ -32164,10 +32184,10 @@ function iD() {
 		}
 	}
 }
-async function aD() {
-	window.OrganizeOnAdminUI.setRoles($.roles), window.OrganizeOnAdminUI.openUserDialog(), await new Promise((e) => requestAnimationFrame(() => requestAnimationFrame(e))), document.getElementById("user-form")?.reset(), iD();
+async function oD() {
+	window.OrganizeOnAdminUI.setRoles($.roles), window.OrganizeOnAdminUI.openUserDialog(), await new Promise((e) => requestAnimationFrame(() => requestAnimationFrame(e))), document.getElementById("user-form")?.reset(), aD();
 }
-function oD(e) {
+function sD(e) {
 	let t = {
 		user: 0,
 		admin: 1,
@@ -32176,7 +32196,7 @@ function oD(e) {
 	};
 	return !$.account || e.username === $.account.username ? !1 : $.account.role === "owner" || (t[$.account.role] || 0) > (t[e.role] || 0);
 }
-function sD(e, t, n) {
+function cD(e, t, n) {
 	if (window.OrganizeOnAdminUI) return window.OrganizeOnAdminUI.showLoginCode({
 		username: e,
 		code: t,
@@ -32186,12 +32206,12 @@ function sD(e, t, n) {
 	r.innerHTML = "\n    <div class=\"modal\">\n      <h2>Código de login</h2>\n      <p>Conta <strong></strong> · uso único · válido até <span></span></p>\n      <input readonly aria-label=\"Código de login\" />\n      <div class=\"modal-actions\">\n        <button class=\"button copy\" type=\"button\">Copiar</button>\n        <button class=\"button primary close\" type=\"button\">Fechar</button>\n      </div>\n    </div>", r.querySelector("strong").textContent = e, r.querySelector("span").textContent = new Date(n).toLocaleTimeString("pt-BR");
 	let i = r.querySelector("input");
 	i.value = t, r.querySelector(".copy").addEventListener("click", async () => {
-		await navigator.clipboard.writeText(t), bD("Código copiado.");
+		await navigator.clipboard.writeText(t), xD("Código copiado.");
 	}), r.querySelector(".close").addEventListener("click", () => r.close()), r.addEventListener("close", () => r.remove()), document.body.append(r), r.showModal(), i.select();
 }
-async function cD(e) {
+async function lD(e) {
 	e.preventDefault();
-	let t = e.target, n = new FormData(t), r = await vD("/admin/users", {
+	let t = e.target, n = new FormData(t), r = await yD("/admin/users", {
 		method: "POST",
 		body: JSON.stringify({
 			username: n.get("username"),
@@ -32200,82 +32220,82 @@ async function cD(e) {
 			permissions: n.getAll("permissions")
 		})
 	});
-	if (!r.ok) return bD(await yD(r));
-	window.OrganizeOnAdminUI.closeUserDialog(), bD("Conta criada."), nD();
+	if (!r.ok) return xD(await bD(r));
+	window.OrganizeOnAdminUI.closeUserDialog(), xD("Conta criada."), rD();
 }
-function lD() {
-	uD();
-	let e = localStorage.getItem(ED), t = `${TD.apiOrigin.replace(/^http/, "ws")}${TD.apiPrefix}/terminal/`, n = e ? `${t}${encodeURIComponent(e)}/` : t, r = new WebSocket(n);
-	$.terminal = r, mD("connecting"), pD("Conectando…"), fD("\r\n\x1B[36mConectando ao terminal seguro…\x1B[0m\r\n"), r.addEventListener("message", (e) => {
+function uD() {
+	dD();
+	let e = localStorage.getItem(DD), t = `${ED.apiOrigin.replace(/^http/, "ws")}${ED.apiPrefix}/terminal/`, n = e ? `${t}${encodeURIComponent(e)}/` : t, r = new WebSocket(n);
+	$.terminal = r, hD("connecting"), mD("Conectando…"), pD("\r\n\x1B[36mConectando ao terminal seguro…\x1B[0m\r\n"), r.addEventListener("message", (e) => {
 		let t;
 		try {
 			t = JSON.parse(e.data);
 		} catch {
-			fD("\x1B[31mResposta inválida do servidor.\x1B[0m\r\n");
+			pD("\x1B[31mResposta inválida do servidor.\x1B[0m\r\n");
 			return;
 		}
-		t.type === "terminal-ready" ? (mD("connected"), pD(`Conectado · ${t.shell}`), document.getElementById("terminal-input").disabled = !1, document.getElementById("terminal-input").focus(), fD(`\x1b[32mSessão iniciada como ${t.username}.\x1b[0m\r\n`)) : t.type === "output" ? fD(t.data) : t.type === "error" ? fD(`\x1b[31mErro: ${t.message}\x1b[0m\r\n`) : t.type === "exit" && fD(`\r\n\x1b[33mShell encerrado (${t.code ?? t.signal}).\x1b[0m\r\n`);
+		t.type === "terminal-ready" ? (hD("connected"), mD(`Conectado · ${t.shell}`), document.getElementById("terminal-input").disabled = !1, document.getElementById("terminal-input").focus(), pD(`\x1b[32mSessão iniciada como ${t.username}.\x1b[0m\r\n`)) : t.type === "output" ? pD(t.data) : t.type === "error" ? pD(`\x1b[31mErro: ${t.message}\x1b[0m\r\n`) : t.type === "exit" && pD(`\r\n\x1b[33mShell encerrado (${t.code ?? t.signal}).\x1b[0m\r\n`);
 	}), r.addEventListener("close", (e) => {
-		r.organizeonDisconnectMessageShown ||= (fD(`\r\n\x1b[33mConexão do terminal encerrada${e.reason ? `: ${e.reason}` : "."}\x1b[0m\r\n`), !0), mD("disconnected"), pD("Desconectado"), document.getElementById("terminal-input").disabled = !0, $.terminal === r && ($.terminal = null);
+		r.organizeonDisconnectMessageShown ||= (pD(`\r\n\x1b[33mConexão do terminal encerrada${e.reason ? `: ${e.reason}` : "."}\x1b[0m\r\n`), !0), hD("disconnected"), mD("Desconectado"), document.getElementById("terminal-input").disabled = !0, $.terminal === r && ($.terminal = null);
 	}), r.addEventListener("error", () => {
-		fD("\x1B[31mFalha ao conectar ao terminal.\x1B[0m\r\n");
+		pD("\x1B[31mFalha ao conectar ao terminal.\x1B[0m\r\n");
 	});
 }
-function uD() {
+function dD() {
 	let e = $.terminal;
-	e?.readyState < WebSocket.CLOSING && (fD("\r\n\x1B[33mTerminal desconectado pelo administrador.\x1B[0m\r\n"), e.organizeonDisconnectMessageShown = !0, e.close(1e3, "Admin disconnected")), $.terminal = null, document.getElementById("terminal-input").disabled = !0, mD("disconnected"), pD("Desconectado");
+	e?.readyState < WebSocket.CLOSING && (pD("\r\n\x1B[33mTerminal desconectado pelo administrador.\x1B[0m\r\n"), e.organizeonDisconnectMessageShown = !0, e.close(1e3, "Admin disconnected")), $.terminal = null, document.getElementById("terminal-input").disabled = !0, hD("disconnected"), mD("Desconectado");
 }
-function dD(e) {
+function fD(e) {
 	e.preventDefault();
 	let t = document.getElementById("terminal-input");
-	$.terminal?.readyState === WebSocket.OPEN && t.value && (fD(`\x1b[38;5;244m$ ${t.value}\x1b[0m\r\n`), $.terminal.send(JSON.stringify({
+	$.terminal?.readyState === WebSocket.OPEN && t.value && (pD(`\x1b[38;5;244m$ ${t.value}\x1b[0m\r\n`), $.terminal.send(JSON.stringify({
 		type: "input",
 		data: `${t.value}\n`
 	})), t.value = "");
 }
-function fD(e) {
-	gD(), OD.write(e);
-}
 function pD(e) {
-	document.getElementById("terminal-status").textContent = e;
+	_D(), kD.write(e);
 }
 function mD(e) {
+	document.getElementById("terminal-status").textContent = e;
+}
+function hD(e) {
 	let t = document.getElementById("terminal-connect"), n = document.getElementById("terminal-disconnect");
 	t.hidden = e === "connected", t.disabled = e === "connecting";
 	let r = t.querySelector("[data-ui-label]");
 	r && (r.textContent = e === "connecting" ? "Conectando…" : "Conectar"), n.hidden = e === "disconnected", document.getElementById("terminal-input").placeholder = e === "connected" ? "Digite um comando…" : "Conecte para iniciar";
 }
-function hD() {
-	AD === null && (AD = requestAnimationFrame(() => {
-		AD = null;
+function gD() {
+	MD === null && (MD = requestAnimationFrame(() => {
+		MD = null;
 		let e = document.getElementById("terminal-output");
-		if (!e?.clientWidth || !e.clientHeight || !kD) return;
-		let t = (OD.element?.querySelector(".xterm-screen"))?.getBoundingClientRect();
+		if (!e?.clientWidth || !e.clientHeight || !AD) return;
+		let t = (kD.element?.querySelector(".xterm-screen"))?.getBoundingClientRect();
 		if (!t?.width || !t.height) return;
-		let n = t.width / OD.cols, r = t.height / OD.rows, i = OD.element.querySelector(".xterm-viewport"), a = i ? i.offsetWidth - i.clientWidth : 0, o = Math.max(20, Math.floor((e.clientWidth - 24 - a) / n)), s = Math.max(4, Math.floor((e.clientHeight - 16) / r));
-		(o !== OD.cols || s !== OD.rows) && OD.resize(o, s), OD.refresh(0, OD.rows - 1);
+		let n = t.width / kD.cols, r = t.height / kD.rows, i = kD.element.querySelector(".xterm-viewport"), a = i ? i.offsetWidth - i.clientWidth : 0, o = Math.max(20, Math.floor((e.clientWidth - 24 - a) / n)), s = Math.max(4, Math.floor((e.clientHeight - 16) / r));
+		(o !== kD.cols || s !== kD.rows) && kD.resize(o, s), kD.refresh(0, kD.rows - 1);
 	}));
 }
-function gD() {
-	if (!kD) {
-		let e = document.getElementById("terminal-output");
-		OD.open(e), kD = !0, OD.writeln("\x1B[38;5;244mConecte para iniciar a sessão.\x1B[0m"), new ResizeObserver(hD).observe(e), document.fonts?.ready.then(hD);
-	}
-	hD();
-}
 function _D() {
-	DD && (document.documentElement.classList.add("organizeon-mobile"), window.setTimeout(() => bD("Modo mobile ativado"), 50));
+	if (!AD) {
+		let e = document.getElementById("terminal-output");
+		kD.open(e), AD = !0, kD.writeln("\x1B[38;5;244mConecte para iniciar a sessão.\x1B[0m"), new ResizeObserver(gD).observe(e), document.fonts?.ready.then(gD);
+	}
+	gD();
 }
-function vD(e, t = {}) {
-	let n = localStorage.getItem(ED), r = new Headers(t.headers);
-	return r.set("Accept", "application/json"), t.body && r.set("Content-Type", "application/json"), n && r.set("Authorization", `Bearer ${n}`), fetch(`${TD.apiOrigin}${TD.apiPrefix}${e}`, {
+function vD() {
+	OD && (document.documentElement.classList.add("organizeon-mobile"), window.setTimeout(() => xD("Modo mobile ativado"), 50));
+}
+function yD(e, t = {}) {
+	let n = localStorage.getItem(DD), r = new Headers(t.headers);
+	return r.set("Accept", "application/json"), t.body && r.set("Content-Type", "application/json"), n && r.set("Authorization", `Bearer ${n}`), fetch(`${ED.apiOrigin}${ED.apiPrefix}${e}`, {
 		...t,
 		headers: r,
 		credentials: "include",
 		cache: "no-store"
 	});
 }
-async function yD(e) {
+async function bD(e) {
 	return {
 		username_exists: "Esse nome de usuário já existe.",
 		invalid_username: "Nome de usuário inválido.",
@@ -32292,7 +32312,7 @@ async function yD(e) {
 		forbidden: "Permissão insuficiente."
 	}[(await e.json().catch(() => ({}))).error] || `Erro HTTP ${e.status}.`;
 }
-function bD(e, t = 8e3) {
+function xD(e, t = 8e3) {
 	if (window.OrganizeOnAdminUI) {
 		window.OrganizeOnAdminUI.toast(e);
 		return;
@@ -32308,11 +32328,11 @@ function bD(e, t = 8e3) {
 		n.hidden = !0;
 	}, t));
 }
-function xD(e, t) {
+function SD(e, t) {
 	let n = document.createElement("button");
 	return n.type = "button", n.className = t, n.textContent = e, n;
 }
-function SD(e) {
+function CD(e) {
 	let t = [
 		"B",
 		"KB",
@@ -32322,16 +32342,16 @@ function SD(e) {
 	for (; n >= 1024 && r < t.length - 1;) n /= 1024, r += 1;
 	return `${n.toFixed(+(r > 1))} ${t[r]}`;
 }
-function CD(e) {
+function wD(e) {
 	return e < 3600 ? `${Math.floor(e / 60)}m` : e < 86400 ? `${(e / 3600).toFixed(1)}h` : `${(e / 86400).toFixed(1)}d`;
 }
-function wD(e) {
+function TD(e) {
 	if (!e) return "agora";
 	let t = Math.max(0, Math.floor((Date.now() - new Date(e).getTime()) / 1e3));
 	return t < 10 ? "agora" : t < 60 ? `há ${t}s` : `há ${Math.floor(t / 60)}min`;
 }
-var TD, ED, DD, $, OD, kD, AD, jD = o((() => {
-	FE(), TD = window.__ORGANIZEON_CONFIG__, ED = "organizeon-access-token", DD = window.matchMedia("(max-width: 700px)").matches || navigator.userAgentData?.mobile === !0 || /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent), $ = {
+var ED, DD, OD, $, kD, AD, jD, MD, ND = o((() => {
+	FE(), ED = window.__ORGANIZEON_CONFIG__, DD = "organizeon-access-token", OD = window.matchMedia("(max-width: 700px)").matches || navigator.userAgentData?.mobile === !0 || /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent), $ = {
 		account: null,
 		permissions: [],
 		grantablePermissions: [],
@@ -32345,13 +32365,13 @@ var TD, ED, DD, $, OD, kD, AD, jD = o((() => {
 		logSocket: null,
 		logsPaused: !1,
 		terminal: null
-	}, OD = new PE({
+	}, kD = new PE({
 		allowProposedApi: !1,
 		convertEol: !0,
 		cursorBlink: !1,
 		disableStdin: !0,
 		fontFamily: "\"JetBrains Mono\", \"Fira Code\", \"Cascadia Mono\", monospace",
-		fontSize: DD ? 12 : 13,
+		fontSize: OD ? 12 : 13,
 		lineHeight: 1.25,
 		scrollback: 5e3,
 		theme: {
@@ -32376,25 +32396,27 @@ var TD, ED, DD, $, OD, kD, AD, jD = o((() => {
 			brightCyan: "#82edf5",
 			brightWhite: "#ffffff"
 		}
-	}), kD = !1, _D(), window.OrganizeOnAdminUI || document.querySelectorAll("[data-view]").forEach((e) => {
-		e.addEventListener("click", () => RE(e.dataset.view));
+	}), AD = !1, vD(), window.OrganizeOnAdminUI || document.querySelectorAll("[data-view]").forEach((e) => {
+		e.addEventListener("click", () => zE(e.dataset.view));
 	}), document.getElementById("back-link").addEventListener("click", () => {
 		window.parent === window ? window.location.href = new URL("./", document.baseURI).href : window.parent.postMessage({
 			type: "organizeon:open-main",
 			openSidebar: !0
 		}, "*");
-	}), document.getElementById("monitor-toggle").addEventListener("click", VE), document.getElementById("monitor-activate").addEventListener("click", VE), document.getElementById("monitor-refresh").addEventListener("click", KE), document.getElementById("request-domain-select").addEventListener("change", (e) => {
-		$.requestDomain = e.currentTarget.value, $.monitoring && HE($.monitoring);
-	}), document.getElementById("logs-pause").addEventListener("click", QE), document.getElementById("logs-clear").addEventListener("click", () => {
-		$.logs = [], $E();
-	}), document.getElementById("create-user").addEventListener("click", aD), document.addEventListener("submit", (e) => {
-		e.target.id === "user-form" && cD(e);
-	}), window.addEventListener("organizeon:admin-view", (e) => RE(e.detail)), document.getElementById("terminal-connect").addEventListener("click", lD), document.getElementById("services-refresh").addEventListener("click", zE), document.getElementById("terminal-disconnect").addEventListener("click", uD), document.getElementById("terminal-scroll-up").addEventListener("click", () => OD.scrollLines(-12)), document.getElementById("terminal-scroll-down").addEventListener("click", () => OD.scrollLines(12)), document.getElementById("terminal-scroll-bottom").addEventListener("click", () => OD.scrollToBottom()), document.getElementById("terminal-form").addEventListener("submit", dD), window.addEventListener("resize", () => {
-		$.monitoring?.active && JE($.monitoring.history);
-	}), LE().catch((e) => {
-		console.error(e), bD(e.message === "forbidden" ? "Esta conta não possui acesso ao Dashboard." : "Não foi possível conectar ao servidor.", 0);
-	}), AD = null;
-})), MD = [
+	}), document.getElementById("monitor-toggle").addEventListener("click", HE), document.getElementById("monitor-activate").addEventListener("click", HE), document.getElementById("monitor-refresh").addEventListener("click", qE), document.getElementById("request-domain-select").addEventListener("change", (e) => {
+		$.requestDomain = e.currentTarget.value, $.monitoring && UE($.monitoring);
+	}), document.getElementById("logs-pause").addEventListener("click", $E), document.getElementById("logs-clear").addEventListener("click", () => {
+		$.logs = [], eD();
+	}), document.getElementById("create-user").addEventListener("click", oD), document.addEventListener("submit", (e) => {
+		e.target.id === "user-form" && lD(e);
+	}), window.addEventListener("organizeon:admin-view", (e) => zE(e.detail)), jD = !1, window.addEventListener("organizeon:admin-logout", () => {
+		LE();
+	}), document.getElementById("terminal-connect").addEventListener("click", uD), document.getElementById("services-refresh").addEventListener("click", BE), document.getElementById("terminal-disconnect").addEventListener("click", dD), document.getElementById("terminal-scroll-up").addEventListener("click", () => kD.scrollLines(-12)), document.getElementById("terminal-scroll-down").addEventListener("click", () => kD.scrollLines(12)), document.getElementById("terminal-scroll-bottom").addEventListener("click", () => kD.scrollToBottom()), document.getElementById("terminal-form").addEventListener("submit", fD), window.addEventListener("resize", () => {
+		$.monitoring?.active && YE($.monitoring.history);
+	}), RE().catch((e) => {
+		console.error(e), xD(e.message === "forbidden" ? "Esta conta não possui acesso ao Dashboard." : "Não foi possível conectar ao servidor.", 0);
+	}), MD = null;
+})), PD = [
 	{
 		value: "overview",
 		label: "Visão geral",
@@ -32424,7 +32446,7 @@ var TD, ED, DD, $, OD, kD, AD, jD = o((() => {
 		permission: "admin.terminal"
 	}
 ];
-function ND({ value: e, label: t, icon: n, permission: r, active: i }) {
+function FD({ value: e, label: t, icon: n, permission: r, active: i }) {
 	let { setOpenMobile: a } = Sp();
 	return /* @__PURE__ */ (0, Y.jsxs)(Ip, {
 		"data-view": e,
@@ -32437,7 +32459,7 @@ function ND({ value: e, label: t, icon: n, permission: r, active: i }) {
 		children: [/* @__PURE__ */ (0, Y.jsx)(n, { "aria-hidden": "true" }), /* @__PURE__ */ (0, Y.jsx)("span", { children: t })]
 	});
 }
-function PD({ title: e, valueId: t, detailId: n, icon: r, fallback: i = "—" }) {
+function ID({ title: e, valueId: t, detailId: n, icon: r, fallback: i = "—" }) {
 	return /* @__PURE__ */ (0, Y.jsxs)(R_, {
 		className: "min-w-0",
 		children: [/* @__PURE__ */ (0, Y.jsxs)(z_, {
@@ -32454,7 +32476,7 @@ function PD({ title: e, valueId: t, detailId: n, icon: r, fallback: i = "—" })
 		})] })]
 	});
 }
-function FD() {
+function LD() {
 	let [e, t] = (0, k.useState)(null), [n, r] = (0, k.useState)(null), [i, a] = (0, k.useState)([]), [o, s] = (0, k.useState)("overview"), [c, l] = (0, k.useState)(!1), [u, d] = (0, k.useState)(["user", "admin"]), [f, p] = (0, k.useState)("user"), [m, h] = (0, k.useState)(null), [g, _] = (0, k.useState)(null), [v, y] = (0, k.useState)(null), [b, x] = (0, k.useState)(""), S = (0, k.useRef)(null), C = (0, k.useRef)(null), [w, T] = (0, k.useState)("all"), [E, D] = (0, k.useState)(["all"]), O = (0, k.useRef)(null);
 	(0, k.useEffect)(() => {
 		let e = () => document.getElementById("organizeon-admin-root")?.style.setProperty("--admin-viewport-height", `${window.visualViewport?.height || window.innerHeight}px`);
@@ -32488,7 +32510,7 @@ function FD() {
 				C.current = t, y(e), x("");
 			})
 		};
-		return window.OrganizeOnAdminUI = e, Promise.resolve().then(() => (jD(), IE)), () => {
+		return window.OrganizeOnAdminUI = e, Promise.resolve().then(() => (ND(), IE)), () => {
 			window.OrganizeOnAdminUI === e && delete window.OrganizeOnAdminUI;
 		};
 	}, []), (0, k.useEffect)(() => {
@@ -32529,9 +32551,9 @@ function FD() {
 								})
 							}),
 							/* @__PURE__ */ (0, Y.jsx)(kp, {}),
-							/* @__PURE__ */ (0, Y.jsx)(Ap, { children: /* @__PURE__ */ (0, Y.jsxs)(jp, { children: [/* @__PURE__ */ (0, Y.jsx)(Mp, { children: "Administração" }), /* @__PURE__ */ (0, Y.jsx)(Np, { children: MD.filter((t) => !e || (!t.permission || e.permissions.includes(t.permission)) && (t.value !== "services" || e.permissions.some((e) => e.startsWith("services.")))).map(({ value: e, label: t, icon: n, permission: r }) => /* @__PURE__ */ (0, Y.jsx)(Pp, {
+							/* @__PURE__ */ (0, Y.jsx)(Ap, { children: /* @__PURE__ */ (0, Y.jsxs)(jp, { children: [/* @__PURE__ */ (0, Y.jsx)(Mp, { children: "Administração" }), /* @__PURE__ */ (0, Y.jsx)(Np, { children: PD.filter((t) => !e || (!t.permission || e.permissions.includes(t.permission)) && (t.value !== "services" || e.permissions.some((e) => e.startsWith("services.")))).map(({ value: e, label: t, icon: n, permission: r }) => /* @__PURE__ */ (0, Y.jsx)(Pp, {
 								id: e === "services" ? "services-nav" : void 0,
-								children: /* @__PURE__ */ (0, Y.jsx)(ND, {
+								children: /* @__PURE__ */ (0, Y.jsx)(FD, {
 									value: e,
 									label: t,
 									icon: n,
@@ -32562,7 +32584,7 @@ function FD() {
 									className: "min-w-0 flex-1",
 									children: /* @__PURE__ */ (0, Y.jsx)("p", {
 										className: "truncate text-sm font-medium",
-										children: MD.find((e) => e.value === o)?.label || "Central de controle"
+										children: PD.find((e) => e.value === o)?.label || "Central de controle"
 									})
 								}),
 								/* @__PURE__ */ (0, Y.jsxs)(fp, { children: [/* @__PURE__ */ (0, Y.jsx)(pp, {
@@ -32590,7 +32612,7 @@ function FD() {
 									/* @__PURE__ */ (0, Y.jsx)(uv, {
 										className: "sr-only",
 										"aria-label": "Painéis administrativos",
-										children: MD.map(({ value: e, label: t }) => /* @__PURE__ */ (0, Y.jsx)(dv, {
+										children: PD.map(({ value: e, label: t }) => /* @__PURE__ */ (0, Y.jsx)(dv, {
 											value: e,
 											"data-view": e,
 											children: t
@@ -32720,14 +32742,14 @@ function FD() {
 												children: [/* @__PURE__ */ (0, Y.jsxs)("div", {
 													className: "grid gap-3 sm:grid-cols-2 xl:grid-cols-4",
 													children: [
-														/* @__PURE__ */ (0, Y.jsx)(PD, {
+														/* @__PURE__ */ (0, Y.jsx)(ID, {
 															title: "CPU",
 															valueId: "cpu-value",
 															detailId: "cpu-detail",
 															icon: se,
 															fallback: "0%"
 														}),
-														/* @__PURE__ */ (0, Y.jsx)(PD, {
+														/* @__PURE__ */ (0, Y.jsx)(ID, {
 															title: "RAM",
 															valueId: "ram-value",
 															detailId: "ram-detail",
@@ -32769,7 +32791,7 @@ function FD() {
 																})]
 															})
 														] })] }),
-														/* @__PURE__ */ (0, Y.jsx)(PD, {
+														/* @__PURE__ */ (0, Y.jsx)(ID, {
 															title: "Uptime",
 															valueId: "uptime-value",
 															detailId: "process-detail",
@@ -33065,6 +33087,6 @@ function FD() {
 	});
 }
 // src/admin/entry.tsx
-var ID = document.getElementById("organizeon-admin-root");
-if (!ID) throw Error("Elemento raiz do painel administrativo não encontrado.");
-ID.classList.add("organizeon-ui", "dark"), (0, wn.createRoot)(ID).render(/* @__PURE__ */ (0, Y.jsx)(k.StrictMode, { children: /* @__PURE__ */ (0, Y.jsx)(FD, {}) }));
+var RD = document.getElementById("organizeon-admin-root");
+if (!RD) throw Error("Elemento raiz do painel administrativo não encontrado.");
+RD.classList.add("organizeon-ui", "dark"), (0, wn.createRoot)(RD).render(/* @__PURE__ */ (0, Y.jsx)(k.StrictMode, { children: /* @__PURE__ */ (0, Y.jsx)(LD, {}) }));
