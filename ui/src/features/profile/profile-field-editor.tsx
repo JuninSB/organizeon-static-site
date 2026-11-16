@@ -34,7 +34,7 @@ export function ProfileFieldEditor({
   onCancel: () => void;
   onRerolled?: (profile: Profile) => void;
 }) {
-  const [draft, setDraft] = useState(profile),
+  const [draft, setDraft] = useState({...profile, bannerStyle: profile.bannerStyle === "slime" || profile.bannerStyle === "magma" ? "solid" as const : profile.bannerStyle}),
     [photo, setPhoto] = useState<File | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -71,9 +71,9 @@ export function ProfileFieldEditor({
         <BannerSeedControl profile={draft} disabled={busy} onUpdated={(next) => {setDraft(current => ({...current,bannerSeed:next.bannerSeed,bannerRerollAvailableAt:next.bannerRerollAvailableAt,bannerRerollUnlimited:next.bannerRerollUnlimited}));onRerolled?.(next);}} />
         <label className="flex items-center gap-3 text-sm"><Checkbox checked={draft.showGoldBadge !== false} disabled={busy} onCheckedChange={(value) => setDraft({ ...draft, showGoldBadge: !!value })} />Exibir emblema dourado no perfil</label>
         <label className="grid gap-2 text-sm">Fundo do perfil
-          <Select value={draft.bannerStyle || "solid"} disabled={busy} onValueChange={(value) => {if(value && ["solid","lava","slime","bubbles","gradient","magma","stars","rainbow"].includes(value))setDraft({ ...draft, bannerStyle: value as Profile["bannerStyle"] });}}>
-            <SelectTrigger><SelectValue>{({solid:"Cor sólida",lava:"Fluidos — 12 composições",slime:"Slime",bubbles:"Bolhas",gradient:"Gradiente",magma:"Lava",stars:"Estrelas",rainbow:"Arcos de cor"}[draft.bannerStyle || "solid"])}</SelectValue></SelectTrigger>
-            <SelectContent><SelectItem value="solid">Cor sólida</SelectItem><SelectItem value="lava">Fluidos — 12 composições</SelectItem><SelectItem value="slime">Slime</SelectItem><SelectItem value="bubbles">Bolhas</SelectItem><SelectItem value="gradient">Gradiente</SelectItem><SelectItem value="magma">Lava</SelectItem><SelectItem value="stars">Estrelas</SelectItem><SelectItem value="rainbow">Arcos de cor</SelectItem></SelectContent>
+          <Select value={draft.bannerStyle || "solid"} disabled={busy} onValueChange={(value) => {if(value && ["solid","lava","bubbles","gradient","stars","rainbow"].includes(value))setDraft({ ...draft, bannerStyle: value as Profile["bannerStyle"] });}}>
+            <SelectTrigger><SelectValue>{({solid:"Cor sólida",lava:"Fluidos — 12 composições",bubbles:"Bolhas",gradient:"Gradiente",stars:"Estrelas",rainbow:"Arcos de cor"}[(draft.bannerStyle === "slime" || draft.bannerStyle === "magma" ? "solid" : draft.bannerStyle) || "solid"])}</SelectValue></SelectTrigger>
+            <SelectContent><SelectItem value="solid">Cor sólida</SelectItem><SelectItem value="lava">Fluidos — 12 composições</SelectItem><SelectItem value="bubbles">Bolhas</SelectItem><SelectItem value="gradient">Gradiente</SelectItem><SelectItem value="stars">Estrelas</SelectItem><SelectItem value="rainbow">Arcos de cor</SelectItem></SelectContent>
           </Select>
         </label>
       </>}

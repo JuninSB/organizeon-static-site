@@ -5,6 +5,7 @@ import { fluidPath } from "./fluid-paths";
 /** Full-frame layered fabric, marble and wave surfaces with directional shading. */
 export function LavaBanner({ seed, color, material }: { seed: string; color: string; material?: string }) {
   const id = "oo-fluid-" + useId().replace(/[^a-z0-9_-]/gi, "");
+  if (material === "slime" || material === "lava") return null;
   if (material) return <MaterialBanner seed={seed} color={color} material={material}/>;
   const pattern = lavaPattern(seed);
   const family = pattern.family, layers = pattern.layers;

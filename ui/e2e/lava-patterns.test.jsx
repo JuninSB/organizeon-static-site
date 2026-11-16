@@ -19,14 +19,14 @@ it('defines twelve distinct motion families, stable per-account surfaces and iso
  writeFileSync('/tmp/organizeon-lava-patterns.html','<!doctype html><html><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:24px;background:#09090b;color:#fafafa;font:14px system-ui}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}section{border:1px solid #27272a;border-radius:10px;overflow:hidden}h2{margin:0;padding:10px 14px;font-size:14px;font-weight:500}'+css+'</style>'+html+'</html>');
 });
 it('renders six distinct selectable materials without changing the seeded fluid family',()=>{
- const materials=['slime','bubbles','gradient','lava','stars','rainbow'];
+ const materials=['bubbles','gradient','stars','rainbow'];
  const html=renderToStaticMarkup(<main className="grid">{materials.map(material=><section key={material}><h2>{material}</h2><div className="oo-profile-banner" style={{height:160}}><LavaBanner seed="c521c7bb040e4dfd8438e43914bfcf29" color="#8b22e9" material={material}/></div></section>)}</main>);
  for(const material of materials)expect(html).toContain(`data-pattern="${material}"`);
  const css=readFileSync(resolve(process.cwd(),'src/features/profile/profile-banner.css'),'utf8');
  writeFileSync('/tmp/organizeon-materials.html','<!doctype html><style>body{background:#09090b;color:#fafafa;font:14px system-ui;padding:24px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}section{border:1px solid #27272a;border-radius:12px;overflow:hidden}h2{margin:0;padding:12px}'+css+'</style>'+html);
 });
 it('uses independent material structures instead of routing every theme through fluidPath',()=>{
- const signatures={slime:'elastic-gel',bubbles:'merging-metaballs',gradient:'diffused-color-mesh',lava:'volcanic-crust',stars:'parallax-starfield',rainbow:'spectral-rings'};
+ const signatures={bubbles:'merging-metaballs',gradient:'diffused-color-mesh',stars:'parallax-starfield',rainbow:'spectral-rings'};
  for(const [material,renderer] of Object.entries(signatures)){
   const html=renderToStaticMarkup(<LavaBanner seed="account-one" color="#34d399" material={material}/>);
   expect(html).toContain(`data-renderer="${renderer}"`);
@@ -35,3 +35,5 @@ it('uses independent material structures instead of routing every theme through 
   if(material==='slime')expect(html).toContain('oo-gel-stretch');
  }
 });
+
+it("hides removed slime and lava materials while retaining seeded fluids",()=>{for(const material of ["slime","lava"])expect(renderToStaticMarkup(<LavaBanner seed="test" color="#34d399" material={material}/>)).toBe("");expect(renderToStaticMarkup(<LavaBanner seed="test" color="#34d399"/>)).toContain("oo-lava-depth");});
