@@ -28,6 +28,7 @@ const files = [
   "stores/message-outbox.ts",
   "features/messages/pending-message.tsx",
   "core/operation-feedback.ts",
+  "features/messages/gesture-config.ts",
   "features/messages/conversation-row.tsx",
   "features/messages/conversation-actions.tsx",
   "features/messages/messages.css",

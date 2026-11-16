@@ -54,6 +54,7 @@ export type DmSettings = {
   desktop: boolean;
   quickReaction: string;
   showSendStatus?: boolean;
+  longPressMs?: number;
 };
 export type DmEvent = {
   seq: number;

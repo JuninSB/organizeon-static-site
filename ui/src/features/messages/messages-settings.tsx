@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { Bell, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, ShieldCheck, Timer } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { longPressDelay, MIN_LONG_PRESS_MS, MAX_LONG_PRESS_MS } from "./gesture-config";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +21,8 @@ export function MessagesSettings() {
   const { inbox } = useMessagesState();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [holdMs, setHoldMs] = useState(() => String(longPressDelay(inbox?.settings.longPressMs)));
+  useEffect(() => setHoldMs(String(longPressDelay(inbox?.settings.longPressMs))), [inbox?.settings.longPressMs]);
   if (!inbox)
     return (
       <p className="p-5 text-sm text-muted-foreground">
@@ -39,7 +43,7 @@ export function MessagesSettings() {
     }
   }
   return (
-    <section className="mx-auto w-full max-w-lg space-y-5 overflow-y-auto p-5">
+    <section className="mx-auto w-full max-w-lg h-full min-h-0 space-y-5 overflow-y-auto overscroll-contain p-5">
       <div>
         <h2 className="text-lg font-semibold">Configurações de mensagens</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -137,6 +141,23 @@ export function MessagesSettings() {
           </div>
         )}
       </div>
+      <form className="space-y-3 rounded-lg border border-border p-4" onSubmit={(event) => {
+        event.preventDefault();
+        const value = Number(holdMs);
+        if (!Number.isInteger(value) || value < MIN_LONG_PRESS_MS || value > MAX_LONG_PRESS_MS) {
+          setError(`Escolha um tempo entre ${MIN_LONG_PRESS_MS} e ${MAX_LONG_PRESS_MS} ms.`);
+          return;
+        }
+        void save({ longPressMs: value });
+      }}>
+        <h3 className="flex items-center gap-2 text-sm font-medium"><Timer className="size-4" />Toque longo</h3>
+        <label className="grid gap-2 text-sm">
+          Tempo para abrir menus (ms)
+          <Input type="number" min={MIN_LONG_PRESS_MS} max={MAX_LONG_PRESS_MS} step={1} required value={holdMs} disabled={busy} onChange={(event) => setHoldMs(event.target.value)} />
+        </label>
+        <p className="text-xs text-muted-foreground">Padrão: 200 ms. Aplica-se às mensagens e às conversas.</p>
+        <Button type="submit" variant="outline" disabled={busy || Number(holdMs) === longPressDelay(prefs.longPressMs)}>Salvar tempo</Button>
+      </form>
       <div className="space-y-2 rounded-lg border border-border p-4">
         <label className="text-sm font-medium">
           Reação com toque duplo

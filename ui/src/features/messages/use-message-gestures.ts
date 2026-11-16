@@ -1,3 +1,4 @@
+import { useLongPressDelay } from "./gesture-config";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 /** Horizontal reply gesture never prevents the native vertical scroll gesture. */
 export function useMessageGestures({
@@ -7,6 +8,7 @@ export function useMessageGestures({
   reply: () => void;
   actions: () => void;
 }) {
+  const delay = useLongPressDelay();
   const origin = useRef<{
       x: number;
       y: number;
@@ -53,7 +55,7 @@ export function useMessageGestures({
             origin.current.long = true;
             actions();
           }
-        }, 500);
+        }, delay);
       },
       onPointerMove: (event: PointerEvent<HTMLElement>) => {
         const start = origin.current;

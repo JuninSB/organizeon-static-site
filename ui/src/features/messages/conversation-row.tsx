@@ -1,3 +1,4 @@
+import { useLongPressDelay } from "./gesture-config";
 import { useEffect, useRef } from "react";
 import { BellOff, Pin, Star } from "lucide-react";
 import { m } from "@/core/motion";
@@ -17,6 +18,7 @@ export function ConversationRow({
   onOpen: () => void;
   onActions: () => void;
 }) {
+  const delay = useLongPressDelay();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null),
     origin = useRef<{ x: number; y: number } | null>(null),
     held = useRef(false);
@@ -55,7 +57,7 @@ export function ConversationRow({
         timer.current = setTimeout(() => {
           held.current = true;
           onActions();
-        }, 420);
+        }, delay);
       }}
       onPointerMove={(event) => {
         if (

@@ -2,7 +2,7 @@ import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Profile } from "@/services/profile-service";
-import { ProfileAvatar } from "./profile-avatar";
+import { ProfileAvatar, avatarRadius } from "./profile-avatar";
 export type ProfileField = "identity" | "bio" | "photo";
 /** Presentation is shared by own/public profiles; editing is an explicit capability. */
 export function ProfileCard({
@@ -53,7 +53,9 @@ export function ProfileCard({
       <div className="px-5 pb-5 sm:px-6 sm:pb-6">
         <div className="-mt-10 mb-4 flex items-end justify-between gap-3">
           <div
-            className={`${frameless ? "rounded-full bg-popover" : "rounded-2xl bg-card"} p-1`}
+            data-avatar-frame
+            className={`${frameless ? "bg-popover" : "bg-card"} p-1`}
+            style={{ borderRadius: avatarRadius(profile.avatarShape) }}
           >
             <ProfileAvatar
               profile={profile}

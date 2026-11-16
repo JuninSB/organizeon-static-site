@@ -133,3 +133,9 @@ Referências: [shadcn Drawer](https://ui.shadcn.com/docs/components/base/drawer)
 A ação **Alterar senha** fica no menu compartilhado da conta, entre Perfil e Sair da sessão, com destaque laranja e disponível a qualquer conta autenticada. Ela não fica mais dentro do perfil. O diálogo de segurança é carregado sob demanda e continua exigindo senha atual, nova senha e confirmação; somente o backend confirma a mudança e a revogação de sessões.
 
 Validação desta revisão: o teste reproduziu a falha anterior com deslocamento vertical sempre zero; após a correção, mediu a entrada de 782 px até zero e fechamento por toque real no mobile. No D2 verificou também cor laranja computada, abertura/cancelamento do formulário de senha e ausência da ação dentro do perfil. Typecheck, builds cliente/admin/D3, 18 testes de UI e 13 do cliente passaram. GitHub Pages publicou `a56cdde` (run `43957007617`) e os hashes dos quatro bundles conferiram. D2: `bottom-sheet-20261116`; D3: `index-CdRXTzxI.js`. Rollback de fontes/index D3 e template D2 em `~/organizeon/backend/staging/d3-bottom-sheet-rollback-20261116-180853/`; não houve mudança de backend, banco, túnel ou reinício de serviço.
+
+## Rolagem, formatos de avatar e tempo de toque longo
+
+Configurações de mensagens ocupa a altura disponível e possui sua própria rolagem vertical; a altura não pode crescer além do contêiner recortado do painel. Testes de navegador em viewport mobile curta precisam alcançar a última opção usando toque real.
+
+O contorno atrás do avatar usa a mesma função `avatarRadius` da foto, respeitando círculo, quadrado e cantos arredondados. Mensagens e conversas usam `gesture-config.ts` como contrato único para toque longo. A preferência `longPressMs` começa em **200 ms**, aceita inteiros de 100 a 2000 ms e é salva por conta em Configurações de mensagens. Movimento de rolagem, cancelamento e desmontagem cancelam o temporizador; mudar essa preferência não altera pedidos Xiaomi nem tempos de rede.
