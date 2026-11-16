@@ -688,6 +688,7 @@ function renderUsers(users) {
       if(self){localStorage.removeItem(tokenKey);if(window.parent!==window)window.parent.postMessage({type:'organizeon:open-main',loggedOut:true},'*');else window.location.replace(new URL('./',document.baseURI).href);}
       else await loadUsers();
     },
+    onGrantBadge:async user=>{await checked(await api(`/dm/people/${encodeURIComponent(user.username)}/gold-badge`,{method:"POST"}));showToast("Emblema dourado concedido.");await loadUsers();},
     onCode:async user=>{const response=await checked(await api(`/admin/users/${encodeURIComponent(user.username)}/login-code`,{method:'POST'}));const result=await response.json();showLoginCodeDialog(user.username,result.code,result.expiresAt);},
     onRevokeSessions:async user=>{
       if(!await window.OrganizeOnAdminUI.confirm(`Encerrar todas as sessões de ${user.username}? Será necessário entrar novamente em todos os dispositivos.`, 'Deslogar todas as sessões', 'Deslogar'))return;

@@ -15,13 +15,15 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import type { Profile } from "@/services/profile-service";
-import { saveOptimisticProfile } from "@/stores/profile-store";
+import { GrantGoldBadge } from "./grant-gold-badge";
+import { updateProfile, saveOptimisticProfile } from "@/stores/profile-store";
 import { ProfileCard, type ProfileField } from "./profile-card";
 import { ProfileFieldEditor } from "./profile-field-editor";
 const titles = {
   identity: "Editar nome",
   bio: "Editar descrição",
   photo: "Editar foto",
+  appearance: "Editar aparência",
 };
 function useCompactProfile() {
   const [compact, setCompact] = useState(
@@ -94,13 +96,18 @@ export default function ProfileDialog({
   profile,
   onClose,
   editable = true,
+  canGrantBadge = false,
 }: {
   username: string;
   role: string;
   profile: Profile;
   onClose: () => void;
   editable?: boolean;
+  canGrantBadge?: boolean;
 }) {
+  const [grantedProfile, setGrantedProfile] = useState<Profile | null>(null);
+  const shownProfile = grantedProfile || profile;
+  useEffect(() => setGrantedProfile(null), [profile]);
   const compact = useCompactProfile();
   const [open, setOpen] = useState(true),
     [editing, setEditing] = useState<ProfileField | null>(null);
@@ -155,7 +162,7 @@ export default function ProfileDialog({
                   <ProfileFieldEditor
                     key={editing}
                     field={editing}
-                    profile={profile}
+                    profile={shownProfile}
                     onCancel={() => setEditing(null)}
                     onSave={async (patch) => {
                       setEditing(null);
@@ -172,7 +179,7 @@ export default function ProfileDialog({
                   <ProfileCard
                     username={username}
                     role={role}
-                    profile={profile}
+                    profile={shownProfile}
                     frameless
                     onEdit={editable ? setEditing : undefined}
                   />
@@ -181,6 +188,7 @@ export default function ProfileDialog({
             </div>
           </MotionPane>
         </div>
+        {canGrantBadge && !shownProfile.goldBadge && <div className="px-5 pb-5"><GrantGoldBadge username={username} onGranted={(next) => {setGrantedProfile(next);if(editable)updateProfile(username,next);}} /></div>}
       </ProfileSurface>
     </MotionRoot>
   );

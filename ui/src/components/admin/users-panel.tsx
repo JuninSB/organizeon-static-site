@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Award,
   KeyRound,
   LogOut,
   MoreHorizontal,
@@ -42,6 +43,7 @@ export type AdminUser = {
   canEdit: boolean;
   canRevokeSessions: boolean;
   isSelf: boolean;
+  profile?: { goldBadge?: boolean };
 };
 export type UserAccess = {
   role: string;
@@ -59,6 +61,7 @@ export type UsersData = {
   onCode: (user: AdminUser) => Promise<void>;
   onRevokeSessions: (user: AdminUser) => Promise<void>;
   onDelete: (user: AdminUser) => Promise<void>;
+  onGrantBadge?: (user: AdminUser) => Promise<void>;
 };
 export function UsersPanel({ data }: { data: UsersData | null }) {
   const [target, setTarget] = useState<AdminUser | null>(null);
@@ -163,6 +166,7 @@ export function UsersPanel({ data }: { data: UsersData | null }) {
                   <MoreHorizontal className="size-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  {data.currentUser.role === "owner" && data.onGrantBadge && !user.profile?.goldBadge && <DropdownMenuItem className="text-amber-600 dark:text-amber-400" disabled={busy} onClick={() => void run(() => data.onGrantBadge!(user))}><Award />Dar emblema dourado</DropdownMenuItem>}
                   <DropdownMenuItem
                     disabled={busy || (!user.canEdit && !user.isSelf)}
                     onClick={() => void run(() => data.onPassword(user))}

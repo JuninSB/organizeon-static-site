@@ -162,6 +162,7 @@ export function AccountMenu({
             <ProfileDialog
               username={username}
               role={label}
+              canGrantBadge={role === "owner"}
               profile={profile}
               onClose={() => setOpen(false)}
             />

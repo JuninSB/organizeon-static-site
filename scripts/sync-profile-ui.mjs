@@ -8,6 +8,10 @@ if (!target)
 const files = [
   "components/layout/account-menu.tsx",
   "components/admin/password-dialog.tsx",
+  "features/profile/gold-badge.tsx",
+  "features/profile/grant-gold-badge.tsx",
+  "features/profile/profile-banner.css",
+  "features/profile/profile-banner.ts",
   "features/profile/profile-avatar.tsx",
   "features/profile/profile-boundary.tsx",
   "features/profile/avatar-editor.tsx",

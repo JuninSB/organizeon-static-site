@@ -1,0 +1,12 @@
+.oo-profile-banner { position: relative; overflow: hidden; isolation: isolate; }
+.oo-profile-banner[data-lava]::before,
+.oo-profile-banner[data-lava]::after {
+  content: ""; position: absolute; inset: -65%; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse at var(--lava-x-one) var(--lava-y-one), var(--profile-color), transparent 55%), radial-gradient(ellipse at var(--lava-x-two) var(--lava-y-two), color-mix(in srgb, var(--profile-color) 48%, rgb(var(--card))), transparent 55%);
+  mask-image: radial-gradient(ellipse at center, #000 25%, transparent 70%);
+  animation: oo-profile-lava var(--lava-duration-a, 16s) ease-in-out infinite alternate;
+  animation-delay: var(--lava-delay, 0s);
+}
+.oo-profile-banner[data-lava]::after { animation-delay: var(--lava-delay, -8s); animation-duration: var(--lava-duration-b, 20s); animation-direction: alternate-reverse; opacity: .7; }
+@keyframes oo-profile-lava { from { transform: translate(-9%, -6%) rotate(-20deg) scale(.9); } to { transform: translate(12%, 9%) rotate(var(--lava-rotation, 25deg)) scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .oo-profile-banner[data-lava]::before, .oo-profile-banner[data-lava]::after { animation: none; } }

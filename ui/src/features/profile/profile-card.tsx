@@ -1,9 +1,13 @@
+import { profileBannerPattern } from "./profile-banner";
+import { GoldBadge } from "./gold-badge";
+import "./profile-banner.css";
+import type { CSSProperties } from "react";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Profile } from "@/services/profile-service";
 import { ProfileAvatar, avatarRadius } from "./profile-avatar";
-export type ProfileField = "identity" | "bio" | "photo";
+export type ProfileField = "identity" | "bio" | "photo" | "appearance";
 /** Presentation is shared by own/public profiles; editing is an explicit capability. */
 export function ProfileCard({
   username,
@@ -40,18 +44,22 @@ export function ProfileCard({
       }
     >
       <div
-        className={`${frameless ? "h-28" : "h-20 border-b border-border"} bg-card`}
+        data-lava={profile.goldBadge && profile.bannerStyle === "lava" ? "" : undefined}
+        className={`oo-profile-banner ${frameless ? "h-28" : "h-20 border-b border-border"} bg-card`}
         style={
           frameless
             ? {
+                ...profileBannerPattern(profile.bannerSeed || username),
+                "--profile-color": profile.nameColor,
                 background: `color-mix(in srgb, ${profile.nameColor} 18%, rgb(var(--card)))`,
-              }
-            : undefined
+              } as CSSProperties
+            : { ...profileBannerPattern(profile.bannerSeed || username), "--profile-color": profile.nameColor } as CSSProperties
         }
-        aria-hidden="true"
-      />
+      >
+        {profile.goldBadge && onEdit && <div className="absolute right-3 top-3">{pencil("appearance", "Editar aparência")}</div>}
+      </div>
       <div className="px-5 pb-5 sm:px-6 sm:pb-6">
-        <div className="-mt-10 mb-4 flex items-end justify-between gap-3">
+        <div className="relative -mt-10 mb-4 flex items-end justify-between gap-3">
           <div
             data-avatar-frame
             className={`${frameless ? "bg-popover" : "bg-card"} p-1`}
@@ -62,7 +70,10 @@ export function ProfileCard({
               className={frameless ? "size-24" : "size-20"}
             />
           </div>
-          {pencil("photo", "Editar foto de perfil")}
+          <div className="flex items-center gap-2">
+            {profile.goldBadge && profile.showGoldBadge !== false && <GoldBadge />}
+            {pencil("photo", "Editar foto de perfil")}
+          </div>
         </div>
         <div className="flex min-w-0 items-start gap-2">
           <div className="min-w-0 flex-1">

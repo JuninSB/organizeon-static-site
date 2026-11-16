@@ -2,15 +2,20 @@ import {
   operationFeedback,
   useOperationFailure,
 } from "@/core/operation-feedback";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { usePortalContainer } from "@/components/ui/portal-context";
 import { Button } from "@/components/ui/button";
+import { roleNames } from "@/utils/account-roles";
+import { GoldBadge } from "@/features/profile/gold-badge";
+import { ProfileBoundary } from "@/features/profile/profile-boundary";
+import { useProfile } from "@/stores/profile-store";
 import { ProfileAvatar } from "@/features/profile/profile-avatar";
 import { messagesStore, useMessagesState } from "@/stores/messages-store";
 import type { DmNotice } from "./types";
-function Notice({ notice }: { notice: DmNotice }) {
+const ProfileDialog = lazy(() => import("@/features/profile/profile-dialog"));
+function Notice({ notice, onProfile }: { notice: DmNotice; onProfile: () => void }) {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const frame = requestAnimationFrame(() => setVisible(true));
@@ -30,10 +35,10 @@ function Notice({ notice }: { notice: DmNotice }) {
       className={`pointer-events-auto rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-sm transition-[opacity,transform] duration-150 motion-reduce:transition-none ${visible ? "translate-x-0 opacity-100" : "translate-x-2 opacity-0"}`}
     >
       <div className="flex items-start gap-3">
-        <ProfileAvatar profile={notice.person.profile} className="size-9" />
+        {notice.kind === "gold_badge" ? <GoldBadge /> : <ProfileAvatar profile={notice.person.profile} className="size-9" />}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">
-            {notice.person.profile.displayName}
+            {notice.kind === "gold_badge" ? "OrganizeOn" : notice.person.profile.displayName}
           </p>
           <p className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground">
             {notice.text}
@@ -44,11 +49,11 @@ function Notice({ notice }: { notice: DmNotice }) {
             size="sm"
             className="mt-2"
             onClick={() => {
-              messagesStore.open(notice.conversationId);
+              if(notice.kind === "gold_badge") onProfile(); else messagesStore.open(notice.conversationId);
               dismiss();
             }}
           >
-            Abrir
+            {notice.kind === "gold_badge" ? "Ver perfil" : "Abrir"}
           </Button>
         </div>
         <Button
@@ -65,10 +70,13 @@ function Notice({ notice }: { notice: DmNotice }) {
   );
 }
 export function MessagesNotifications() {
-  const { notices } = useMessagesState();
+  const { notices, inbox } = useMessagesState();
+  const [profileOwner,setProfileOwner]=useState<string|null>(null);
+  const profileOpen=!!inbox&&profileOwner===inbox.me.username;
+  const profile=useProfile(inbox?.me.username||"",profileOpen);
   const failure = useOperationFailure();
   const container = usePortalContainer();
-  if (!notices.length && !failure) return null;
+  if (!notices.length && !failure && !profileOpen) return null;
   return createPortal(
     <div
       aria-label="Notificações de mensagens"
@@ -92,8 +100,9 @@ export function MessagesNotifications() {
         </div>
       )}
       {notices.map((notice) => (
-        <Notice key={notice.id} notice={notice} />
+        <Notice key={notice.id} notice={notice} onProfile={() => setProfileOwner(inbox?.me.username||null)} />
       ))}
+      {profileOpen && inbox && <ProfileBoundary onClose={()=>setProfileOwner(null)}><Suspense fallback={null}><ProfileDialog username={inbox.me.username} role={roleNames[inbox.me.role] || inbox.me.role} profile={profile} editable onClose={()=>setProfileOwner(null)} /></Suspense></ProfileBoundary>}
     </div>,
     container || document.body,
   );

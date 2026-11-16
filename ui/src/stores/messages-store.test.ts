@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { dmService } from "@/services/messages-service";
 import { messagesStore } from "./messages-store";
-vi.mock("@/services/messages-service", () => ({ dmService: { inbox: vi.fn(), messages: vi.fn(), message: vi.fn(), claim: vi.fn(), read: vi.fn() } }));
+vi.mock("@/services/messages-service", () => ({ dmService: { inbox: vi.fn(), messages: vi.fn(), message: vi.fn(), claimGoldBadge: vi.fn(), claim: vi.fn(), read: vi.fn() } }));
 let stop: (() => void) | undefined;
 afterEach(() => { stop?.(); stop = undefined; vi.useRealTimers(); Object.defineProperty(document,"hidden",{configurable:true,value:false}); });
 it("keeps edits consumed in the background dirty until the cached message refreshes", async () => {
@@ -22,4 +22,10 @@ it("keeps edits consumed in the background dirty until the cached message refres
  vi.mocked(dmService.inbox).mockResolvedValue({...inbox,cursor:2,events:[]} as any);
  vi.mocked(dmService.messages).mockResolvedValue({messages:[],hasMore:false,typing:false,conversation} as any);
  await messagesStore.refresh();expect(dmService.message).toHaveBeenCalledWith("m1");expect(messagesStore.get().threads.c1.messages[0].content).toBe("after");
+});
+
+it("delivers a pending award on the next visible session even when DM notices are disabled",async()=>{
+ vi.useFakeTimers();vi.spyOn(document,"hasFocus").mockReturnValue(true);
+ const inbox={me:{username:"alice",profile:{displayName:"Alice",nameColor:"#FAFAFA",avatarShape:"circle",avatar:null,bio:"",goldBadge:true}},conversations:[],requests:[],settings:{notifications:false},cursor:0,events:[],goldBadgeNotificationPending:true};
+ vi.mocked(dmService.inbox).mockResolvedValue(inbox as any);vi.mocked(dmService.claimGoldBadge).mockResolvedValue({claimed:true});stop=messagesStore.start("alice");await vi.advanceTimersByTimeAsync(0);expect(dmService.claimGoldBadge).toHaveBeenCalledOnce();expect(messagesStore.get().notices[0].kind).toBe("gold_badge");expect(messagesStore.get().notices[0].text).toContain("Você ganhou");vi.mocked(dmService.inbox).mockResolvedValue({...inbox,goldBadgeNotificationPending:false} as any);await messagesStore.refresh();expect(dmService.claimGoldBadge).toHaveBeenCalledOnce();
 });

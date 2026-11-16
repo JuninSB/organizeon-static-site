@@ -65,6 +65,7 @@ export type DmEvent = {
 };
 export type Inbox = {
   me: DmPerson;
+  goldBadgeNotificationPending?: boolean;
   conversations: DmConversation[];
   requests: DmConversation[];
   settings: DmSettings;

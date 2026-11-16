@@ -7,3 +7,8 @@ it.each([['circle','50%'],['rounded','20%'],['square','0']] as const)("matches t
  const frame=container.querySelector('[data-avatar-frame]') as HTMLElement;
  expect(frame).toHaveStyle({borderRadius:radius});expect(frame.firstElementChild).toHaveStyle({borderRadius:radius});
 });
+it('shows the official badge only when awarded and publicly enabled, and gates lava by entitlement',()=>{
+ const profile={...defaultProfile('fixture'),bannerStyle:'lava' as const};const {container,rerender}=render(<ProfileCard username="fixture" role="Usuário" profile={profile}/>);expect(container.querySelector('[data-lava]')).toBeNull();expect(screen.queryByRole('img',{name:'Emblema dourado OrganizeOn'})).toBeNull();
+ rerender(<ProfileCard username="fixture" role="Usuário" profile={{...profile,goldBadge:true,showGoldBadge:true}}/>);expect(container.querySelector('[data-lava]')).toBeTruthy();expect(screen.getByRole('img',{name:'Emblema dourado OrganizeOn'})).toBeInTheDocument();
+ rerender(<ProfileCard username="fixture" role="Usuário" profile={{...profile,goldBadge:true,showGoldBadge:false}}/>);expect(screen.queryByRole('img',{name:'Emblema dourado OrganizeOn'})).toBeNull();expect(container.querySelector('[data-lava]')).toBeTruthy();
+});

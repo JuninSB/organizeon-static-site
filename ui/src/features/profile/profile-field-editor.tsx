@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -48,7 +49,9 @@ export function ProfileFieldEditor({
               ? { displayName: draft.displayName, nameColor: draft.nameColor }
               : field === "bio"
                 ? { bio: draft.bio }
-                : { avatar: draft.avatar, avatarShape: draft.avatarShape },
+                : field === "appearance"
+                  ? { showGoldBadge: draft.showGoldBadge !== false, bannerStyle: draft.bannerStyle || "solid" }
+                  : { avatar: draft.avatar, avatarShape: draft.avatarShape },
           );
         } catch (e) {
           setError(e instanceof Error ? e.message : "Não foi possível salvar.");
@@ -57,6 +60,15 @@ export function ProfileFieldEditor({
         }
       }}
     >
+      {field === "appearance" && profile.goldBadge && <>
+        <label className="flex items-center gap-3 text-sm"><Checkbox checked={draft.showGoldBadge !== false} disabled={busy} onCheckedChange={(value) => setDraft({ ...draft, showGoldBadge: !!value })} />Exibir emblema dourado no perfil</label>
+        <label className="grid gap-2 text-sm">Fundo do perfil
+          <Select value={draft.bannerStyle || "solid"} disabled={busy} onValueChange={(value) => {if(value === "solid" || value === "lava")setDraft({ ...draft, bannerStyle: value });}}>
+            <SelectTrigger><SelectValue>{draft.bannerStyle === "lava" ? "Lava animada" : "Cor sólida"}</SelectValue></SelectTrigger>
+            <SelectContent><SelectItem value="solid">Cor sólida</SelectItem><SelectItem value="lava">Lava animada</SelectItem></SelectContent>
+          </Select>
+        </label>
+      </>}
       {field === "identity" && (
         <>
           <label className="grid gap-1.5 text-sm">

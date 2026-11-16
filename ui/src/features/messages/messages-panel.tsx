@@ -64,12 +64,14 @@ function PersonProfile({
   onClose: () => void;
 }) {
   const profile = useProfile(person.username, own);
+  const canGrantBadge = useMessagesState().inbox?.me.role === "owner";
   return (
     <Suspense fallback={<p role="status">Carregando perfil…</p>}>
       <ProfileDialog
         username={person.username}
         role={roleNames[person.role] || person.role}
         profile={own ? profile : person.profile}
+        canGrantBadge={canGrantBadge}
         editable={own}
         onClose={onClose}
       />

@@ -145,3 +145,15 @@ Validação: 24 testes UI/stores, 13 testes do cliente e 9 testes de mensagens p
 Rollback do backend/template: `~/organizeon/backend/staging/dm-hold-rollback-20261116-182224/`; frontend D3: `staging/d3-hold-scroll-rollback-20261116-182338/`. A preferência usa a tabela existente, sem migração ou alteração de credenciais. O backend precisou de reinício dirigido para reconhecer o novo campo; D3 foi atualizado com assets preservados e troca atômica do index.
 
 Publicação: GitHub Pages `acae6cc`, execução `43959563596` concluída com sucesso; quatro bundles públicos verificados por SHA-256. D2 aponta para `dm-gestures-acae6cc`; D3 para `index-CE4xmTh3.js`. Testes usam apenas contas fictícias, sem DM real ou pedido Xiaomi.
+
+## Emblema dourado e fundo lava por conta
+
+O emblema é uma concessão independente do cargo. Só um owner autenticado pode conceder, pelo menu de Users ou pelo perfil aberto nas DMs. Contas comuns, admins e ultra admins não recebem sequer um item desativado: a ação é omitida. O backend verifica novamente o cargo atual persistido; falsificar campos do perfil ou o rótulo do frontend não concede o emblema.
+
+A concessão persiste `goldBadge` fora das preferências editáveis, com emissor e data privados. O perfil público inclui apenas a elegibilidade e aparência. Ela libera `bannerStyle=lava` e exibição opcional do emblema. O símbolo oficial usa as variantes clara/escura conforme o tema de quem visualiza. O emblema fica no agrupamento ao lado do avatar; a edição de aparência permite ocultá-lo sem perder a elegibilidade.
+
+`bannerSeed` é derivado do identificador público imutável da conta. `profile-banner.ts` determina geometria, ritmo, fase e rotação estáveis por conta; `nameColor` define a cor. O efeito usa camadas CSS pequenas com transform, máscara estática e pausa em `prefers-reduced-motion`. Não usa canvas, timers de renderização ou sorteio a cada abertura.
+
+A concessão deixa uma notificação pendente persistente na conta, inclusive offline. O inbox autenticado expõe essa pendência somente ao titular; `POST /dm/awards/gold-badge/claim` a confirma uma única vez para uma sessão visível. O aviso usa o emblema oficial e abre o próprio perfil. É uma notificação de conta, sem criar conversa ou mensagem artificial; a preferência de avisos de DMs não suprime esse recebimento. Concessões repetidas são idempotentes e não criam novos avisos.
+
+Contratos: `POST /dm/people/:username/gold-badge` (owner, origem validada); `POST /dm/awards/gold-badge/claim` (própria conta); `PATCH /account/profile` aceita `showGoldBadge` e `bannerStyle`, mas rejeita concessão ou seed enviados pelo cliente. Os aliases autenticados `/d2/api/dm` e `/d3/api/dm` usam o mesmo handler.

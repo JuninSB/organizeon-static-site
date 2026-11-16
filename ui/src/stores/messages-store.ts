@@ -1,3 +1,4 @@
+import { updateProfile } from "./profile-store";
 import { messageOutbox } from "./message-outbox";
 import { operationFeedback } from "@/core/operation-feedback";
 import { useSyncExternalStore } from "react";
@@ -520,6 +521,11 @@ async function poll() {
           },
         });
       }
+    }
+    if (inbox.goldBadgeNotificationPending && !document.hidden && document.hasFocus()) {
+      const award = await dmService.claimGoldBadge();
+      if (version !== generation) return;
+      if (award.claimed) { updateProfile(inbox.me.username,inbox.me.profile); set({notices:[...state.notices.filter(notice=>notice.kind!=="gold_badge"),{id:-1,conversationId:"",person:inbox.me,text:"Você ganhou o emblema dourado OrganizeOn.",kind:"gold_badge"}].slice(-3)}); }
     }
     const desktopAllowed =
       inbox.settings.desktop &&

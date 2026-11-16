@@ -1,0 +1,3 @@
+import { expect, it } from "vitest";
+import { profileBannerPattern } from "./profile-banner";
+it('keeps the same account pattern stable across renders and differentiates accounts',()=>{const first=profileBannerPattern('9e107d9d372bb6826bd81d3542a419d6');expect(profileBannerPattern('9e107d9d372bb6826bd81d3542a419d6')).toEqual(first);expect(profileBannerPattern('e4d909c290d0fb1ca068ffaddf22cbd0')).not.toEqual(first);expect(profileBannerPattern('fixture-user')).toEqual(profileBannerPattern('fixture-user'));expect(profileBannerPattern('another-user')).not.toEqual(profileBannerPattern('fixture-user'));});

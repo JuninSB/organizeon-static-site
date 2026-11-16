@@ -17,6 +17,7 @@ const conversationCache = new Map<
   { version?: string; conversation: DmConversation }
 >();
 export const dmService = {
+  claimGoldBadge: () => accountRequest<{claimed:boolean}>("/dm/awards/gold-badge/claim", {method:"POST"}),
   inbox: async (after: number | null): Promise<Inbox> => {
     if (after === null) {
       epoch++;

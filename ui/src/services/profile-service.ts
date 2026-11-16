@@ -5,6 +5,10 @@ export type Profile = {
   bio: string;
   avatarShape: "circle" | "square" | "rounded";
   avatar: string | null;
+  goldBadge?: boolean;
+  bannerSeed?: string;
+  showGoldBadge?: boolean;
+  bannerStyle?: "solid" | "lava";
 };
 export const defaultProfile = (username: string): Profile => ({
   displayName: username,
@@ -14,6 +18,8 @@ export const defaultProfile = (username: string): Profile => ({
   avatar: null,
 });
 export const profileService = {
+  grantGoldBadge: async (username: string): Promise<Profile> =>
+    (await accountRequest("/dm/people/" + encodeURIComponent(username) + "/gold-badge", { method: "POST" })).profile,
   get: async (): Promise<Profile> =>
     (await accountRequest("/account/profile")).profile,
   save: async (profile: Partial<Profile>): Promise<Profile> =>
