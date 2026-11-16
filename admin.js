@@ -30,14 +30,14 @@ const terminalView = new Terminal({
   disableStdin: true,
   fontFamily:
     '"JetBrains Mono", "Fira Code", "Cascadia Mono", monospace',
-  fontSize: dashboardMobile ? 10 : 13,
-  lineHeight: dashboardMobile ? 1.15 : 1.25,
+  fontSize: dashboardMobile ? 12 : 13,
+  lineHeight: 1.25,
   scrollback: 5000,
   theme: {
-    background: "#030807",
-    foreground: "#d7e7e2",
-    cursor: "#5df0c8",
-    selectionBackground: "#285f53",
+    background: "#09090b",
+    foreground: "#e4e4e7",
+    cursor: "#fafafa",
+    selectionBackground: "#3f3f46",
     black: "#1b2522",
     red: "#ff6b75",
     green: "#5df0a8",
@@ -257,20 +257,20 @@ function renderMonitoring(monitoring) {
   document.getElementById("monitoring-off").hidden = monitoring.active;
   document.getElementById("monitoring-content").hidden = !monitoring.active;
   const toggle = document.getElementById("monitor-toggle");
-  toggle.textContent = state.monitorSocket
-    ? "Stop monitoring"
+  (toggle.querySelector("[data-ui-label]") || toggle).textContent = state.monitorSocket
+    ? "Parar monitoramento"
     : monitoring.active
-      ? "Join monitoring"
-      : "Activate monitoring";
+      ? "Acompanhar monitoramento"
+      : "Ativar monitoramento";
   toggle.classList.toggle("danger", Boolean(state.monitorSocket));
   toggle.classList.toggle("primary", !state.monitorSocket);
   const refresh = document.getElementById("monitor-refresh");
   refresh.disabled =
     state.monitorSocket?.readyState !== WebSocket.OPEN ||
     state.monitorRefreshPending;
-  refresh.textContent = state.monitorRefreshPending
-    ? "↻ Atualizando…"
-    : "↻ Atualizar";
+  (refresh.querySelector("[data-ui-label]") || refresh).textContent = state.monitorRefreshPending
+    ? "Atualizando…"
+    : "Atualizar";
   if (!monitoring.active) return;
 
   document.getElementById("cpu-value").textContent =
@@ -322,74 +322,7 @@ function renderServerFacts(monitoring) {
   renderRoutes(service.routes || []);
 }
 
-function renderRoutes(routes) {
-  const body = document.getElementById("routes-status-body");
-  if (!routes.length) {
-    const row = document.createElement("tr");
-    const cell = document.createElement("td");
-    cell.colSpan = 4;
-    cell.textContent = "O backend ainda não informou as rotas.";
-    row.append(cell);
-    body.replaceChildren(row);
-    return;
-  }
-  body.replaceChildren(
-    ...routes.map((route) => {
-      const row = document.createElement("tr");
-      const serviceCell = document.createElement("td");
-      serviceCell.textContent = route.label;
-      if (route.used) {
-        const badge = document.createElement("span");
-        badge.className = "used-badge";
-        badge.textContent = "em uso";
-        serviceCell.append(badge);
-      }
-      const routeCell = document.createElement("td");
-      const url = document.createElement("span");
-      url.className = "route-url";
-      url.textContent = route.url;
-      url.title = route.url;
-      const purpose = document.createElement("small");
-      purpose.className = "route-purpose";
-      purpose.textContent = route.purpose;
-      routeCell.append(url, purpose);
-      const statusCell = document.createElement("td");
-      const status = document.createElement("span");
-      status.className = `route-status ${route.status || "pending"}`;
-      status.textContent = routeStatusLabel(route);
-      statusCell.append(status);
-      const responseCell = document.createElement("td");
-      if (route.statusCode === null || route.statusCode === undefined) {
-        responseCell.textContent = route.error || "—";
-      } else if (route.timings) {
-        const phases = document.createElement("div");
-        phases.className = "route-timings";
-        const values = [
-          ["DNS", route.timings.dnsMs],
-          ["TCP", route.timings.tcpMs],
-          ["TLS", route.timings.tlsMs],
-          ["TTFB", route.timings.ttfbMs],
-        ];
-        for (const [label, value] of values) {
-          const phase = document.createElement("span");
-          phase.textContent = `${label} ${Number(value || 0).toFixed(0)} ms`;
-          phases.appendChild(phase);
-        }
-        const total = document.createElement("span");
-        total.className = "total";
-        total.textContent =
-          `HTTP ${route.statusCode} · total ${route.timings.totalMs.toFixed(0)} ms`;
-        phases.appendChild(total);
-        responseCell.appendChild(phases);
-      } else {
-        responseCell.textContent =
-          `HTTP ${route.statusCode} · ${route.latencyMs.toFixed(0)} ms`;
-      }
-      row.append(serviceCell, routeCell, statusCell, responseCell);
-      return row;
-    }),
-  );
-}
+function renderRoutes(routes) { window.OrganizeOnAdminUI.setRoutes(routes); }
 
 function routeStatusLabel(route) {
   if (route.status === "online") return "Online";
@@ -696,7 +629,7 @@ async function loadUsers() {
   const response = await api("/admin/users");
   if (!response.ok) return showToast("Não foi possível carregar as contas.");
   const result = await response.json();
-  state.permissions = result.permissions;
+  state.permissions = result.permissions || [];
   state.grantablePermissions = result.grantablePermissions || result.permissions;
   state.roles = result.roles || ["user", "admin"];
   renderPermissionChecks();
@@ -704,145 +637,15 @@ async function loadUsers() {
 }
 
 function renderUsers(users) {
-  const body = document.getElementById("users-body");
-  body.replaceChildren();
-  for (const user of users) {
-    const row = document.createElement("tr");
-    const identity = document.createElement("td");
-    const name = document.createElement("strong");
-    name.textContent = user.username;
-    identity.append(name);
-    if (user.username === state.account.username) {
-      identity.append(document.createTextNode(" (você)"));
-    }
-
-    const roleCell = document.createElement("td");
-    const role = document.createElement("select");
-    const availableRoles = new Set([...state.roles, user.role]);
-    role.replaceChildren(...[...availableRoles].map((roleName) => {
-      const option = document.createElement("option");
-      option.value = roleName;
-      option.textContent = roleLabel(roleName);
-      return option;
-    }));
-    role.value = user.role;
-    roleCell.append(role);
-
-    const canEditAccess = canManageAccess(user);
-    role.disabled = !canEditAccess;
-
-    const permissionsCell = document.createElement("td");
-    const permissions = document.createElement("div");
-    permissions.className = "permissions";
-    const permissionInputs = state.permissions.map((permission) => {
-      const label = document.createElement("label");
-      const input = document.createElement("input");
-      input.type = "checkbox";
-      input.value = permission;
-      input.checked = user.permissions.includes(permission);
-      input.disabled =
-        !canEditAccess || !state.grantablePermissions.includes(permission);
-      const caption = document.createElement("small");
-      caption.textContent = permission;
-      label.append(input, caption);
-      permissions.append(label);
-      return input;
-    });
-    permissionsCell.append(permissions);
-
-    const statusCell = document.createElement("td");
-    const disabled = document.createElement("input");
-    disabled.type = "checkbox";
-    disabled.checked = user.disabled;
-    disabled.title = "Conta desativada";
-    disabled.disabled = !canEditAccess;
-    statusCell.append(disabled, document.createTextNode(" Desativada"));
-
-    const actions = document.createElement("td");
-    const save = button("Salvar", "button");
-    const password = button("Senha", "button");
-    const loginCode = button("Código", "button");
-    const remove = button("Excluir", "button danger");
-    save.disabled = !canEditAccess;
-    remove.disabled = !canEditAccess || user.username === state.account.username;
-    role.addEventListener("change", () => {
-      permissionInputs.forEach((input) => {
-        input.disabled =
-          !canEditAccess || !state.grantablePermissions.includes(input.value);
-      });
-    });
-    save.addEventListener("click", async () => {
-      const response = await api(
-        `/admin/users/${encodeURIComponent(user.username)}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            role: role.value,
-            disabled: disabled.checked,
-            permissions: permissionInputs
-              .filter((input) => input.checked)
-              .map((input) => input.value),
-          }),
-        },
-      );
-      if (response.ok) {
-        showToast("Conta atualizada.");
-        loadUsers();
-      } else {
-        showToast(await apiError(response));
-      }
-    });
-    password.addEventListener("click", async () => {
-      const nextPassword = await window.OrganizeOnAdminUI.promptPassword(user.username);
-      if (nextPassword === null) return;
-      const response = await api(
-        `/admin/users/${encodeURIComponent(user.username)}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ password: nextPassword }),
-        },
-      );
-      if (response.ok) {
-        showToast("Senha alterada; os tokens anteriores foram invalidados.");
-        loadUsers();
-      } else {
-        showToast(await apiError(response));
-      }
-    });
-    loginCode.addEventListener("click", async () => {
-      const response = await api(
-        `/admin/users/${encodeURIComponent(user.username)}/login-code`,
-        { method: "POST" },
-      );
-      if (!response.ok) return showToast(await apiError(response));
-      const result = await response.json();
-      showLoginCodeDialog(user.username, result.code, result.expiresAt);
-    });
-    remove.addEventListener("click", async () => {
-      if (!await window.OrganizeOnAdminUI.confirm(`Excluir a conta ${user.username}?`)) return;
-      const response = await api(
-        `/admin/users/${encodeURIComponent(user.username)}`,
-        { method: "DELETE" },
-      );
-      if (response.ok) {
-        showToast("Conta excluída.");
-        loadUsers();
-      } else {
-        showToast(await apiError(response));
-      }
-    });
-    actions.append(
-      save,
-      document.createTextNode(" "),
-      password,
-      document.createTextNode(" "),
-      loginCode,
-      document.createTextNode(" "),
-      remove,
-    );
-    row.append(identity, roleCell, permissionsCell, statusCell, actions);
-    body.append(row);
-  }
+  const checked=async response=>{if(!response.ok)throw Error(await apiError(response));return response;};
+  window.OrganizeOnAdminUI.setUsers({
+    users:users.map(user=>({...user,canEdit:canManageAccess(user),isSelf:user.username===state.account.username})),
+    permissions:state.permissions,grantablePermissions:state.grantablePermissions,roles:state.roles,
+    onSave:async(user,patch)=>{await checked(await api(`/admin/users/${encodeURIComponent(user.username)}`,{method:'PATCH',body:JSON.stringify(patch)}));showToast('Conta atualizada.');await loadUsers();},
+    onPassword:async user=>{const password=await window.OrganizeOnAdminUI.promptPassword(user.username);if(password===null)return;await checked(await api(`/admin/users/${encodeURIComponent(user.username)}`,{method:'PATCH',body:JSON.stringify({password})}));showToast('Senha alterada; os tokens anteriores foram invalidados.');await loadUsers();},
+    onCode:async user=>{const response=await checked(await api(`/admin/users/${encodeURIComponent(user.username)}/login-code`,{method:'POST'}));const result=await response.json();showLoginCodeDialog(user.username,result.code,result.expiresAt);},
+    onDelete:async user=>{if(!await window.OrganizeOnAdminUI.confirm(`Excluir a conta ${user.username}?`))return;await checked(await api(`/admin/users/${encodeURIComponent(user.username)}`,{method:'DELETE'}));showToast('Conta excluída.');await loadUsers();},
+  });
 }
 
 function renderPermissionChecks() {
@@ -915,7 +718,7 @@ function showLoginCodeDialog(username, code, expiresAt) {
 
 async function createUser(event) {
   event.preventDefault();
-  const form = event.currentTarget;
+  const form = event.target;
   const formData = new FormData(form);
   const response = await api("/admin/users", {
     method: "POST",
@@ -1025,34 +828,35 @@ function setTerminalStatus(text) {
 }
 
 function setTerminalConnectionState(connectionState) {
-  const connect = document.getElementById("terminal-connect");
-  const disconnect = document.getElementById("terminal-disconnect");
-  if (connectionState === "connecting") {
-    connect.textContent = "Conectando…";
-    connect.disabled = true;
-    disconnect.hidden = false;
-    return;
-  }
-  if (connectionState === "connected") {
-    connect.textContent = "Terminal conectado ✓";
-    connect.disabled = true;
-    disconnect.hidden = false;
-    return;
-  }
-  connect.textContent = "Conectar terminal";
-  connect.disabled = false;
-  disconnect.hidden = true;
+  const connect=document.getElementById('terminal-connect');const disconnect=document.getElementById('terminal-disconnect');
+  connect.hidden=connectionState==='connected';connect.disabled=connectionState==='connecting';
+  const label=connect.querySelector('[data-ui-label]');if(label)label.textContent=connectionState==='connecting'?'Conectando…':'Conectar';
+  disconnect.hidden=connectionState==='disconnected';
+  document.getElementById('terminal-input').placeholder=connectionState==='connected'?'Digite um comando…':'Conecte para iniciar';
 }
-
+let terminalFitFrame=null;
+function scheduleTerminalFit() {
+  if(terminalFitFrame!==null)return;
+  terminalFitFrame=requestAnimationFrame(()=>{
+    terminalFitFrame=null;const host=document.getElementById('terminal-output');if(!host?.clientWidth||!host.clientHeight||!terminalOpened)return;
+    const screen=terminalView.element?.querySelector('.xterm-screen');const rect=screen?.getBoundingClientRect();
+    if(!rect?.width||!rect.height)return;
+    const cellWidth=rect.width/terminalView.cols,cellHeight=rect.height/terminalView.rows;
+    const viewport=terminalView.element.querySelector('.xterm-viewport');const scrollbar=viewport?viewport.offsetWidth-viewport.clientWidth:0;
+    const cols=Math.max(20,Math.floor((host.clientWidth-24-scrollbar)/cellWidth));
+    const rows=Math.max(4,Math.floor((host.clientHeight-16)/cellHeight));
+    if(cols!==terminalView.cols||rows!==terminalView.rows)terminalView.resize(cols,rows);
+    terminalView.refresh(0,terminalView.rows-1);
+  });
+}
 function ensureTerminalOpen() {
-  if (!terminalOpened) {
-    terminalView.open(document.getElementById("terminal-output"));
-    terminalOpened = true;
-    terminalView.writeln(
-      '\x1b[38;5;244mClique em “Conectar terminal” para iniciar.\x1b[0m',
-    );
+  if(!terminalOpened){
+    const host=document.getElementById('terminal-output');terminalView.open(host);terminalOpened=true;
+    terminalView.writeln('\x1b[38;5;244mConecte para iniciar a sessão.\x1b[0m');
+    new ResizeObserver(scheduleTerminalFit).observe(host);
+    document.fonts?.ready.then(scheduleTerminalFit);
   }
-  window.requestAnimationFrame(() => terminalView.refresh(0, 23));
+  scheduleTerminalFit();
 }
 
 function setupDashboardMobileMode() {

@@ -20213,8 +20213,8 @@ var cg = {
 	user: "Usuário",
 	guest: "Convidado"
 };
-function lg({ username: e, role: t, onLogout: n, onReturn: r }) {
-	let i = cg[t] || t;
+function lg({ username: e, role: t, onLogout: n }) {
+	let r = cg[t] || t;
 	return /* @__PURE__ */ (0, Z.jsxs)(tg, { children: [/* @__PURE__ */ (0, Z.jsxs)(ng, {
 		render: /* @__PURE__ */ (0, Z.jsx)(wm, {
 			size: "lg",
@@ -20233,7 +20233,7 @@ function lg({ username: e, role: t, onLogout: n, onReturn: r }) {
 					children: e
 				}), /* @__PURE__ */ (0, Z.jsx)("span", {
 					className: "truncate text-muted-foreground",
-					children: i
+					children: r
 				})]
 			}),
 			/* @__PURE__ */ (0, Z.jsx)(P, { className: "ml-auto size-4 text-muted-foreground group-data-[collapsible=icon]:hidden" })
@@ -20257,7 +20257,7 @@ function lg({ username: e, role: t, onLogout: n, onReturn: r }) {
 							children: e
 						}), /* @__PURE__ */ (0, Z.jsx)("span", {
 							className: "truncate text-xs text-muted-foreground",
-							children: i
+							children: r
 						})]
 					})]
 				})
@@ -20267,10 +20267,6 @@ function lg({ username: e, role: t, onLogout: n, onReturn: r }) {
 				onClick: n,
 				className: "text-destructive",
 				children: [/* @__PURE__ */ (0, Z.jsx)(ve, {}), "Sair da conta"]
-			}),
-			r && /* @__PURE__ */ (0, Z.jsxs)(og, {
-				onClick: r,
-				children: [/* @__PURE__ */ (0, Z.jsx)(O, {}), "Voltar ao cliente"]
 			})
 		]
 	})] });

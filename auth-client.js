@@ -1067,6 +1067,7 @@ function openDashboardWindow() {
       return;
     }
     removeDashboard();
+    if (event.data.loggedOut) { restartClientAtMain(); return; }
     if (event.data.openSidebar) {
       document.getElementById("organizeon-account-navigation-react")?.shadowRoot?.querySelector('button[aria-label="Abrir menu"]')?.click();
     }

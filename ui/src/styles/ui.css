@@ -166,3 +166,21 @@
 /* Dialog geometry stays fixed while opacity changes. */
 .organizeon-ui .oo-dialog-popup[data-open] { animation: ui-fade-in 160ms ease-out; }
 .organizeon-ui .oo-dialog-popup[data-closed] { animation: ui-fade-out 120ms ease-in; }
+/* Tailwind utilities require these defaults even when global Preflight is omitted.
+   Scope them to our UI so Fern's original styles stay independent. */
+.organizeon-ui, .organizeon-ui *, .organizeon-ui ::before, .organizeon-ui ::after {
+ --tw-translate-x: 0; --tw-translate-y: 0; --tw-rotate: 0;
+ --tw-skew-x: 0; --tw-skew-y: 0; --tw-scale-x: 1; --tw-scale-y: 1;
+ --tw-ring-offset-width: 0px; --tw-ring-offset-color: #fff;
+ --tw-ring-color: rgb(113 113 122 / .5); --tw-ring-offset-shadow: 0 0 #0000;
+ --tw-ring-shadow: 0 0 #0000; --tw-shadow: 0 0 #0000; --tw-shadow-colored: 0 0 #0000;
+ border-width: 0; border-style: solid; border-color: rgb(var(--border));
+}
+.organizeon-ui [hidden] { display: none; }
+.organizeon-ui fieldset { min-width: 0; margin: 0; padding: 0; }
+.organizeon-ui table { border-collapse: collapse; border-spacing: 0; }
+.oo-admin-main[data-terminal="true"] { height: calc(var(--admin-viewport-height, 100dvh) - 3.5rem); display: flex; flex-direction: column; padding-top: .75rem; padding-bottom: .75rem; }
+.oo-admin-main[data-terminal="true"] > [data-slot="tabs"] { flex: 1; min-height: 0; }
+.organizeon-ui #terminal-output .xterm { height: 100%; }
+.organizeon-ui #terminal-output .xterm-viewport { overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #3f3f46 #09090b; }
+.organizeon-ui #terminal-output .xterm-screen { margin: 0; }

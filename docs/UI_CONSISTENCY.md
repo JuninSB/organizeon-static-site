@@ -37,7 +37,7 @@ O catálogo adicional agora mora em um ShadowRoot próprio. `ensureDocumentStyle
 
 ### Contratos compartilhados de navegação e posicionamento
 
-`components/layout/client-sidebar.tsx` utiliza os primitives Sidebar/SidebarProvider reais. A navegação do cliente não possui uma implementação paralela baseada apenas em Sheet. `components/layout/account-menu.tsx` é compartilhado entre cliente, D2 e admin: avatar, nome, nível e ação contextual usam a mesma estrutura. O admin mantém a ação de retornar ao cliente; a saída da conta continua no perfil do cliente.
+`components/layout/client-sidebar.tsx` utiliza os primitives Sidebar/SidebarProvider reais. A navegação do cliente não possui uma implementação paralela baseada apenas em Sheet. `components/layout/account-menu.tsx` é compartilhado entre cliente, D2 e admin: avatar, nome, nível e ação contextual usam a mesma estrutura. O perfil do admin oferece saída da conta; a navegação de retorno fica no header, fora do menu de usuário.
 
 A lista de categorias possui um viewport próprio com largura limitada e conteúdo `w-max`, sem permitir que o grid da página cresça pelo tamanho intrínseco das tabs. As rolagens da página e da lista são independentes.
 
@@ -50,3 +50,12 @@ O admin versiona os próprios bundles pelo hash de conteúdo em `scripts/update-
 Validação desta correção: viewport de 390px, área das categorias de 358px, documento limitado a 390px; gesto de toque deslocou a lista em 736px. O diálogo permaneceu centrado em (195,425) durante 15 frames. O teste com runtime original confirmou a busca e Configurações; o service worker não foi validado nesse host sintético (bloqueado pelo ambiente de teste).
 
 A montagem da sidebar do cliente não cria mais um drawer HTML antigo como fallback. Em falha de módulo/CSS, mostra somente uma ação neutra para tentar carregar a navegação novamente; o conteúdo do Fern permanece disponível. Isso evita duas implementações concorrentes e o flash do menu antigo.
+
+
+### Tabelas e terminal no celular
+
+Rotas e contas usam listas React responsivas (`routes-panel.tsx`, `users-panel.tsx`). Permissões são editadas em um diálogo com busca e viewport próprio; não colocar dezenas de checkboxes em cada linha de uma tabela. O controlador fornece os dados e callbacks para a bridge, mantendo endpoints e regras `canManageAccess` existentes.
+
+`terminal-panel.tsx` dedica o espaço disponível à saída e ao prompt. O controlador ajusta cols/rows do xterm por ResizeObserver e métricas da grade renderizada, usando `resize()` público. Não utiliza polling nem altera o protocolo do shell. A viewport visual atualiza o espaço com o teclado mobile. ANSI recebido é preservado; o chrome do terminal usa cores neutras. Não adicionar teclas extras de Termux.
+
+O projeto omite Preflight global para preservar o Fern. Portanto os defaults de transform/ring exigidos pelas utilities Tailwind precisam existir no escopo `.organizeon-ui`. Sem eles, `rotate-180` e centralização com translate falham. Validar a geometria dos ícones e o tamanho real dos dados, não somente listas vazias.

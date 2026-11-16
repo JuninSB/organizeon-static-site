@@ -1,7 +1,10 @@
+import { TerminalPanel } from "@/components/admin/terminal-panel";
+import { UsersPanel, type UsersData } from "@/components/admin/users-panel";
+import { RoutesPanel, type AdminRoute } from "@/components/admin/routes-panel";
 import { AccountMenu } from "@/components/layout/account-menu";
 import { useEffect, useRef, useState } from "react";
 import {
-  Activity, ArrowLeft, ChevronDown, Cpu, Database, Gauge, LayoutDashboard, RefreshCw, Server,
+  Activity, ArrowLeft, Cpu, Database, Gauge, LayoutDashboard, RefreshCw, Server,
   TerminalSquare, Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarSeparator, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "@/components/ui/sonner";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -20,6 +22,8 @@ import { PortalContextProvider } from "@/components/ui/portal-context";
 
 type AdminView = "overview" | "logs" | "users" | "services" | "terminal";
 type AdminUIBridge = {
+  setUsers: (data: UsersData) => void;
+  setRoutes: (routes: AdminRoute[]) => void;
   setAccount: (account: { username: string; role: string; permissions: string[] }) => void;
   setView: (view: AdminView) => void;
   openUserDialog: () => void;
@@ -52,6 +56,8 @@ function Metric({ title, valueId, detailId, icon: Icon, fallback = "—" }: { ti
 
 export function AdminApp() {
   const [account, setAccount] = useState<{username: string; role: string; permissions: string[]} | null>(null);
+  const [usersData, setUsersData] = useState<UsersData | null>(null);
+  const [routes, setRoutes] = useState<AdminRoute[]>([]);
   const [view, setView] = useState<AdminView>("overview");
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [roles, setRoles] = useState(["user", "admin"]);
@@ -67,7 +73,15 @@ export function AdminApp() {
   const domainElement = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const update = () => document.getElementById('organizeon-admin-root')?.style.setProperty('--admin-viewport-height', `${window.visualViewport?.height || window.innerHeight}px`);
+    update();window.visualViewport?.addEventListener('resize',update);window.addEventListener('resize',update);
+    return () => {window.visualViewport?.removeEventListener('resize',update);window.removeEventListener('resize',update);};
+  }, []);
+
+  useEffect(() => {
     const bridge: AdminUIBridge = {
+      setUsers: setUsersData,
+      setRoutes,
       setAccount,
       setView: (next) => setView(next),
       openUserDialog: () => setUserDialogOpen(true),
@@ -119,17 +133,17 @@ export function AdminApp() {
           <SidebarContent><SidebarGroup><SidebarGroupLabel>Administração</SidebarGroupLabel><SidebarMenu>{navigation.filter(item => !account || (!item.permission || account.permissions.includes(item.permission)) && (item.value !== "services" || account.permissions.some(permission => permission.startsWith("services.")))).map(({ value, label, icon: Icon, permission }) => <SidebarMenuItem key={value} id={value === "services" ? "services-nav" : undefined}>
             <AdminNavigation value={value} label={label} icon={Icon} permission={permission} active={view === value}/>
           </SidebarMenuItem>)}</SidebarMenu></SidebarGroup></SidebarContent>
-          <SidebarFooter className="px-2 pb-3"><AccountMenu username={account?.username || 'Conta'} role={account?.role || 'user'} onReturn={() => document.getElementById('back-link')?.click()}/></SidebarFooter>
+          <SidebarFooter className="px-2 pb-3"><AccountMenu username={account?.username || 'Conta'} role={account?.role || 'user'} onLogout={() => window.dispatchEvent(new CustomEvent("organizeon:admin-logout"))}/></SidebarFooter>
         </Sidebar>
         <SidebarInset className="min-w-0 bg-background">
-          <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur-sm sm:px-6">
+          <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background px-4 sm:px-6">
             <SidebarTrigger aria-label="Abrir navegação" />
             <Separator orientation="vertical" className="h-5" />
-            <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">Central de controle</p></div>
+            <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{navigation.find(item => item.value === view)?.label || "Central de controle"}</p></div>
             <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" aria-label="Voltar ao cliente" id="back-link" />}><ArrowLeft /></TooltipTrigger><TooltipContent>Voltar ao OrganizeOn</TooltipContent></Tooltip>
             <Toaster position="bottom-right" theme="dark" closeButton />
           </header>
-          <main className="mx-auto w-full max-w-[1500px] min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+          <main data-terminal={view === "terminal"} className="oo-admin-main mx-auto w-full max-w-[1500px] min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
             <Tabs value={view} onValueChange={(value) => setView(value as AdminView)}>
               <TabsList className="sr-only" aria-label="Painéis administrativos">{navigation.map(({ value, label }) => <TabsTrigger value={value} data-view={value} key={value}>{label}</TabsTrigger>)}</TabsList>
               <TabsContent keepMounted value="overview" className="view mt-0" id="view-overview">
@@ -140,7 +154,7 @@ export function AdminApp() {
                   <Card><CardHeader className="pb-2"><CardDescription>Portas</CardDescription></CardHeader><CardContent><p id="ports-value" className="font-semibold">—</p><p id="ports-detail" className="mt-1 break-words text-xs text-muted-foreground">—</p></CardContent></Card>
                   <Card><CardHeader className="pb-2"><CardDescription>Uptime do processo</CardDescription></CardHeader><CardContent><p id="server-uptime-value" className="font-semibold">—</p><p id="server-uptime-detail" className="mt-1 break-words text-xs text-muted-foreground">—</p></CardContent></Card>
                 </section>
-                <Card className="mb-4 overflow-hidden"><CardHeader className="flex-row flex-wrap items-center justify-between gap-3 border-b py-3"><div><CardTitle className="text-sm">Domínios e rotas</CardTitle><CardDescription className="mt-1">Medição até a resposta HTTP; não é ping ICMP.</CardDescription></div><Button id="monitor-refresh" variant="outline" size="sm" disabled><RefreshCw /><span data-ui-label>Atualizar</span></Button></CardHeader><CardContent className="p-0"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Serviço</TableHead><TableHead>Rota</TableHead><TableHead>Status</TableHead><TableHead>HTTP completo</TableHead></TableRow></TableHeader><TableBody id="routes-status-body"><TableRow><TableCell colSpan={4} className="h-20 text-center text-muted-foreground">Ative o monitoramento para consultar as rotas.</TableCell></TableRow></TableBody></Table></div></CardContent></Card>
+                <Card className="mb-4 overflow-hidden"><CardHeader className="flex-row flex-wrap items-center justify-between gap-3 border-b py-3"><div><CardTitle className="text-sm">Domínios e rotas</CardTitle><CardDescription className="mt-1">Medição até a resposta HTTP; não é ping ICMP.</CardDescription></div><Button id="monitor-refresh" variant="outline" size="sm" disabled><RefreshCw /><span data-ui-label>Atualizar</span></Button></CardHeader><CardContent className="p-0"><RoutesPanel routes={routes}/></CardContent></Card>
                 <Card id="monitoring-off" className="mb-4"><CardContent className="flex flex-col items-start justify-between gap-4 py-5 sm:flex-row sm:items-center"><div><CardTitle className="text-sm">Monitoramento desativado</CardTitle><CardDescription className="mt-1 max-w-2xl">Uptime e requisições continuam sendo contados. CPU, RAM e gráficos só são amostrados quando um administrador ativa esta sessão.</CardDescription></div><Button id="monitor-activate"><Activity />Ativar monitoramento</Button></CardContent></Card>
                 <div id="monitoring-content" hidden>
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric title="CPU" valueId="cpu-value" detailId="cpu-detail" icon={Cpu} fallback="0%"/><Metric title="RAM" valueId="ram-value" detailId="ram-detail" icon={Database} fallback="0%"/><Card><CardHeader className="pb-2"><CardDescription>Solicitações por minuto</CardDescription></CardHeader><CardContent><p id="rpm-value" className="text-2xl font-semibold">0</p><p id="request-detail" className="mt-1 min-h-5 text-xs text-muted-foreground">—</p><div className="mt-2"><Select value={domain} onValueChange={changeDomain}><SelectTrigger id="request-domain-trigger" className="w-full"><SelectValue placeholder="Todos os domínios"/></SelectTrigger><SelectContent>{domains.map((item) => <SelectItem value={item} key={item}>{item === "all" ? "Todos os domínios" : item}</SelectItem>)}</SelectContent></Select><div id="request-domain-select" ref={domainElement} className="sr-only" aria-hidden="true" /></div></CardContent></Card><Metric title="Uptime" valueId="uptime-value" detailId="process-detail" icon={Gauge} fallback="0m"/></div>
@@ -148,9 +162,9 @@ export function AdminApp() {
                 </div>
               </TabsContent>
               <TabsContent keepMounted value="logs" className="view mt-0" id="view-logs"><div className="mb-4"><h1 className="text-2xl font-semibold tracking-tight">Eventos do servidor</h1><p className="mt-1 text-sm text-muted-foreground">Fluxo de entrada e saída, sem conteúdo sensível.</p></div><Card><CardHeader className="flex-row items-center justify-between border-b py-3"><CardDescription id="logs-status">Desconectado</CardDescription><div className="flex gap-2"><Button id="logs-pause" variant="outline" size="sm">Pausar</Button><Button id="logs-clear" variant="outline" size="sm">Limpar tela</Button></div></CardHeader><CardContent className="p-0"><div className="max-h-[70svh] min-h-80 overflow-auto p-3 font-mono text-xs" id="logs-list"><div className="grid min-h-64 place-items-center text-center text-sm text-muted-foreground">Abra esta aba para conectar aos eventos.</div></div></CardContent></Card></TabsContent>
-              <TabsContent keepMounted value="users" className="view mt-0" id="view-users"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Contas e permissões</h1><p className="mt-1 text-sm text-muted-foreground">Alterações invalidam imediatamente os tokens anteriores.</p></div><Button id="create-user"><Users />Criar usuário</Button></div><Card className="overflow-hidden"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Conta</TableHead><TableHead>Tipo</TableHead><TableHead>Permissões</TableHead><TableHead>Status</TableHead><TableHead>Ações</TableHead></TableRow></TableHeader><TableBody id="users-body" /></Table></div></Card></TabsContent>
+              <TabsContent keepMounted value="users" className="view mt-0" id="view-users"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Contas e permissões</h1><p className="mt-1 text-sm text-muted-foreground">Alterações invalidam imediatamente os tokens anteriores.</p></div><Button id="create-user"><Users />Criar usuário</Button></div><UsersPanel data={usersData}/></TabsContent>
               <TabsContent keepMounted value="services" className="view mt-0" id="view-services"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Serviços</h1><p className="mt-1 text-sm text-muted-foreground">Ações disponíveis conforme as permissões da conta.</p></div><Button id="services-refresh" variant="outline"><RefreshCw />Atualizar status</Button></div><div id="services-grid" className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3" /></TabsContent>
-              <TabsContent keepMounted value="terminal" className="view mt-0" id="view-terminal"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Terminal do servidor</h1><p className="mt-1 text-sm text-muted-foreground">Shell remoto protegido por token e permissão administrativa.</p></div><Button id="terminal-connect"><TerminalSquare /><span data-ui-label>Conectar terminal</span></Button></div><Card className="overflow-hidden"><CardHeader className="flex-row items-center justify-between gap-2 border-b py-3"><CardDescription id="terminal-status">Desconectado</CardDescription><div className="flex items-center gap-1"><Tooltip><TooltipTrigger render={<Button variant="outline" size="icon-sm" id="terminal-scroll-up" aria-label="Subir no histórico"/>}><ChevronDown className="rotate-180" /></TooltipTrigger><TooltipContent>Subir no histórico</TooltipContent></Tooltip><Button variant="outline" size="icon-sm" id="terminal-scroll-down" aria-label="Descer no histórico"><ChevronDown /></Button><Button variant="outline" size="sm" id="terminal-scroll-bottom">Fim</Button><Button variant="destructive" size="sm" id="terminal-disconnect" hidden>Desconectar</Button></div></CardHeader><CardContent className="bg-background p-2"><div className="h-[min(62svh,560px)] min-h-64 overflow-auto" id="terminal-output" aria-label="Saída do terminal"/><form id="terminal-form" className="flex items-center gap-2 border-t pt-2"><span className="font-mono text-muted-foreground">$</span><Input id="terminal-input" autoComplete="off" spellCheck={false} disabled aria-label="Comando terminal" className="border-0 bg-transparent font-mono shadow-none focus-visible:ring-0" /></form></CardContent></Card></TabsContent>
+              <TabsContent keepMounted value="terminal" className="view mt-0 flex h-full min-h-0 flex-col" id="view-terminal"><TerminalPanel/></TabsContent>
             </Tabs>
           </main>
         </SidebarInset>

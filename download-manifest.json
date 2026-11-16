@@ -1,7 +1,7 @@
 {
-  "version": "v2-e3a0266ec900106f",
-  "generatedAt": "2026-11-16T02:26:39.798Z",
-  "totalBytes": 12680110,
+  "version": "v2-6e7ab5d3de55df59",
+  "generatedAt": "2026-11-16T02:48:59.991Z",
+  "totalBytes": 12693154,
   "files": [
     {
       "path": "404.html",
@@ -11,12 +11,12 @@
     {
       "path": "admin.html",
       "size": 731,
-      "sha256": "be6128b6028a403999031da29d91ccb054c3b5b878a74fc14ac09e365cefaa4e"
+      "sha256": "9355b4c1f729caf1426b60cfa07e200b470372ef8522708fbb511633fda3f490"
     },
     {
       "path": "admin.js",
-      "size": 40921,
-      "sha256": "b43080124d16de59c06025c02f40679f5a1686d959bf56553dbbc7ff93d4e02a"
+      "size": 35824,
+      "sha256": "6356f4be37756a01657d82f9b9704c0a10adc6a0c0688532002a1311bc8d6e44"
     },
     {
       "path": "assets/jdht-a-B22Nviop.woff2",
@@ -335,8 +335,8 @@
     },
     {
       "path": "auth-client.js",
-      "size": 141221,
-      "sha256": "c74c12d00b3a778a3cabb7a9c4bc67f5ac6909c8217d34c04680447ca25437a2"
+      "size": 141286,
+      "sha256": "004fe8062d311921ced98ed8104643066765802ec9fed18b8eb8aea1c04f13df"
     },
     {
       "path": "config.js",
@@ -780,23 +780,23 @@
     },
     {
       "path": "ui-dist/client-ui.js",
-      "size": 759869,
-      "sha256": "9e900bf61433d48fc21c04d5a954e9c7fcfd8311c6c46c687bfffc831b1a29b0"
+      "size": 759720,
+      "sha256": "1b94458bc8989169d884181c4dc63207e33fe71421624a500c9c6ae7b5d09d63"
     },
     {
       "path": "ui-dist/client-ui.css",
-      "size": 179458,
-      "sha256": "cf6ee27d18fa95c762f871f216566fe4df127efe1e4997fddc6453e6ea350e3f"
+      "size": 180784,
+      "sha256": "9fc4a4fcd557024130cbbc5280da565f1cbdb764a92a8f38bfbb84ba3c8f0a0a"
     },
     {
       "path": "ui-dist/admin-ui.js",
-      "size": 1171986,
-      "sha256": "32b25fcd2adad764c02fcb07a92b4b11ce5c4a787dace4f108998aacbd3914db"
+      "size": 1187559,
+      "sha256": "183b6db8a08d5c1ec11d948049596832db198ee447ba1968854bf72c6d26c1a3"
     },
     {
       "path": "ui-dist/admin-ui.css",
-      "size": 179458,
-      "sha256": "cf6ee27d18fa95c762f871f216566fe4df127efe1e4997fddc6453e6ea350e3f"
+      "size": 180784,
+      "sha256": "9fc4a4fcd557024130cbbc5280da565f1cbdb764a92a8f38bfbb84ba3c8f0a0a"
     }
   ]
 }
