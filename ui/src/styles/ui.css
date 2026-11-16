@@ -184,3 +184,6 @@
 .organizeon-ui #terminal-output .xterm { height: 100%; }
 .organizeon-ui #terminal-output .xterm-viewport { overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #3f3f46 #09090b; }
 .organizeon-ui #terminal-output .xterm-screen { margin: 0; }
+
+/* The overlay host is click-through; only visible notifications receive input. */
+.organizeon-ui [data-sonner-toast] { pointer-events: auto; }

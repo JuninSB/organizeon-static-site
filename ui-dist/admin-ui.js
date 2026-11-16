@@ -21121,10 +21121,15 @@ function i_({ data: e }) {
 			disabled: e.disabled
 		}), o(""), u("");
 	}, f = async (e) => {
-		try {
-			u(""), await e();
-		} catch (e) {
-			u(e instanceof Error ? e.message : "A operação não foi concluída.");
+		if (!s) {
+			c(!0);
+			try {
+				u(""), await e();
+			} catch (e) {
+				u(e instanceof Error ? e.message : "A operação não foi concluída.");
+			} finally {
+				c(!1);
+			}
 		}
 	}, p = async () => {
 		if (t && e) {
@@ -21199,6 +21204,11 @@ function i_({ data: e }) {
 							/* @__PURE__ */ (0, Y.jsxs)(vh, {
 								onClick: () => void f(() => e.onCode(t)),
 								children: [/* @__PURE__ */ (0, Y.jsx)(Re, {}), "Código de login"]
+							}),
+							/* @__PURE__ */ (0, Y.jsxs)(vh, {
+								disabled: s || !t.canRevokeSessions,
+								onClick: () => void f(() => e.onRevokeSessions(t)),
+								children: [/* @__PURE__ */ (0, Y.jsx)(Se, {}), "Deslogar todas as sessões"]
 							}),
 							/* @__PURE__ */ (0, Y.jsxs)(vh, {
 								disabled: !t.canEdit || t.isSelf,
@@ -32147,6 +32157,7 @@ function iD(e) {
 		users: e.map((e) => ({
 			...e,
 			canEdit: sD(e),
+			canRevokeSessions: e.username === $.account.username || sD(e),
 			isSelf: e.username === $.account.username
 		})),
 		permissions: $.permissions,
@@ -32168,6 +32179,12 @@ function iD(e) {
 		onCode: async (e) => {
 			let n = await (await t(await yD(`/admin/users/${encodeURIComponent(e.username)}/login-code`, { method: "POST" }))).json();
 			cD(e.username, n.code, n.expiresAt);
+		},
+		onRevokeSessions: async (e) => {
+			await window.OrganizeOnAdminUI.confirm(`Encerrar todas as sessões de ${e.username}? Será necessário entrar novamente em todos os dispositivos.`, "Deslogar todas as sessões", "Deslogar") && (await t(await yD(`/admin/users/${encodeURIComponent(e.username)}/revoke-sessions`, { method: "POST" })), xD("Todas as sessões da conta foram encerradas."), e.username === $.account.username ? (localStorage.removeItem(DD), window.parent === window ? window.location.replace(new URL("./", document.baseURI).href) : window.parent.postMessage({
+				type: "organizeon:open-main",
+				loggedOut: !0
+			}, "*")) : await rD());
 		},
 		onDelete: async (e) => {
 			await window.OrganizeOnAdminUI.confirm(`Excluir a conta ${e.username}?`) && (await t(await yD(`/admin/users/${encodeURIComponent(e.username)}`, { method: "DELETE" })), xD("Conta excluída."), await rD());

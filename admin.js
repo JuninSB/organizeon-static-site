@@ -665,11 +665,21 @@ async function loadUsers() {
 function renderUsers(users) {
   const checked=async response=>{if(!response.ok)throw Error(await apiError(response));return response;};
   window.OrganizeOnAdminUI.setUsers({
-    users:users.map(user=>({...user,canEdit:canManageAccess(user),isSelf:user.username===state.account.username})),
+    users:users.map(user=>({...user,canEdit:canManageAccess(user),canRevokeSessions:user.username===state.account.username||canManageAccess(user),isSelf:user.username===state.account.username})),
     permissions:state.permissions,grantablePermissions:state.grantablePermissions,roles:state.roles,
     onSave:async(user,patch)=>{await checked(await api(`/admin/users/${encodeURIComponent(user.username)}`,{method:'PATCH',body:JSON.stringify(patch)}));showToast('Conta atualizada.');await loadUsers();},
     onPassword:async user=>{const password=await window.OrganizeOnAdminUI.promptPassword(user.username);if(password===null)return;await checked(await api(`/admin/users/${encodeURIComponent(user.username)}`,{method:'PATCH',body:JSON.stringify({password})}));showToast('Senha alterada; os tokens anteriores foram invalidados.');await loadUsers();},
     onCode:async user=>{const response=await checked(await api(`/admin/users/${encodeURIComponent(user.username)}/login-code`,{method:'POST'}));const result=await response.json();showLoginCodeDialog(user.username,result.code,result.expiresAt);},
+    onRevokeSessions:async user=>{
+      if(!await window.OrganizeOnAdminUI.confirm(`Encerrar todas as sessões de ${user.username}? Será necessário entrar novamente em todos os dispositivos.`, 'Deslogar todas as sessões', 'Deslogar'))return;
+      await checked(await api(`/admin/users/${encodeURIComponent(user.username)}/revoke-sessions`,{method:'POST'}));
+      showToast('Todas as sessões da conta foram encerradas.');
+      if(user.username===state.account.username){
+        localStorage.removeItem(tokenKey);
+        if(window.parent!==window)window.parent.postMessage({type:'organizeon:open-main',loggedOut:true},'*');
+        else window.location.replace(new URL('./',document.baseURI).href);
+      }else await loadUsers();
+    },
     onDelete:async user=>{if(!await window.OrganizeOnAdminUI.confirm(`Excluir a conta ${user.username}?`))return;await checked(await api(`/admin/users/${encodeURIComponent(user.username)}`,{method:'DELETE'}));showToast('Conta excluída.');await loadUsers();},
   });
 }
