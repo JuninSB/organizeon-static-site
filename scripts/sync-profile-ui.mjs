@@ -12,6 +12,8 @@ const files = [
   "features/profile/profile-boundary.tsx",
   "features/profile/avatar-editor.tsx",
   "features/profile/profile-dialog.tsx",
+  "features/profile/profile-card.tsx",
+  "features/profile/profile-field-editor.tsx",
   "services/profile-service.ts",
   "stores/profile-store.ts",
 ];

@@ -1,6 +1,6 @@
 import { ProfileBoundary } from "@/features/profile/profile-boundary";
 import { lazy, Suspense, useState } from "react";
-import { ChevronUp, UserRound } from "lucide-react";
+import { ChevronUp, UserRound, LogOut } from "lucide-react";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -41,7 +41,12 @@ export function AccountMenu({
       <span className="grid min-w-0 flex-1 text-left text-xs leading-tight group-data-[collapsible=icon]:hidden">
         <span
           className="truncate font-medium"
-          style={{ color: profile.nameColor }}
+          style={{
+            color:
+              profile.nameColor.toUpperCase() === "#FAFAFA"
+                ? undefined
+                : profile.nameColor,
+          }}
         >
           {profile.displayName}
         </span>
@@ -72,7 +77,12 @@ export function AccountMenu({
                 <span className="grid min-w-0">
                   <span
                     className="truncate text-sm font-medium"
-                    style={{ color: profile.nameColor }}
+                    style={{
+                      color:
+                        profile.nameColor.toUpperCase() === "#FAFAFA"
+                          ? undefined
+                          : profile.nameColor,
+                    }}
                   >
                     {profile.displayName}
                   </span>
@@ -93,9 +103,10 @@ export function AccountMenu({
             <UserRound />
             Perfil
           </DropdownMenuItem>
-          {role === "guest" && onLogout && (
-            <DropdownMenuItem onClick={onLogout}>
-              Sair do modo convidado
+          {onLogout && (
+            <DropdownMenuItem onClick={onLogout} className="text-destructive">
+              <LogOut />
+              {role === "guest" ? "Sair do modo convidado" : "Sair da sessão"}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -117,7 +128,6 @@ export function AccountMenu({
               role={label}
               profile={profile}
               onClose={() => setOpen(false)}
-              onLogout={onLogout}
             />
           </Suspense>
         </ProfileBoundary>

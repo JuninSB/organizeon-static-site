@@ -1,3 +1,12 @@
+const messages: Record<string, string> = {
+  invalid_profile: "Confira o nome, a descrição e a foto do perfil.",
+  invalid_current_password: "A senha atual está incorreta.",
+  invalid_password: "A nova senha deve ter pelo menos 8 caracteres.",
+  password_confirmation_mismatch: "As novas senhas não coincidem.",
+  too_many_attempts: "Muitas tentativas. Aguarde antes de tentar novamente.",
+  unauthorized: "Sua sessão expirou. Entre novamente.",
+  request_too_large: "A foto excede o tamanho permitido.",
+};
 export type Profile = {
   displayName: string;
   nameColor: string;
@@ -12,6 +21,18 @@ export const defaultProfile = (username: string): Profile => ({
   avatarShape: "circle",
   avatar: null,
 });
+type ProfileTransport = (
+  kind: "profile" | "password",
+  options: RequestInit,
+) => Promise<any>;
+let transport: ProfileTransport | undefined;
+/** Applications may supply their existing authenticated request adapter. */
+export function configureProfileTransport(next: ProfileTransport) {
+  transport = next;
+  return () => {
+    if (transport === next) transport = undefined;
+  };
+}
 function endpoint(kind: "profile" | "password") {
   if (/^\/d[23](\/|$)/.test(location.pathname))
     return location.pathname.slice(0, 3) + "/api/" + kind;
@@ -34,6 +55,16 @@ async function request(
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
   if (options.body) headers.set("Content-Type", "application/json");
+  if (transport) {
+    try {
+      return await transport(kind, { ...options, headers });
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "";
+      throw Error(
+        messages[code] || code || "Não foi possível salvar. Tente novamente.",
+      );
+    }
+  }
   const token = localStorage.getItem("organizeon-access-token");
   if (token && !/^\/d[23](\/|$)/.test(location.pathname))
     headers.set("Authorization", "Bearer " + token);
@@ -46,16 +77,6 @@ async function request(
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const messages: Record<string, string> = {
-      invalid_profile: "Confira o nome, a descrição e a foto do perfil.",
-      invalid_current_password: "A senha atual está incorreta.",
-      invalid_password: "A nova senha deve ter pelo menos 8 caracteres.",
-      password_confirmation_mismatch: "As novas senhas não coincidem.",
-      too_many_attempts:
-        "Muitas tentativas. Aguarde antes de tentar novamente.",
-      unauthorized: "Sua sessão expirou. Entre novamente.",
-      request_too_large: "A foto excede o tamanho permitido.",
-    };
     throw Error(
       messages[data.error] || "Não foi possível salvar. Tente novamente.",
     );
@@ -64,7 +85,7 @@ async function request(
 }
 export const profileService = {
   get: async (): Promise<Profile> => (await request("profile")).profile,
-  save: async (profile: Profile): Promise<Profile> =>
+  save: async (profile: Partial<Profile>): Promise<Profile> =>
     (
       await request("profile", {
         method: "PATCH",
