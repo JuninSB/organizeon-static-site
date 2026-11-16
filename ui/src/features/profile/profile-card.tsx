@@ -45,7 +45,7 @@ export function ProfileCard({
       }
     >
       <div
-        data-lava={profile.goldBadge && profile.bannerStyle === "lava" ? "" : undefined}
+        data-lava={profile.goldBadge && profile.bannerStyle !== "solid" && !!profile.bannerStyle ? "" : undefined}
         className={`oo-profile-banner ${frameless ? "h-28" : "h-20 border-b border-border"} bg-card`}
         style={
           frameless
@@ -57,7 +57,7 @@ export function ProfileCard({
             : { ...profileBannerPattern(profile.bannerSeed || username), "--profile-color": profile.nameColor } as CSSProperties
         }
       >
-        {profile.goldBadge && profile.bannerStyle === "lava" && <LavaBanner seed={profile.bannerSeed || username} color={profile.nameColor} />}
+        {profile.goldBadge && profile.bannerStyle !== "solid" && !!profile.bannerStyle && <LavaBanner seed={profile.bannerSeed || username} color={profile.nameColor} material={profile.bannerStyle === "lava" ? undefined : profile.bannerStyle === "magma" ? "lava" : profile.bannerStyle} />}
         {profile.goldBadge && onEdit && <div className="absolute right-3 top-3">{pencil("appearance", "Editar aparência")}</div>}
       </div>
       <div className="px-5 pb-5 sm:px-6 sm:pb-6">

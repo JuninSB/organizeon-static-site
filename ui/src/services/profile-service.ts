@@ -10,7 +10,7 @@ export type Profile = {
   bannerRerollAvailableAt?: string | null;
   bannerRerollUnlimited?: boolean;
   showGoldBadge?: boolean;
-  bannerStyle?: "solid" | "lava";
+  bannerStyle?: "solid" | "lava" | "slime" | "bubbles" | "gradient" | "magma" | "stars" | "rainbow";
 };
 export const defaultProfile = (username: string): Profile => ({
   displayName: username,

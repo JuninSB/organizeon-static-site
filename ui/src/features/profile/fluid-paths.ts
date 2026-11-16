@@ -4,6 +4,11 @@ export function fluidPath(family: string, index: number, variation: number) {
   const x = -130 + index * 105 + variation * 25;
   const bottom = `L 640 300 L -180 300 Z`;
   switch (family) {
+    case "slime": return `M -180 ${y-50} Q 0 ${y-60},40 ${y+35} Q 65 ${y+150},90 ${y+30} Q 140 ${y-80},220 ${y+20} Q 260 ${y+140},300 ${y+15} Q 360 ${y-70},640 ${y} ${bottom}`;
+    case "lava": return `M -180 ${y} C 40 ${y-120},60 ${y+140},170 ${y+15} S 290 ${y-90},340 ${y+50} S 490 ${y+100},640 ${y-70} ${bottom}`;
+    case "gradient": return `M -180 ${y-80} C 80 ${y-140},290 ${y+100},640 ${y-20} ${bottom}`;
+    case "rainbow": return `M -180 ${y} Q 220 ${y-220},640 ${y} L 640 ${y+35} Q 220 ${y-180},-180 ${y+35} Z`;
+
     case "silk": return `M -180 ${y} C 30 ${y+120},110 ${y-115},265 ${y+15} S 510 ${y+115},640 ${y-40} ${bottom}`;
     case "vortex": return `M -180 ${y-100} C 430 ${y-140},610 ${y+170},200 ${y+150} C -30 ${y+125},-15 ${y-20},170 ${y+10} C 410 ${y+40},330 ${y+125},190 ${y+65} C 90 ${y+15},50 ${y+100},350 ${y+140} L 640 300 L -180 300 Z`;
     case "dunes": return `M -180 ${y} C 80 ${y-35},150 ${y+70},305 ${y+5} S 510 ${y-60},640 ${y+25} ${bottom}`;

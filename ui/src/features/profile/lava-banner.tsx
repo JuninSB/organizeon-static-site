@@ -2,10 +2,11 @@ import { useId } from "react";
 import { LAVA_PATTERNS, lavaPalette, lavaPattern } from "./profile-banner";
 import { fluidPath } from "./fluid-paths";
 /** Full-frame layered fabric, marble and wave surfaces with directional shading. */
-export function LavaBanner({ seed, color }: { seed: string; color: string }) {
+export function LavaBanner({ seed, color, material }: { seed: string; color: string; material?: string }) {
   const id = "oo-fluid-" + useId().replace(/[^a-z0-9_-]/gi, "");
-  const { family, layers } = lavaPattern(seed);
-  const base = lavaPalette(color, .5), familyIndex = LAVA_PATTERNS.indexOf(family);
+  const pattern = lavaPattern(seed);
+  const family = material || pattern.family, layers = pattern.layers.map(layer=>({...layer,style:{...layer.style,animationName:`oo-fluid-${material || pattern.family}`}}));
+  const base = lavaPalette(color, .5), familyIndex = (LAVA_PATTERNS as readonly string[]).indexOf(family);
   return <svg className="oo-lava-field" aria-hidden="true" data-pattern={family} viewBox="0 0 440 120" preserveAspectRatio="none">
     <defs>
       <linearGradient id={`${id}-base`} x2="1" y2="1"><stop stopColor={base.body}/><stop offset=".5" stopColor={base.shade}/><stop offset="1" stopColor={base.light}/></linearGradient>
@@ -20,10 +21,11 @@ export function LavaBanner({ seed, color }: { seed: string; color: string }) {
       </linearGradient>;})}
     </defs>
     <rect width="440" height="120" fill={`url(#${id}-base)`}/>
+    {family === "bubbles" || family === "stars" ? <g>{layers.map((layer,index)=><g key={index} className="oo-fluid-layer" style={layer.style}><circle cx={35+index*73} cy={25+index%3*34} r={family === "stars" ? 2 : 12+layer.tone*13} fill={family === "stars" ? base.light : "none"} stroke={base.light} strokeWidth="1.5" opacity=".65" /></g>)}</g> :
     <g filter={`url(#${id}-flow)`}>
       {layers.map((layer,index)=><g key={index} className="oo-fluid-layer oo-lava-depth" style={layer.style} opacity={family === "mist" ? .42 : family === "aurora" ? .65 : .88}>
         <path d={fluidPath(family,index,layer.tone)} fill={`url(#${id}-fold-${index})`}/>
       </g>)}
-    </g>
+    </g>}
   </svg>;
 }

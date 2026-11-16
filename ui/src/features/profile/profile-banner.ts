@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 export const LAVA_PATTERNS = ["silk", "vortex", "dunes", "diagonal", "folds", "aurora", "marble", "waves", "helix", "cascade", "storm", "mist"] as const;
+export const EXTRA_PATTERNS = ["slime", "bubbles", "gradient", "lava", "stars", "rainbow"] as const;
 function seedValue(seed: string, index: number) {
   const part = seed.slice(index * 4, index * 4 + 4);
   if (/^[a-f0-9]{4}$/i.test(part)) return Number.parseInt(part, 16) / 65535;

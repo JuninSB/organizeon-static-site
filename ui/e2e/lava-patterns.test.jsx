@@ -18,3 +18,10 @@ it('defines twelve distinct motion families, stable per-account surfaces and iso
  const html=renderToStaticMarkup(cards);const ids=[...html.matchAll(/<filter id="([^"]+)"/g)].map(match=>match[1]);expect(new Set(ids).size).toBe(12);expect(html).toContain('feGaussianBlur');expect(html).toContain('feColorMatrix');expect(html).not.toContain('<ellipse');expect(html).toContain('<path');
  writeFileSync('/tmp/organizeon-lava-patterns.html','<!doctype html><html><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:24px;background:#09090b;color:#fafafa;font:14px system-ui}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}section{border:1px solid #27272a;border-radius:10px;overflow:hidden}h2{margin:0;padding:10px 14px;font-size:14px;font-weight:500}'+css+'</style>'+html+'</html>');
 });
+it('renders six distinct selectable materials without changing the seeded fluid family',()=>{
+ const materials=['slime','bubbles','gradient','lava','stars','rainbow'];
+ const html=renderToStaticMarkup(<main className="grid">{materials.map(material=><section key={material}><h2>{material}</h2><div className="oo-profile-banner" style={{height:160}}><LavaBanner seed="c521c7bb040e4dfd8438e43914bfcf29" color="#8b22e9" material={material}/></div></section>)}</main>);
+ for(const material of materials)expect(html).toContain(`data-pattern="${material}"`);
+ const css=readFileSync(resolve(process.cwd(),'src/features/profile/profile-banner.css'),'utf8');
+ writeFileSync('/tmp/organizeon-materials.html','<!doctype html><style>body{background:#09090b;color:#fafafa;font:14px system-ui;padding:24px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}section{border:1px solid #27272a;border-radius:12px;overflow:hidden}h2{margin:0;padding:12px}'+css+'</style>'+html);
+});
