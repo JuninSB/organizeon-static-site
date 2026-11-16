@@ -1,7 +1,7 @@
 {
-  "version": "v2-75dbede5503bf031",
-  "generatedAt": "2026-11-16T01:06:25.094Z",
-  "totalBytes": 11385432,
+  "version": "v2-8dd74292802c9cc9",
+  "generatedAt": "2026-11-16T01:09:08.610Z",
+  "totalBytes": 11390054,
   "files": [
     {
       "path": "404.html",
@@ -780,13 +780,13 @@
     },
     {
       "path": "ui-dist/client-ui.js",
-      "size": 754847,
-      "sha256": "ab114dc7e08a656f9e3aa1392bbbb60794ff75642e6e3ec6ad592a35f6c4ad25"
+      "size": 758494,
+      "sha256": "32b72923992caad80b3967bb8049796d31632de2867c3f9713c1bd9de9e50920"
     },
     {
       "path": "ui-dist/client-ui.css",
-      "size": 178202,
-      "sha256": "287b47c5123a0690171baa414b14ceb51b1d79ac09b0c1aeee3b13533d474264"
+      "size": 179177,
+      "sha256": "11dbe86eac8d6c40078ffae74fef68e722b2cbc8ed2d5fea44ca18e3de529569"
     }
   ]
 }
