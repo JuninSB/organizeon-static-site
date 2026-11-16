@@ -1,7 +1,7 @@
 {
-  "version": "v2-f21c2a18cbe1a99f",
-  "generatedAt": "2026-11-16T15:00:58.678Z",
-  "totalBytes": 13012644,
+  "version": "v2-8f655f2139910977",
+  "generatedAt": "2026-11-16T15:36:30.227Z",
+  "totalBytes": 13105935,
   "files": [
     {
       "path": "404.html",
@@ -11,7 +11,7 @@
     {
       "path": "admin.html",
       "size": 731,
-      "sha256": "89758e60c83225e8ccf26e7763fe4c392d90e3073e7f6f855368e5cf0479d249"
+      "sha256": "8125a565c3e4f80acfcd77de5961c19749bda78d8e18870c9c42ef1c9b557797"
     },
     {
       "path": "admin.js",
@@ -775,23 +775,23 @@
     },
     {
       "path": "ui-dist/client-ui.js",
-      "size": 911085,
-      "sha256": "017922026a1b75c534864c6ce29ee65aa681f5602b4d6737594de426e35357bf"
+      "size": 956790,
+      "sha256": "ec00f66412676fd379141b6f5eab52c28d00ad33e00e1fca972bba29276ed935"
     },
     {
       "path": "ui-dist/client-ui.css",
-      "size": 187106,
-      "sha256": "51f752eb71fc980f9be99b409ec5ddce876429a1a2f1b8d8074e0f9ae44bce47"
+      "size": 188206,
+      "sha256": "90095b49157d5236bcf7d32e45e65451f15d3a90f56e378e0a597e63829082e7"
     },
     {
       "path": "ui-dist/admin-ui.js",
-      "size": 1336859,
-      "sha256": "b71138a8054c19f5c55ae73b0ba3c5b3df2e4ec986d858bcbe648691f8a14b2f"
+      "size": 1382245,
+      "sha256": "a3764d2a0d583fa2530868f58fd6849adb13894e92a8a5eaf1cf36a2054369f2"
     },
     {
       "path": "ui-dist/admin-ui.css",
-      "size": 187106,
-      "sha256": "51f752eb71fc980f9be99b409ec5ddce876429a1a2f1b8d8074e0f9ae44bce47"
+      "size": 188206,
+      "sha256": "90095b49157d5236bcf7d32e45e65451f15d3a90f56e378e0a597e63829082e7"
     },
     {
       "path": "core/proxy/scramjet-bootstrap.js",
