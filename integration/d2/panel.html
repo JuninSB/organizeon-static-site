@@ -1,0 +1,105 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0d0c"><title>OrganizeOn — Arquivos</title><style>
+:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#090d0b;color:#edf7f0}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#17372a 0,transparent 42%),#090d0b}main{width:min(100% - 28px,920px);margin:0 auto;padding:34px 0 60px}.brand{display:flex;align-items:center;gap:12px;margin-bottom:24px}.mark{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#39d98a;color:#07120c;font-weight:900;font-size:22px}.brand h1{font-size:22px;margin:0}.brand small{display:block;color:#91a89a;margin-top:2px}.card{border:1px solid #26382d;border-radius:18px;background:rgba(19,29,23,.94);box-shadow:0 18px 55px #0005;padding:24px;margin:16px 0}.login{max-width:470px;margin:12vh auto}.hrow,.actions,.file{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}h2{font-size:18px;margin:0 0 16px}input,textarea{width:100%;border:1px solid #38513f;border-radius:10px;background:#0b130e;color:#effff4;padding:12px;margin:6px 0 10px;font:inherit}textarea{min-height:220px;resize:vertical;font-family:ui-monospace,monospace}button{border:0;border-radius:10px;background:#39d98a;color:#07120c;font:inherit;font-weight:700;padding:11px 15px;cursor:pointer}button.secondary{background:#26382d;color:#d9f5e2}button.danger{background:#8e3535;color:#fff}button:hover{filter:brightness(1.1)}.muted{color:#91a89a;font-size:14px}.msg{min-height:22px;color:#a7e8bc}.upload-progress{display:none;height:8px;margin:5px 0 2px;overflow:hidden;border-radius:999px;background:#17271d;border:1px solid #38513f}.upload-progress.active{display:block}.upload-progress span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#39d98a,#62e8b0);transition:width .12s ease}.upload-progress.complete span{background:#39d98a}.file{padding:14px 0;border-bottom:1px solid #26382d}.file:last-child{border-bottom:0}.file b{word-break:break-word}.meta{display:block;color:#91a89a;font-size:12px;margin-top:4px}.tools{display:flex;gap:7px;flex-wrap:wrap}.tools button{padding:8px 10px;font-size:13px}.hidden{display:none!important}@media(max-width:560px){main{width:min(100% - 18px,920px);padding-top:20px}.card{padding:18px;border-radius:15px}.file{align-items:flex-start}.tools{width:100%}.tools button{flex:1}.login{margin-top:8vh}}
+#login.enhanced{padding:0;margin:0;border:0;background:transparent;box-shadow:none;max-width:none}#login.enhanced>:not(#d2-login-ui){display:none}#d2-login-ui{visibility:hidden;position:fixed;inset:0;z-index:1000;background:#09090b}#app.enhanced>:not(#d2-dashboard-ui){display:none}#d2-dashboard-ui{visibility:hidden;position:fixed;inset:0;z-index:999;overflow:auto;background:#09090b}
+/* Legacy controls are adapters only; never paint them during module loading. */
+body>main>.brand{display:none}
+#login>:not(#d2-login-ui):not([data-page-error]),#app>:not(#d2-dashboard-ui):not([data-page-error]){display:none}
+#login:not(.enhanced),#app:not(.enhanced){border:0;background:transparent;box-shadow:none;padding:0;margin:0}
+#login:not(.hidden):not(.enhanced):not([data-failed])::before,#app:not(.hidden):not(.enhanced):not([data-failed])::before{content:"Carregando interface…";position:fixed;inset:0;display:grid;place-items:center;background:#09090b;color:#a1a1aa;font:14px system-ui}
+</style></head><body><main><header class="brand"><div class="mark">O</div><div><h1>OrganizeOn</h1><small>Painel de arquivos</small></div></header><section id="login" class="card login"><h2>Entrar</h2><p class="muted">Gerencie seus arquivos e hospede scripts.</p><input id="user" placeholder="Usuário" autocomplete="username"><input id="pass" type="password" placeholder="Senha" autocomplete="current-password"><button id="loginBtn" onclick="login()">Entrar</button><p id="loginMsg" class="msg"></p></section><section id="app" class="hidden"><div class="card"><div class="hrow"><div><b id="who"></b><div class="muted">Seus arquivos ficam organizados aqui.</div></div><button class="secondary" onclick="logout()">Sair</button></div></div><section class="card"><h2>Adicionar arquivo</h2><div class="actions"><label><input id="upload" type="file"></label><button onclick="uploadFile()">Enviar arquivo</button><button class="secondary" onclick="openText()">Novo texto</button></div><p id="msg" class="msg"></p><div id="uploadProgress" class="upload-progress" role="progressbar" aria-label="Progresso do upload" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="uploadProgressBar"></span></div><p id="uploadProgressText" class="muted" aria-live="polite"></p></section><section class="card"><div class="hrow"><h2>Meus arquivos</h2><button class="secondary" onclick="refresh()">Atualizar</button></div><div id="files"><p class="muted">Carregando...</p></div></section><section id="editorCard" class="card hidden"><div class="hrow"><h2 id="editorTitle">Novo texto</h2><button class="secondary" onclick="closeEditor()">Fechar</button></div><input id="textName" placeholder="Nome do arquivo (ex.: script.txt)"><textarea id="editor" placeholder="Cole ou escreva seu código aqui..."></textarea><button onclick="saveText()">Salvar texto</button><p id="editorMsg" class="msg"></p></section></section></main><script>
+const API='https://api.organizeon.com.br/827e7h3heuw823eh';const MAX_UPLOAD_SIZE=100*1024*1024;let token=localStorage.getItem('organizeon_panel_token'),editing=null,canUploadLarge=false;const $=x=>document.getElementById(x);async function api(path,opt={}){opt.headers={...(opt.headers||{}),...(token?{Authorization:'Bearer '+token}:{})};const r=await fetch(API+path,opt);if(r.status===401){logout();throw Error('Sessão expirada')}const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'erro');return d}async function login(){const m=$('loginMsg');m.textContent='Entrando...';try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('user').value,password:$('pass').value})}),d=await r.json();if(!r.ok)throw Error(d.error||'credenciais inválidas');token=d.token;localStorage.setItem('organizeon_panel_token',token);m.textContent='Login realizado.';await showApp()}catch(e){m.textContent='Erro: '+e.message}}async function showApp(){try{const s=await api('/auth/session');$('who').textContent='Usuário: '+s.username;canUploadLarge=s.role==='ultra_admin'||s.role==='owner';$('login').classList.add('hidden');$('app').classList.remove('hidden');await refresh()}catch(e){$('loginMsg').textContent='Erro: '+e.message}}function logout(){token=null;localStorage.removeItem('organizeon_panel_token');$('app').classList.add('hidden');$('login').classList.remove('hidden')}function fmt(n){return n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB'}function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function refresh(){const d=await api('/files');$('files').innerHTML=d.files.length?d.files.map(f=>`<div class="file"><div><b>${esc(f.name)}</b><span class="meta">${fmt(f.size)} · ${new Date(f.updatedAt).toLocaleString()}</span></div><div class="tools">${f.contentType.startsWith('text/')?`<button class="secondary" onclick="edit('${f.id}')">Editar</button>`:''}<button onclick="copyLink('${f.id}','${esc(f.name)}')">Copiar link</button><button class="danger" onclick="removeFile('${f.id}')">Apagar</button></div></div>`).join(''):'<p class="muted">Nenhum arquivo ainda.</p>'}function uploadFile(){const f=$('upload').files[0];if(!f)return;const progress=$('uploadProgress'),bar=$('uploadProgressBar'),progressText=$('uploadProgressText'),msg=$('msg');if(!canUploadLarge&&f.size>MAX_UPLOAD_SIZE){msg.textContent='Erro: arquivo excede o limite de 100 MB';progressText.textContent='Limite máximo: 100 MB';progress.classList.remove('active');return}progress.classList.add('active');progress.classList.remove('complete');bar.style.width='0%';progress.setAttribute('aria-valuenow','0');progressText.textContent='Preparando upload...';msg.textContent='';const xhr=new XMLHttpRequest();xhr.open('POST',API+'/files');if(token)xhr.setRequestHeader('Authorization','Bearer '+token);xhr.setRequestHeader('Content-Type',f.type||'application/octet-stream');xhr.setRequestHeader('X-File-Name',encodeURIComponent(f.name));xhr.upload.addEventListener('progress',event=>{if(!event.lengthComputable){progressText.textContent='Enviando '+fmt(event.loaded)+'...';return}const percent=Math.min(100,event.loaded/event.total*100);const shownPercent=percent<1?percent.toFixed(2):Math.round(percent);bar.style.width=percent+'%';progress.setAttribute('aria-valuenow',String(percent));progressText.textContent='Enviando '+shownPercent+'% · '+fmt(event.loaded)+' / '+fmt(event.total)});xhr.onload=async()=>{let data={};try{data=JSON.parse(xhr.responseText||'{}')}catch{}if(xhr.status===401){logout();msg.textContent='Erro: Sessão expirada';progressText.textContent='Sessão expirada';return}if(xhr.status<200||xhr.status>=300){const error=data.error||'erro no upload';msg.textContent='Erro: '+error;progressText.textContent='Upload não concluído';return}bar.style.width='100%';progress.setAttribute('aria-valuenow','100');progress.classList.add('complete');progressText.textContent='Concluído · '+fmt(f.size);msg.textContent='Arquivo enviado.';$('upload').value='';try{await refresh()}catch(error){msg.textContent='Arquivo enviado, mas a lista não pôde ser atualizada: '+error.message}};xhr.onerror=()=>{msg.textContent='Erro: falha de rede';progressText.textContent='Upload interrompido'};xhr.onabort=()=>{msg.textContent='Erro: upload cancelado';progressText.textContent='Upload cancelado'};xhr.send(f)}function openText(){editing=null;$('editorTitle').textContent='Novo texto';$('textName').value='script.txt';$('editor').value='';$('editorMsg').textContent='';$('editorCard').classList.remove('hidden');$('editor').focus()}async function edit(id){try{const d=await api('/files/'+id);editing=id;$('editorTitle').textContent='Editar texto';$('textName').value=d.file.name;$('editor').value=d.content||'';$('editorMsg').textContent='';$('editorCard').classList.remove('hidden');$('editor').focus()}catch(e){alert(e.message)}}async function saveText(){const name=$('textName').value.trim()||'script.txt',body=$('editor').value;try{if(editing){await api('/files/'+editing,{method:'PUT',headers:{'Content-Type':'text/plain;charset=utf-8'},body});}else{await api('/files',{method:'POST',headers:{'Content-Type':'text/plain','X-File-Name':encodeURIComponent(name)},body});}$('editorMsg').textContent='Texto salvo.';await refresh()}catch(e){$('editorMsg').textContent='Erro: '+e.message}}function closeEditor(){$('editorCard').classList.add('hidden');editing=null}async function removeFile(id){if(!confirm('Apagar este arquivo?'))return;try{await api('/files/'+id,{method:'DELETE'});await refresh()}catch(e){alert(e.message)}}async function copyLink(id,name){const u='https://organizeon.com.br/d2/files/'+encodeURIComponent(name);await navigator.clipboard.writeText(u);$('msg').textContent='Link público copiado.'}if(token)showApp();
+</script><script>
+window.D2PageFailure = (section, error, retry) => {
+  const details = String(error?.stack || error?.message || error || 'Erro desconhecido').replace(/Bearer\s+[^\s]+/gi, 'Bearer [oculto]').replace(/([?&](?:token|password|secret)=)[^&\s]+/gi, '$1[oculto]');
+  section.dataset.failed = 'true';
+  section.classList.remove('enhanced');
+  const page = document.createElement('section');
+  page.dataset.pageError = 'true';
+  page.style.cssText = 'position:fixed;inset:0;z-index:1001;overflow:auto;display:grid;place-content:center;gap:16px;padding:24px;background:#09090b;color:#fafafa;font:14px system-ui';
+  const face = document.createElement('div'); face.textContent = ":'("; face.style.cssText = 'font-size:40px;color:#a1a1aa';
+  const title = document.createElement('h2'); title.textContent = 'Um erro ocorreu ao carregar esta página!';
+  const pre = document.createElement('pre'); pre.textContent = details; pre.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;max-width:680px;max-height:40vh;overflow:auto;padding:16px;background:#18181b;border:1px solid #27272a;border-radius:8px';
+  const actions = document.createElement('div'); actions.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap';
+  const copy = document.createElement('button'); copy.textContent = 'Copiar erro'; copy.style.cssText = 'background:#fafafa;color:#09090b';
+  copy.onclick = async () => { try { await navigator.clipboard.writeText(details); copy.textContent = 'Erro copiado'; } catch { copy.textContent = 'Selecione o erro para copiar'; } };
+  const reload = document.createElement('button'); reload.textContent = 'Tentar novamente'; reload.className = 'secondary'; reload.onclick = retry || (() => location.reload());
+  actions.append(copy, reload); page.append(face, title, pre, actions);
+  section.querySelector('[data-page-error]')?.remove(); section.append(page);
+};
+</script><script type="module">
+const uiOrigin = "https://juninsb.github.io/organizeon-static-site/ui-dist/";
+(async () => {
+  const host = document.createElement("div"); host.id = "d2-login-ui";
+  const section = document.getElementById("login"); section.appendChild(host);
+  let finished = false;
+  const fallback = (error = new Error("Tempo limite ao carregar o módulo de login.")) => { if (finished) return; finished = true; host.remove(); D2PageFailure(section, error); };
+  const timeout = setTimeout(fallback, 12000);
+  try {
+    const module = await import(uiOrigin + "client-ui.js?v=shared-ui-5873a21-release");
+    if (finished) return;
+    const cleanup = module.mountD2Login(host, async (username, password) => {
+      document.getElementById("user").value = username;
+      document.getElementById("pass").value = password;
+      await login();
+      document.getElementById("pass").value = "";
+      if (!section.classList.contains("hidden")) throw new Error(document.getElementById("loginMsg").textContent.replace(/^Erro:\s*/, "") || "Não foi possível entrar.");
+    }, uiOrigin + "client-ui.css?v=shared-ui-5873a21-release");
+    const stylesheet = host.shadowRoot.querySelector('link[rel="stylesheet"]');
+    const revealLogin = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
+      host.style.visibility = "visible";
+      section.classList.add("enhanced");
+      
+    };
+    const failLoginStyles = () => { cleanup(); clearTimeout(timeout); fallback(new Error("Não foi possível carregar os estilos do login.")); };
+    stylesheet.addEventListener("load", revealLogin, { once: true });
+    stylesheet.addEventListener("error", failLoginStyles, { once: true });
+    // A cached stylesheet can finish before the listener above is attached.
+    if (stylesheet.sheet) revealLogin();
+  } catch (error) { clearTimeout(timeout); fallback(error); console.error("Falha ao carregar tela de login.", error); }
+})();
+</script><script type="module">
+const dashboardOrigin = "https://juninsb.github.io/organizeon-static-site/ui-dist/";
+const panel = document.getElementById("app");
+let dashboardHost = null, dashboardCleanup = null, mounting = false;
+async function updateDashboard() {
+  if (panel.classList.contains("hidden")) {
+    if (dashboardCleanup) dashboardCleanup();
+    dashboardCleanup = null;
+    dashboardHost?.remove(); dashboardHost = null;
+    if (panel.classList.contains("enhanced")) panel.classList.remove("enhanced");
+    return;
+  }
+  if (dashboardHost || mounting) return;
+  mounting = true;
+  const host = document.createElement("div"); host.id = "d2-dashboard-ui"; panel.appendChild(host); dashboardHost = host;
+  try {
+    const [module, session] = await Promise.all([import(dashboardOrigin + "client-ui.js?v=shared-ui-5873a21-release"), api("/auth/session")]);
+    if (panel.classList.contains("hidden") || dashboardHost !== host) { host.remove(); return; }
+    const upload = (file, progress) => new Promise((resolve, reject) => {
+      if (!canUploadLarge && file.size > MAX_UPLOAD_SIZE) return reject(new Error("Arquivo excede o limite de 100 MB."));
+      const xhr = new XMLHttpRequest(); xhr.open("POST", API + "/files");
+      if (token) xhr.setRequestHeader("Authorization", "Bearer " + token);
+      xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+      xhr.setRequestHeader("X-File-Name", encodeURIComponent(file.name));
+      xhr.upload.addEventListener("progress", (event) => { if (event.lengthComputable) progress(Math.min(100, event.loaded / event.total * 100)); });
+      xhr.onload = () => { if (xhr.status === 401) { logout(); reject(new Error("Sessão expirada.")); return; } if (xhr.status < 200 || xhr.status >= 300) { let error = "Falha no envio."; try { error = JSON.parse(xhr.responseText).error || error; } catch {} reject(new Error(error)); return; } resolve(); };
+      xhr.onerror = () => reject(new Error("Falha de rede.")); xhr.onabort = () => reject(new Error("Upload cancelado.")); xhr.send(file);
+    });
+    dashboardCleanup = module.mountD2Dashboard(host, { username: session.username, role: session.role, request: api, upload, logout }, dashboardOrigin + "client-ui.css?v=shared-ui-5873a21-release");
+    const link = host.shadowRoot.querySelector('link[rel="stylesheet"]');
+    const revealDashboard = () => { host.style.visibility = "visible"; panel.classList.add("enhanced"); };
+    link.addEventListener("load", revealDashboard, { once: true });
+    link.addEventListener("error", () => { dashboardCleanup?.(); dashboardCleanup = null; host.remove(); dashboardHost = null; D2PageFailure(panel, new Error("Não foi possível carregar os estilos do dashboard.")); }, { once: true });
+    // Cached CSS may already be ready when the React mount returns.
+    if (link.sheet) revealDashboard();
+  } catch (error) { host.remove(); dashboardHost = null; D2PageFailure(panel, error); console.error("Falha ao carregar o painel D2:", error); }
+  finally { mounting = false; }
+}
+let wasHidden = panel.classList.contains("hidden");
+new MutationObserver(() => { const hidden = panel.classList.contains("hidden"); if (hidden === wasHidden) return; wasHidden = hidden; void updateDashboard(); }).observe(panel, { attributes: true, attributeFilter: ["class"] });
+void updateDashboard();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5b2ab8cb91aec05',t:'MTc5NDc5MTk5NA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5b2ab8cb91aec05',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body></html>
