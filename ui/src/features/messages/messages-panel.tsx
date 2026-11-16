@@ -1,3 +1,4 @@
+import { ConversationActions } from "./conversation-actions";
 import { AnimatePresence } from "motion/react";
 import { m } from "@/core/motion";
 import { ConversationRow } from "./conversation-row";
@@ -31,7 +32,7 @@ import { MessageThread } from "./message-thread";
 import { MessagesSettings } from "./messages-settings";
 import { RequestsList } from "./requests-list";
 import { NewConversation } from "./new-conversation";
-import type { DmPerson } from "./types";
+import type { DmPerson, DmConversation } from "./types";
 const ProfileDialog = lazy(() => import("@/features/profile/profile-dialog"));
 function useViewport() {
   const measure = () => ({
@@ -78,6 +79,8 @@ function PersonProfile({
 export default function MessagesPanel() {
   const state = useMessagesState(),
     viewport = useViewport();
+  const [conversationMenu, setConversationMenu] =
+    useState<DmConversation | null>(null);
   const [listSearchOpen, setListSearchOpen] = useState(false);
   const [query, setQuery] = useState(""),
     [person, setPerson] = useState<DmPerson | null>(null);
@@ -289,6 +292,7 @@ export default function MessagesPanel() {
                       conversation={c}
                       username={state.username}
                       selected={state.selectedId === c.id}
+                      onActions={() => setConversationMenu(c)}
                       onOpen={() => messagesStore.select(c.id)}
                     />
                   ))
@@ -355,6 +359,11 @@ export default function MessagesPanel() {
           </div>
         </DialogContent>
       </Dialog>
+      <ConversationActions
+        conversation={conversationMenu}
+        onClose={() => setConversationMenu(null)}
+        onProfile={setPerson}
+      />
       {person && (
         <PersonProfile
           person={person}

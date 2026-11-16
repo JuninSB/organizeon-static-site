@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AnimatePresence } from "motion/react";
 import { MotionRoot, MotionPane } from "@/core/motion";
 import { ArrowLeft, KeyRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ import {
   finishPasswordChange,
   type Profile,
 } from "@/services/profile-service";
-import { updateProfile } from "@/stores/profile-store";
+import { saveOptimisticProfile } from "@/stores/profile-store";
 import { ProfileCard, type ProfileField } from "./profile-card";
 import { ProfileFieldEditor } from "./profile-field-editor";
 const titles = {
@@ -68,7 +67,10 @@ function ProfileSurface({
       onOpenChangeComplete={complete}
       swipeDirection="down"
     >
-      <DrawerContent className="oo-profile-drawer" contentClassName="px-0">
+      <DrawerContent
+        className="oo-profile-drawer oo-profile-expanded"
+        contentClassName="px-0"
+      >
         <DrawerTitle className="sr-only">{title}</DrawerTitle>
         <DrawerDescription className="sr-only">{description}</DrawerDescription>
         {children}
@@ -107,8 +109,7 @@ export default function ProfileDialog({
   const compact = useCompactProfile();
   const [open, setOpen] = useState(true),
     [editing, setEditing] = useState<ProfileField | null>(null),
-    [password, setPassword] = useState(false),
-    [saving, setSaving] = useState(false);
+    [password, setPassword] = useState(false);
   const title = editing ? titles[editing] : editable ? "Meu perfil" : "Perfil";
   return (
     <MotionRoot>
@@ -117,9 +118,7 @@ export default function ProfileDialog({
         open={open}
         title={title}
         description={`Perfil de ${profile.displayName}, ${role}.`}
-        onOpenChange={(next) => {
-          if (!saving) setOpen(next);
-        }}
+        onOpenChange={setOpen}
         onClosed={onClose}
       >
         <div className="relative">
@@ -130,7 +129,6 @@ export default function ProfileDialog({
                 variant="secondary"
                 size="icon-sm"
                 aria-label="Voltar ao perfil"
-                disabled={saving}
                 onClick={() => setEditing(null)}
               >
                 <ArrowLeft className="size-4" />
@@ -140,20 +138,20 @@ export default function ProfileDialog({
               type="button"
               variant="secondary"
               size="icon-sm"
-              className="rounded-full"
+              className="size-10 rounded-full"
               aria-label="Fechar perfil"
-              disabled={saving}
               onClick={() => setOpen(false)}
             >
               <X className="size-4" />
             </Button>
           </div>
-          <AnimatePresence mode="wait" initial={false}>
-            <MotionPane
-              key={editing || "profile"}
-              className={editing ? "px-5 pb-5 pt-14" : undefined}
-            >
-              <div data-base-ui-swipe-ignore={editing ? "" : undefined}>{editing && editable ? (
+
+          <MotionPane
+            key={editing || "profile"}
+            className={editing ? "px-5 pb-5 pt-14" : undefined}
+          >
+            <div data-base-ui-swipe-ignore={editing ? "" : undefined}>
+              {editing && editable ? (
                 <>
                   <h2 className="mb-4 text-lg font-semibold">
                     {titles[editing]}
@@ -164,15 +162,11 @@ export default function ProfileDialog({
                     profile={profile}
                     onCancel={() => setEditing(null)}
                     onSave={async (patch) => {
-                      setSaving(true);
+                      setEditing(null);
                       try {
-                        updateProfile(
-                          username,
-                          await profileService.save(patch),
-                        );
-                        setEditing(null);
-                      } finally {
-                        setSaving(false);
+                        await saveOptimisticProfile(username, patch);
+                      } catch {
+                        /* Shared feedback owns the rollback notice. */
                       }
                     }}
                   />
@@ -203,9 +197,9 @@ export default function ProfileDialog({
                     </section>
                   )}
                 </>
-              )}</div>
-            </MotionPane>
-          </AnimatePresence>
+              )}
+            </div>
+          </MotionPane>
         </div>
       </ProfileSurface>
       {password && editable && (

@@ -13,6 +13,7 @@ export type DmAttachment = {
   size: number;
 };
 export type DmMessage = {
+  clientNonce?: string;
   id: string;
   seq: number;
   conversationId: string;
@@ -35,6 +36,8 @@ export type DmConversation = {
   peer: DmPerson;
   createdAt: string;
   updatedAt: string;
+  favorite?: boolean;
+  pinned?: boolean;
   muted: boolean;
   archived: boolean;
   blockedByMe: boolean;
@@ -50,6 +53,7 @@ export type DmSettings = {
   previews: boolean;
   desktop: boolean;
   quickReaction: string;
+  showSendStatus?: boolean;
 };
 export type DmEvent = {
   seq: number;

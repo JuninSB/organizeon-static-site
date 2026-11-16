@@ -102,3 +102,13 @@ Imagens privadas de até 1 MiB carregam quando entram na área visível; mídias
 Validação do Motion: o teste de navegador registrou opacidades intermediárias reais durante a abertura dos grupos, além de verificar o arraste nativo, as ações, o perfil editável, o recorte da foto e a prévia autenticada de imagem. Capturas mobile e desktop foram inspecionadas. Os testes unitários passaram após repetir isoladamente o teste de arquivos D2 que excedeu o prazo durante os builds concorrentes. O lint das fontes do D3 não apresentou erros; há um aviso anterior sobre a cópia deliberada de um Set no store. O lint sem caminho também percorre arquivos gerados/dependências e não deve ser usado para corrigir bibliotecas externas.
 
 A versão final passou também no fluxo completo com `prefers-reduced-motion: reduce`: o Drawer não manteve a transição espacial e os gestos/ações continuaram funcionais. Perfis no cliente e no D2 passaram nos testes de edição, cancelamento e foto. O Drawer oferece `contentClassName` para composições sem padding, evitando sobrepor regras de layout para desenhar o banner até a borda.
+
+## Envio otimista e confirmações
+
+A fila local (`stores/message-outbox.ts`) publica a mensagem pendente imediatamente. Ela fica atenuada até a resposta do backend, sem inventar entrega ou leitura. Anexos têm prévia local e progresso medido pelo transporte XHR. Aos 100% dos bytes, o indicador passa a uma espera indeterminada até a confirmação. Falhas ficam em vermelho e permitem nova tentativa com o mesmo nonce, evitando duplicação quando a resposta anterior se perde. A fila não persiste arquivos ou mensagens privadas em localStorage.
+
+Em Configurações de mensagens, **Mostrar textos de envio** vem desativado. A preferência `showSendStatus` é validada e persistida por conta no backend. Desativá-la oculta somente os textos de andamento; indicadores visuais, rótulos acessíveis e erros continuam disponíveis.
+
+Favoritar, fixar, silenciar e editar o perfil podem atualizar imediatamente com reversão em falhas. Confirmações de envio, leitura pelo destinatário, senha, permissões administrativas e autorização Xiaomi continuam dependentes de respostas reais. Filas e revisões impedem respostas antigas de substituir alterações recentes.
+
+Referências: [React useOptimistic](https://react.dev/reference/react/useOptimistic), [TanStack rollback](https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates), [SWR mutation](https://swr.vercel.app/docs/mutation), [Discord anexos](https://support.discord.com/hc/en-us/articles/25444343291031-File-Attachments-FAQ). A implementação usa os stores existentes, sem adicionar outra biblioteca de estado.

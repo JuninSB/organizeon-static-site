@@ -61,3 +61,10 @@
   outline: 2px solid rgb(var(--ring));
   outline-offset: 2px;
 }
+
+.oo-dm-thread { --dm-mention: 234 179 8; }
+.oo-dm-mentioned { background: rgb(var(--dm-mention) / .09); box-shadow: inset 3px 0 rgb(var(--dm-mention) / .8); }
+.oo-upload-progress { appearance: none; display: block; height: 4px; width: 100%; overflow: hidden; border: 0; border-radius: 4px; background: rgb(var(--card)); }
+.oo-upload-progress::-webkit-progress-bar { background: rgb(var(--card)); }
+.oo-upload-progress::-webkit-progress-value { background: rgb(var(--primary)); }
+.oo-upload-progress::-moz-progress-bar { background: rgb(var(--primary)); }

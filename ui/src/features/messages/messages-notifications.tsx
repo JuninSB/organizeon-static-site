@@ -1,3 +1,7 @@
+import {
+  operationFeedback,
+  useOperationFailure,
+} from "@/core/operation-feedback";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
@@ -62,13 +66,31 @@ function Notice({ notice }: { notice: DmNotice }) {
 }
 export function MessagesNotifications() {
   const { notices } = useMessagesState();
+  const failure = useOperationFailure();
   const container = usePortalContainer();
-  if (!notices.length) return null;
+  if (!notices.length && !failure) return null;
   return createPortal(
     <div
       aria-label="Notificações de mensagens"
       className="pointer-events-none fixed right-4 top-4 z-50 grid w-[min(22rem,calc(100vw-2rem))] gap-2"
     >
+      {failure && (
+        <div
+          role="alert"
+          className="pointer-events-auto flex items-start gap-3 rounded-xl border border-border bg-popover p-4 text-sm text-popover-foreground shadow-sm"
+        >
+          <p className="flex-1">{failure}</p>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Fechar aviso de falha"
+            onClick={() => operationFeedback.dismiss()}
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
+      )}
       {notices.map((notice) => (
         <Notice key={notice.id} notice={notice} />
       ))}

@@ -1,3 +1,4 @@
+import { accountSession } from "@/core/account-session";
 import { MotionRoot } from "@/core/motion";
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import {
@@ -22,7 +23,10 @@ export function MessagesProvider({
   const state = useMessagesState();
   const valid = !!username && /^[A-Za-z0-9_.-]{3,32}$/.test(username);
   useEffect(() => {
-    if (valid) return messagesStore.start(username!);
+    if (!valid) return;
+    const release = accountSession.activate(username!);
+    const stop = messagesStore.start(username!);
+    return () => { stop(); release(); };
   }, [username, valid]);
   return (
     <MotionRoot>

@@ -1,4 +1,5 @@
-import { BellOff } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { BellOff, Pin, Star } from "lucide-react";
 import { m } from "@/core/motion";
 import { ProfileAvatar } from "@/features/profile/profile-avatar";
 import { Badge } from "@/components/ui/badge";
@@ -8,12 +9,22 @@ export function ConversationRow({
   username,
   selected,
   onOpen,
+  onActions,
 }: {
   conversation: DmConversation;
   username: string | null;
   selected: boolean;
   onOpen: () => void;
+  onActions: () => void;
 }) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null),
+    origin = useRef<{ x: number; y: number } | null>(null),
+    held = useRef(false);
+  const clear = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  };
+  useEffect(() => () => clear(), []);
   const at = new Date(c.lastMessage?.createdAt || c.updatedAt),
     recent = Date.now() - at.getTime() < 86400000;
   const time = Number.isNaN(at.getTime())
@@ -28,7 +39,49 @@ export function ConversationRow({
     <m.button
       type="button"
       aria-label={`Conversa com ${c.peer.profile.displayName}`}
-      onClick={onOpen}
+      onClick={(event) => {
+        if (held.current) {
+          event.preventDefault();
+          held.current = false;
+          return;
+        }
+        onOpen();
+      }}
+      onPointerDown={(event) => {
+        if (event.pointerType === "mouse") return;
+        held.current = false;
+        origin.current = { x: event.clientX, y: event.clientY };
+        clear();
+        timer.current = setTimeout(() => {
+          held.current = true;
+          onActions();
+        }, 420);
+      }}
+      onPointerMove={(event) => {
+        if (
+          origin.current &&
+          (Math.abs(event.clientX - origin.current.x) > 10 ||
+            Math.abs(event.clientY - origin.current.y) > 10)
+        )
+          clear();
+      }}
+      onPointerUp={clear}
+      onPointerCancel={clear}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        clear();
+        held.current = true;
+        onActions();
+      }}
+      onKeyDown={(event) => {
+        if (
+          event.key === "ContextMenu" ||
+          (event.shiftKey && event.key === "F10")
+        ) {
+          event.preventDefault();
+          onActions();
+        }
+      }}
       whileTap={{ scale: 0.985 }}
       className={`mb-1 flex w-full min-w-0 items-center gap-3 rounded-xl border-0 px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selected ? "bg-accent" : "bg-transparent hover:bg-card"}`}
     >
@@ -57,6 +110,20 @@ export function ConversationRow({
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1.5">
+        <span className="flex gap-1">
+          {c.pinned && (
+            <Pin
+              className="size-3 text-muted-foreground"
+              aria-label="Conversa fixada"
+            />
+          )}
+          {c.favorite && (
+            <Star
+              className="size-3 text-muted-foreground"
+              aria-label="Conversa favorita"
+            />
+          )}
+        </span>
         <time
           className="text-[10px] text-muted-foreground"
           dateTime={Number.isNaN(at.getTime()) ? undefined : at.toISOString()}

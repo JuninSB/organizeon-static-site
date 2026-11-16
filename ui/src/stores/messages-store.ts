@@ -1,3 +1,5 @@
+import { messageOutbox } from "./message-outbox";
+import { operationFeedback } from "@/core/operation-feedback";
 import { useSyncExternalStore } from "react";
 import { AccountApiError } from "@/services/account-api";
 import { dmService } from "@/services/messages-service";
@@ -9,6 +11,7 @@ import type {
   DmAttachment,
   DmNotice,
   DmSettings,
+  DmConversation,
 } from "@/features/messages/types";
 type Thread = {
   messages: DmMessage[];
@@ -107,6 +110,92 @@ function sound() {
     oscillator.stop(audio.currentTime + 0.12);
   } catch {}
 }
+type MetadataPatch = Partial<
+  Pick<DmConversation, "favorite" | "pinned" | "muted" | "archived" | "unread">
+>;
+type PendingMetadata = {
+  base: DmConversation;
+  fields: Set<keyof MetadataPatch>;
+  operations: { token: number; patch: MetadataPatch }[];
+  tail: Promise<void>;
+};
+const optimisticMetadata = new Map<string, PendingMetadata>();
+let metadataToken = 0;
+function overlayMetadata(inbox: Inbox): Inbox {
+  const conversations = inbox.conversations
+    .map((c) => {
+      const pending = optimisticMetadata.get(c.id);
+      if (!pending) return c;
+      const base = Object.fromEntries(
+        [...pending.fields].map((key) => [key, pending.base[key]]),
+      );
+      return Object.assign(
+        { ...c, ...base },
+        ...pending.operations.map((operation) => operation.patch),
+      );
+    })
+    .sort(
+      (a, b) =>
+        Number(!!b.pinned) - Number(!!a.pinned) ||
+        Number(!!b.favorite) - Number(!!a.favorite) ||
+        b.updatedAt.localeCompare(a.updatedAt),
+    );
+  return { ...inbox, conversations };
+}
+function optimisticConversation(
+  id: string,
+  patch: MetadataPatch,
+  send: () => Promise<unknown>,
+): Promise<void> {
+  const row = state.inbox?.conversations.find((c) => c.id === id);
+  if (!row) return Promise.reject(Error("Conversa indisponível."));
+  const currentGeneration = generation;
+  let record = optimisticMetadata.get(id);
+  if (!record) {
+    record = {
+      base: row,
+      fields: new Set(),
+      operations: [],
+      tail: Promise.resolve(),
+    };
+    optimisticMetadata.set(id, record);
+  }
+  const target = record,
+    token = ++metadataToken;
+  for (const key of Object.keys(patch) as (keyof MetadataPatch)[])
+    target.fields.add(key);
+  target.operations.push({ token, patch });
+  revision++;
+  if (state.inbox) set({ inbox: overlayMetadata(state.inbox) });
+  const work = target.tail
+    .catch(() => {})
+    .then(async () => {
+      if (currentGeneration !== generation) return;
+      let failure: unknown;
+      try {
+        await send();
+        target.base = { ...target.base, ...patch };
+      } catch (error) {
+        failure = error;
+      }
+      if (currentGeneration !== generation) return;
+      target.operations = target.operations.filter(
+        (operation) => operation.token !== token,
+      );
+      if (state.inbox) set({ inbox: overlayMetadata(state.inbox) });
+      if (!target.operations.length) optimisticMetadata.delete(id);
+      void messagesStore.refresh();
+      if (failure) {
+        operationFeedback.show(
+          "Não foi possível salvar a alteração. Ela foi desfeita. " +
+            (failure instanceof Error ? failure.message : "Tente novamente."),
+        );
+        throw failure;
+      }
+    });
+  target.tail = work;
+  return work;
+}
 function updateMessage(message: DmMessage) {
   const current = state.threads[message.conversationId];
   if (current)
@@ -126,6 +215,9 @@ export const messagesStore = {
     if (state.username !== username) {
       generation++;
       pendingChanges.clear();
+      optimisticMetadata.clear();
+      messageOutbox.clear();
+      operationFeedback.dismiss();
       if (timer) clearTimeout(timer);
       state = { ...initial(), username };
       cursor = null;
@@ -141,6 +233,9 @@ export const messagesStore = {
       if (--references <= 0) {
         generation++;
         pendingChanges.clear();
+        optimisticMetadata.clear();
+        messageOutbox.clear();
+        operationFeedback.dismiss();
         if (timer) clearTimeout(timer);
         polling = false;
         cursor = null;
@@ -229,31 +324,10 @@ export const messagesStore = {
   },
   async send(id: string) {
     const draft = messagesStore.draft(id);
-    if (!draft.text.trim() && !draft.attachments.length) return;
-    const fingerprint = JSON.stringify({
-      text: draft.text,
-      reply: draft.reply?.id,
-      attachments: draft.attachments.map((a) => a.id),
-    });
-    const nonce =
-      draft.retry?.fingerprint === fingerprint ? draft.retry.nonce : uniqueId();
-    messagesStore.setDraft(id, { retry: { fingerprint, nonce } });
-    const version = generation;
-    const result = await dmService.send(id, {
-      content: draft.text,
-      replyId: draft.reply?.id,
-      attachmentIds: draft.attachments.map((a) => a.id),
-      nonce,
-    });
-    if (version !== generation) return;
-    updateMessage(result.message);
-    messagesStore.setDraft(id, {
-      text: "",
-      reply: null,
-      attachments: [],
-      retry: null,
-    });
-    await messagesStore.refresh();
+    if (!draft.text.trim() && !draft.attachments.length && !messageOutbox.get().drafts[id]?.length) return;
+    const task = messageOutbox.enqueue({ conversationId: id, content: draft.text, replyId: draft.reply?.id || null, attachmentIds: draft.attachments.map(item => item.id) }, message => { updateMessage(message); void messagesStore.refresh(); });
+    messagesStore.setDraft(id, { text: "", reply: null, attachments: [], retry: null });
+    await task;
   },
   async upload(id: string, file: File) {
     const version = generation;
@@ -307,13 +381,13 @@ export const messagesStore = {
   async edit(message: DmMessage, content: string) {
     const result = await dmService.edit(message.id, content);
     updateMessage(result.message);
-    await messagesStore.refresh();
+    void messagesStore.refresh();
   },
   async remove(message: DmMessage) {
     await dmService.remove(message.id);
     const result = await dmService.message(message.id);
     updateMessage(result.message);
-    await messagesStore.refresh();
+    void messagesStore.refresh();
   },
   async forward(message: DmMessage, target: string) {
     const result = await dmService.send(target, {
@@ -326,11 +400,20 @@ export const messagesStore = {
   },
   async conversation(
     id: string,
-    patch: { muted?: boolean; archived?: boolean },
+    patch: {
+      muted?: boolean;
+      archived?: boolean;
+      favorite?: boolean;
+      pinned?: boolean;
+    },
   ) {
-    await dmService.conversation(id, patch);
     if (patch.archived && state.selectedId === id) set({ selectedId: null });
-    await messagesStore.refresh();
+    await optimisticConversation(id, patch, () =>
+      dmService.conversation(id, patch),
+    );
+  },
+  async markRead(id: string) {
+    await optimisticConversation(id, { unread: 0 }, () => dmService.read(id));
   },
   async block(person: DmPerson, blocked: boolean) {
     await dmService.block(person.username, blocked);
@@ -344,7 +427,25 @@ async function poll() {
   const version = generation,
     stamp = revision;
   try {
-    const inbox = await dmService.inbox(cursor);
+    const selectedAtStart =
+      state.open && !document.hidden ? state.selectedId : null;
+    const threadAtStart = selectedAtStart
+      ? state.threads[selectedAtStart]
+      : null;
+    const pageRequest =
+      selectedAtStart && !threadAtStart?.loading
+        ? dmService.messages(
+            selectedAtStart,
+            threadAtStart?.messages.length
+              ? { after: threadAtStart.messages.at(-1)!.seq }
+              : {},
+          )
+        : null;
+    const [rawInbox, nextPage] = await Promise.all([
+      dmService.inbox(cursor),
+      pageRequest,
+    ]);
+    const inbox = overlayMetadata(rawInbox);
     if (version !== generation) return;
     if (
       !Array.isArray(inbox.conversations) ||
@@ -373,12 +474,15 @@ async function poll() {
     cursor = inbox.cursor;
     set({ inbox, connected: true, updatedAt: Date.now(), error: "" });
     const selected = state.selectedId;
-    if (state.open && selected && !document.hidden) {
+    if (
+      state.open &&
+      selected &&
+      !document.hidden &&
+      nextPage &&
+      selectedAtStart === selected
+    ) {
       const current = state.threads[selected] || emptyThread();
-      const page = await dmService.messages(
-        selected,
-        current.messages.length ? { after: current.messages.at(-1)!.seq } : {},
-      );
+      const page = nextPage;
       if (version !== generation || stamp !== revision) return;
       let data = merge(current.messages, page.messages);
       const changed = pendingChanges.get(selected);
@@ -499,7 +603,7 @@ async function poll() {
       if (references)
         timer = setTimeout(
           () => void poll(),
-          document.hidden ? 20000 : state.open ? 1800 : 5000,
+          document.hidden ? 20000 : state.open ? 1000 : 5000,
         );
     }
   }

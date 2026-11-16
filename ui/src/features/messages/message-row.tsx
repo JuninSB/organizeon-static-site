@@ -48,6 +48,7 @@ export function MessageRow({
   quickReaction,
   compact = false,
   showReceipt = true,
+  viewer = "",
 }: {
   message: DmMessage;
   person: DmPerson;
@@ -61,6 +62,7 @@ export function MessageRow({
   quickReaction: string;
   compact?: boolean;
   showReceipt?: boolean;
+  viewer?: string;
 }) {
   const actions = () => {
       if (!message.deleted) onActions(message);
@@ -68,13 +70,18 @@ export function MessageRow({
     reply = () => {
       if (!message.deleted) onReply(message);
     };
+  const mentioned =
+    !own &&
+    message.content
+      .split(/(https?:\/\/[^\s]+|@[A-Za-z0-9_.-]{3,32})/g)
+      .some((part) => part.toLowerCase() === "@" + viewer.toLowerCase());
   const gesture = useMessageGestures({ reply, actions });
   const [hover, setHover] = useState(false);
   return (
     <article
       {...gesture.handlers}
       data-message-id={message.id}
-      className={`group relative flex min-w-0 gap-3 rounded-md px-3 ${compact ? "py-0.5" : "pb-1 pt-3"} hover:bg-accent/20`}
+      className={`group relative flex min-w-0 gap-3 rounded-md px-3 ${mentioned ? "oo-dm-mentioned" : ""} ${compact ? "py-0.5" : "pb-1 pt-3"} hover:bg-accent/20`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onDoubleClick={(event) => {

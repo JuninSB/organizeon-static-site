@@ -31,3 +31,6 @@
     transition-duration: 0ms;
   }
 }
+
+.oo-profile-expanded { height: 92svh; max-height: 92svh; }
+.oo-profile-expanded .oo-drawer-scroll { max-height: calc(92svh - 1.75rem); }

@@ -1,3 +1,5 @@
+import { useMessageOutbox } from "@/stores/message-outbox";
+import { PendingMessageRow } from "./pending-message";
 import { m } from "@/core/motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
@@ -97,10 +99,11 @@ export function MessageThread({
     };
   }, [conversation.id, search, filter, state.inbox?.cursor]);
   const list = filtered || thread?.messages || [];
+  const pending = useMessageOutbox().pending.filter(row=>row.conversationId===conversation.id&&!list.some(message=>message.clientNonce===row.nonce));
   useLayoutEffect(() => {
     if (bottom.current && scroller.current)
       scroller.current.scrollTop = scroller.current.scrollHeight;
-  }, [list.length, list.at(-1)?.id]);
+  }, [list.length, list.at(-1)?.id, pending.length]);
   async function perform(fn: () => Promise<unknown>) {
     setError("");
     try {
@@ -144,7 +147,7 @@ export function MessageThread({
   if (!me) return null;
   return (
     <section
-      className="flex h-full min-h-0 min-w-0 flex-col"
+      className="oo-dm-thread flex h-full min-h-0 min-w-0 flex-col"
       aria-label={`Conversa com ${conversation.peer.profile.displayName}`}
     >
       <header className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
@@ -215,13 +218,10 @@ export function MessageThread({
           >
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => messagesStore.view("settings")}>
-              Configurações de mensagens
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => messagesStore.close()}>
-              Fechar mensagens
-            </DropdownMenuItem>
+          <DropdownMenuContent
+            align="end"
+            className="w-60 max-w-[calc(100vw-2rem)]"
+          >
             <DropdownMenuItem
               onClick={() =>
                 void perform(() =>
@@ -335,6 +335,43 @@ export function MessageThread({
         }}
         aria-label="Histórico de mensagens"
       >
+        {!filtered &&
+          !search &&
+          filter === "all" &&
+          thread &&
+          !thread.hasMore &&
+          !thread.loading && (
+            <section className="px-4 pb-6 pt-5" aria-label="Início da conversa">
+              <button
+                type="button"
+                aria-label={`Ver perfil de ${conversation.peer.profile.displayName}`}
+                onClick={() => onProfile(conversation.peer)}
+              >
+                <ProfileAvatar
+                  profile={conversation.peer.profile}
+                  className="size-16"
+                />
+              </button>
+              <h2 className="mt-4 break-words text-2xl font-semibold tracking-tight">
+                {conversation.peer.profile.displayName}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                @{conversation.peer.username}
+              </p>
+              <p className="mb-4 mt-3 text-sm text-muted-foreground">
+                Este é o início da sua conversa com{" "}
+                {conversation.peer.profile.displayName}.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onProfile(conversation.peer)}
+              >
+                Ver perfil
+              </Button>
+            </section>
+          )}
         {!filtered && !search && filter === "all" && thread?.hasMore && (
           <div className="px-3 pb-3 text-center">
             <Button
@@ -420,6 +457,7 @@ export function MessageThread({
                   </div>
                 )}
                 <MessageRow
+                  viewer={me.username}
                   compact={
                     !!previous &&
                     previous.sender.username === message.sender.username &&
@@ -452,6 +490,7 @@ export function MessageThread({
             );
           })
         )}
+        {pending.map(message => <PendingMessageRow key={message.id} message={message} person={me} />)}
       </div>
       {(error || thread?.error) && (
         <p

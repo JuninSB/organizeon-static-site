@@ -83,6 +83,11 @@ export function MessagesSettings() {
               detail: "Inclui o texto da mensagem no aviso.",
             },
             {
+              key: "showSendStatus",
+              label: "Mostrar textos de envio",
+              detail: "Exibe o status ao lado dos indicadores visuais de envio e upload.",
+            },
+            {
               key: "sound",
               label: "Som de notificação",
               detail: "Toca um som curto nesta aba.",

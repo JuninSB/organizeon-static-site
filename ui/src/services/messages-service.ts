@@ -1,3 +1,4 @@
+import { accountSession } from "@/core/account-session";
 import { accountRequest } from "./account-api";
 import type {
   Inbox,
@@ -9,13 +10,38 @@ import type {
   DmAttachment,
 } from "@/features/messages/types";
 const id = encodeURIComponent;
+let epoch = 0;
+let inboxCache: (Inbox & { version?: string }) | null = null;
+const conversationCache = new Map<
+  string,
+  { version?: string; conversation: DmConversation }
+>();
 export const dmService = {
-  inbox: (after: number | null) =>
-    accountRequest<Inbox>(
-      "/dm/inbox?active=" +
-        (document.hidden ? "0" : "1") +
-        (after === null ? "" : "&after=" + after),
-    ),
+  inbox: async (after: number | null): Promise<Inbox> => {
+    if (after === null) {
+      epoch++;
+      inboxCache = null;
+      conversationCache.clear();
+    }
+    const current = epoch,
+      cached = inboxCache;
+    const params = new URLSearchParams({
+      active: document.hidden ? "0" : "1",
+      compact: "1",
+    });
+    if (after !== null) params.set("after", String(after));
+    if (cached?.version) params.set("version", cached.version);
+    const data = await accountRequest<
+      Inbox & { unchanged?: boolean; version?: string }
+    >("/dm/inbox?" + params);
+    if (data.unchanged && (!cached || cached.version !== data.version))
+      throw Error("Estado de mensagens indisponível.");
+    const result = data.unchanged
+      ? { ...cached!, events: data.events, cursor: data.cursor }
+      : data;
+    if (current === epoch) inboxCache = result;
+    return result;
+  },
   request: (username: string) =>
     accountRequest<DmConversation>("/dm/requests", {
       method: "POST",
@@ -26,7 +52,7 @@ export const dmService = {
       method: "POST",
       body: JSON.stringify({ action }),
     }),
-  messages: (
+  messages: async (
     conversationId: string,
     query: {
       before?: number;
@@ -38,9 +64,21 @@ export const dmService = {
     const p = new URLSearchParams();
     for (const [k, v] of Object.entries(query))
       if (v !== undefined && v !== "") p.set(k, String(v));
-    return accountRequest<MessagePage>(
-      "/dm/conversations/" + id(conversationId) + "/messages?" + p,
-    );
+    const current = epoch,
+      cached = conversationCache.get(conversationId);
+    p.set("compact", "1");
+    if (cached?.version) p.set("conversationVersion", cached.version);
+    const data = await accountRequest<
+      MessagePage & { conversationVersion?: string }
+    >("/dm/conversations/" + id(conversationId) + "/messages?" + p);
+    const conversation = data.conversation || cached?.conversation;
+    if (!conversation) throw Error("Conversa temporariamente indisponível.");
+    if (current === epoch)
+      conversationCache.set(conversationId, {
+        version: data.conversationVersion,
+        conversation,
+      });
+    return { ...data, conversation };
   },
   send: (
     conversationId: string,
@@ -70,7 +108,7 @@ export const dmService = {
       method: "POST",
       body: JSON.stringify({ action, value }),
     }),
-  read: (conversationId: string, seq: number) =>
+  read: (conversationId: string, seq?: number) =>
     accountRequest("/dm/conversations/" + id(conversationId) + "/read", {
       method: "POST",
       body: JSON.stringify({ seq }),
@@ -82,7 +120,12 @@ export const dmService = {
     }),
   conversation: (
     conversationId: string,
-    patch: { muted?: boolean; archived?: boolean },
+    patch: {
+      muted?: boolean;
+      archived?: boolean;
+      favorite?: boolean;
+      pinned?: boolean;
+    },
   ) =>
     accountRequest("/dm/conversations/" + id(conversationId), {
       method: "PATCH",
@@ -110,19 +153,22 @@ export const dmService = {
       method: "POST",
       body: JSON.stringify({ seq }),
     }),
-  upload: async (conversationId: string, file: File) => {
+  upload: async (conversationId: string, file: File, onProgress?: (loaded:number,total:number)=>void) => {
     if (file.size > 8 * 1024 * 1024)
       throw Error("Cada arquivo pode ter até 8 MB.");
+    const session = accountSession.get();
     const data = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result).split(",")[1]);
       reader.onerror = () => reject(Error("Não foi possível ler o arquivo."));
       reader.readAsDataURL(file);
     });
+    if (accountSession.get().revision !== session.revision) throw Error("Sua sessão mudou. Selecione o arquivo novamente.");
     return accountRequest<{ attachment: DmAttachment }>(
       "/dm/conversations/" + id(conversationId) + "/attachments",
       {
         method: "POST",
+        onUploadProgress: onProgress,
         body: JSON.stringify({
           name: file.name,
           mime: file.type || "application/octet-stream",

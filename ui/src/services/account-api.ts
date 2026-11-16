@@ -1,4 +1,5 @@
-type AccountTransport = (path: string, options: RequestInit) => Promise<any>;
+export type AccountRequestOptions = RequestInit & { onUploadProgress?: (loaded: number, total: number) => void };
+type AccountTransport = (path: string, options: AccountRequestOptions) => Promise<any>;
 let transport: AccountTransport | undefined;
 export function configureAccountTransport(next: AccountTransport) {
   transport = next;
@@ -63,7 +64,7 @@ function endpoint(path: string) {
 }
 export async function accountRequest<T = any>(
   path: string,
-  options: RequestInit = {},
+  options: AccountRequestOptions = {},
 ): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
@@ -84,6 +85,16 @@ export async function accountRequest<T = any>(
   const token = localStorage.getItem("organizeon-access-token");
   if (token && !/^\/d[23](\/|$)/.test(location.pathname))
     headers.set("Authorization", "Bearer " + token);
+  if (options.onUploadProgress) {
+    return new Promise<T>((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();xhr.open(options.method || "POST",endpoint(path));xhr.withCredentials=true;xhr.timeout=120000;
+      headers.forEach((value,key)=>xhr.setRequestHeader(key,value));
+      xhr.upload.onprogress=event=>{if(event.lengthComputable)options.onUploadProgress?.(event.loaded,event.total);};
+      xhr.onerror=()=>reject(new AccountApiError(0,"network_error"));xhr.ontimeout=xhr.onerror;
+      xhr.onload=()=>{let data:any;try{data=JSON.parse(xhr.responseText);}catch{return reject(new AccountApiError(xhr.status,"invalid_response"));}if(xhr.status<200||xhr.status>=300)return reject(new AccountApiError(xhr.status,data?.error||"request_failed"));resolve(data);};
+      xhr.send(options.body as XMLHttpRequestBodyInit);
+    });
+  }
   let response: Response;
   try {
     response = await fetch(endpoint(path), {

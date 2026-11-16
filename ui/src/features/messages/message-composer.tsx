@@ -1,3 +1,4 @@
+import { messageOutbox, useMessageOutbox } from "@/stores/message-outbox";
 import {
   forwardRef,
   useImperativeHandle,
@@ -73,6 +74,7 @@ export const MessageComposer = forwardRef<
     [error, setError] = useState(""),
     [editText, setEditText] = useState(editing?.content || ""),
     [emojiQuery, setEmojiQuery] = useState("");
+  const localMedia = useMessageOutbox().drafts[conversation.id] || [];
   const value = editing ? editText : draft.text;
   useLayoutEffect(() => {
     if (editing) text.current?.focus();
@@ -117,7 +119,7 @@ export const MessageComposer = forwardRef<
       if (editing) {
         await messagesStore.edit(editing, editText);
         onEditDone();
-      } else await messagesStore.send(conversation.id);
+      } else { void messagesStore.send(conversation.id).catch(e=>setError(e.message)); }
       text.current?.focus();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível enviar.");
@@ -156,6 +158,7 @@ export const MessageComposer = forwardRef<
           </Button>
         </div>
       )}
+      {localMedia.length > 0 && !editing && <div className="mb-2 flex gap-2 overflow-x-auto">{localMedia.map(item=><div key={item.id} className="relative shrink-0 rounded-lg border border-border bg-card p-2">{item.preview?<img src={item.preview} alt={item.name} className="h-20 w-28 rounded object-cover"/>:<span className="block max-w-36 truncate text-xs">{item.name}</span>}<Button type="button" variant="secondary" size="icon-xs" className="absolute right-0 top-0" aria-label={`Remover anexo ${item.name}`} onClick={()=>messageOutbox.removeDraft(conversation.id,item.id)}><X className="size-3"/></Button></div>)}</div>}
       {draft.attachments.length > 0 && !editing && (
         <div className="mb-2 flex flex-wrap gap-1.5">
           {draft.attachments.map((a) => (
@@ -201,7 +204,7 @@ export const MessageComposer = forwardRef<
             setError("");
             try {
               for (const item of files)
-                await messagesStore.upload(conversation.id, item);
+                messageOutbox.stage(conversation.id, item);
             } catch (e) {
               setError(
                 e instanceof Error ? e.message : "Não foi possível anexar.",
@@ -306,7 +309,7 @@ export const MessageComposer = forwardRef<
             busy ||
             uploading ||
             !conversation.canSend ||
-            (!value.trim() && !draft.attachments.length)
+            (!value.trim() && !draft.attachments.length && !localMedia.length)
           }
           aria-label={editing ? "Salvar mensagem" : "Enviar mensagem"}
         >

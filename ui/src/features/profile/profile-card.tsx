@@ -24,6 +24,7 @@ export function ProfileCard({
         type="button"
         size="icon-sm"
         variant="ghost"
+        className="size-11 rounded-full"
         aria-label={label}
         onClick={() => onEdit(field)}
       >

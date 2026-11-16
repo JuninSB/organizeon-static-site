@@ -1,5 +1,5 @@
-import {MessagesLauncher} from "@/features/messages/messages-launcher";
-import {roleNames} from "@/utils/account-roles";
+import { MessagesLauncher } from "@/features/messages/messages-launcher";
+import { roleNames } from "@/utils/account-roles";
 import { ProfileBoundary } from "@/features/profile/profile-boundary";
 import { lazy, Suspense, useState } from "react";
 import { ChevronUp, UserRound, LogOut } from "lucide-react";
@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useProfile, refreshProfile } from "@/stores/profile-store";
 import { ProfileAvatar } from "@/features/profile/profile-avatar";
-const ProfileDialog = lazy(() => import("@/features/profile/profile-dialog"));
+const loadProfile = () => import("@/features/profile/profile-dialog");
+const ProfileDialog = lazy(loadProfile);
 /** Shared account identity; editing is authenticated by the service, never by role labels. */
 export function AccountMenu({
   username,
@@ -50,7 +51,9 @@ export function AccountMenu({
   );
   return (
     <>
-      {role!=="guest"&&/^[A-Za-z0-9_.-]{3,32}$/.test(username)&&<MessagesLauncher/>}
+      {role !== "guest" && /^[A-Za-z0-9_.-]{3,32}$/.test(username) && (
+        <MessagesLauncher />
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -58,6 +61,8 @@ export function AccountMenu({
               size="lg"
               className="h-12 justify-start"
               aria-label={`Perfil de ${username}`}
+              onPointerEnter={() => void loadProfile()}
+              onFocus={() => void loadProfile()}
             />
           }
         >
@@ -92,7 +97,8 @@ export function AccountMenu({
           <DropdownMenuItem
             disabled={role === "guest"}
             onClick={() => {
-              void refreshProfile(username).then(() => setOpen(true));
+              setOpen(true);
+              void refreshProfile(username);
             }}
           >
             <UserRound />
