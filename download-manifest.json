@@ -1,7 +1,7 @@
 {
-  "version": "v2-8dd74292802c9cc9",
-  "generatedAt": "2026-11-16T01:09:08.610Z",
-  "totalBytes": 11390054,
+  "version": "v2-4985c9b1d79c4112",
+  "generatedAt": "2026-11-16T01:50:11.656Z",
+  "totalBytes": 12653728,
   "files": [
     {
       "path": "404.html",
@@ -10,13 +10,13 @@
     },
     {
       "path": "admin.html",
-      "size": 34762,
-      "sha256": "9ed80e31ad068fe5d0ab7d762411cccc97c731445c9b74a0e41c4f5398aaa5b5"
+      "size": 701,
+      "sha256": "ce331b20d724372ae9f34b16de5637c33233a6265e543e40238bc846a4aa1d3c"
     },
     {
       "path": "admin.js",
-      "size": 41020,
-      "sha256": "56323f98fc30ba3bbb0477e329562e8334f9c5c96830b86172c385cf7cbaefe9"
+      "size": 40921,
+      "sha256": "b43080124d16de59c06025c02f40679f5a1686d959bf56553dbbc7ff93d4e02a"
     },
     {
       "path": "assets/jdht-a-B22Nviop.woff2",
@@ -335,8 +335,8 @@
     },
     {
       "path": "auth-client.js",
-      "size": 170135,
-      "sha256": "ab436534fbb6627e5608ecee830f001b3e88aca43269552cf4b2064c5ad91553"
+      "size": 147716,
+      "sha256": "9b304c1749db40b4afa25c58a66d68668210a27f018d029c3eb804fd19aa5fee"
     },
     {
       "path": "config.js",
@@ -780,13 +780,23 @@
     },
     {
       "path": "ui-dist/client-ui.js",
-      "size": 758494,
-      "sha256": "32b72923992caad80b3967bb8049796d31632de2867c3f9713c1bd9de9e50920"
+      "size": 766327,
+      "sha256": "0f3ded17a4e5e87ea886f2365490ac4a73d17b249851db7978afd3f8a672772d"
     },
     {
       "path": "ui-dist/client-ui.css",
-      "size": 179177,
-      "sha256": "11dbe86eac8d6c40078ffae74fef68e722b2cbc8ed2d5fea44ca18e3de529569"
+      "size": 179974,
+      "sha256": "2595b36b15aa4139faf9dbbf5fa79d9478af9b8c6fb61bcf466aeb85a0a6b970"
+    },
+    {
+      "path": "ui-dist/admin-ui.js",
+      "size": 1131649,
+      "sha256": "f51f51bdb5bb839916c08eff31f9c0df3dbb400f4e6627c53b7bedebbeb3959b"
+    },
+    {
+      "path": "ui-dist/admin-ui.css",
+      "size": 179974,
+      "sha256": "2595b36b15aa4139faf9dbbf5fa79d9478af9b8c6fb61bcf466aeb85a0a6b970"
     }
   ]
 }

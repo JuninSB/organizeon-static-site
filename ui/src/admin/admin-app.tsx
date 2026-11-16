@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarSeparator, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarSeparator, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "@/components/ui/sonner";
@@ -20,6 +20,7 @@ import { PortalContextProvider } from "@/components/ui/portal-context";
 
 type AdminView = "overview" | "logs" | "users" | "services" | "terminal";
 type AdminUIBridge = {
+  setAccount: (account: { username: string; role: string; permissions: string[] }) => void;
   setView: (view: AdminView) => void;
   openUserDialog: () => void;
   closeUserDialog: () => void;
@@ -40,11 +41,17 @@ const navigation: { value: AdminView; label: string; icon: typeof LayoutDashboar
   { value: "terminal", label: "Terminal", icon: TerminalSquare, permission: "admin.terminal" },
 ];
 
+function AdminNavigation({ value, label, icon: Icon, permission, active }: {value: AdminView; label: string; icon: typeof LayoutDashboard; permission?: string; active: boolean}) {
+ const { setOpenMobile } = useSidebar();
+ return <SidebarMenuButton data-view={value} data-permission={permission} isActive={active} tooltip={label} onClick={() => { setOpenMobile(false);window.dispatchEvent(new CustomEvent('organizeon:admin-view', {detail:value})); }}><Icon aria-hidden="true"/><span>{label}</span></SidebarMenuButton>;
+}
+
 function Metric({ title, valueId, detailId, icon: Icon, fallback = "—" }: { title: string; valueId: string; detailId: string; icon: typeof Cpu; fallback?: string }) {
   return <Card className="min-w-0"><CardHeader className="flex-row items-center justify-between gap-2 pb-2"><CardDescription>{title}</CardDescription><Icon className="size-4 text-muted-foreground" /></CardHeader><CardContent><p id={valueId} className="truncate text-2xl font-semibold tracking-tight">{fallback}</p><p id={detailId} className="mt-1 min-h-5 text-xs text-muted-foreground">—</p></CardContent></Card>;
 }
 
 export function AdminApp() {
+  const [account, setAccount] = useState<{username: string; role: string; permissions: string[]} | null>(null);
   const [view, setView] = useState<AdminView>("overview");
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [roles, setRoles] = useState(["user", "admin"]);
@@ -61,6 +68,7 @@ export function AdminApp() {
 
   useEffect(() => {
     const bridge: AdminUIBridge = {
+      setAccount,
       setView: (next) => setView(next),
       openUserDialog: () => setUserDialogOpen(true),
       closeUserDialog: () => setUserDialogOpen(false),
@@ -108,10 +116,10 @@ export function AdminApp() {
         <Sidebar collapsible="icon" variant="sidebar">
           <SidebarHeader className="px-3 pb-3 pt-4"><div className="flex min-h-10 items-center gap-2.5 px-2 text-sm font-semibold tracking-tight"><span className="grid size-7 place-items-center rounded-md border bg-card"><LayoutDashboard className="size-4" /></span><span>OrganizeOn <span className="font-normal text-muted-foreground">Admin</span></span></div></SidebarHeader>
           <SidebarSeparator />
-          <SidebarContent><SidebarGroup><SidebarGroupLabel>Administração</SidebarGroupLabel><SidebarMenu>{navigation.map(({ value, label, icon: Icon, permission }) => <SidebarMenuItem key={value} id={value === "services" ? "services-nav" : undefined}>
-            <SidebarMenuButton data-view={value} data-permission={permission} isActive={view === value} tooltip={label} onClick={() => window.dispatchEvent(new CustomEvent("organizeon:admin-view", { detail: value }))}><Icon aria-hidden="true" /><span>{label}</span></SidebarMenuButton>
+          <SidebarContent><SidebarGroup><SidebarGroupLabel>Administração</SidebarGroupLabel><SidebarMenu>{navigation.filter(item => !account || (!item.permission || account.permissions.includes(item.permission)) && (item.value !== "services" || account.permissions.some(permission => permission.startsWith("services.")))).map(({ value, label, icon: Icon, permission }) => <SidebarMenuItem key={value} id={value === "services" ? "services-nav" : undefined}>
+            <AdminNavigation value={value} label={label} icon={Icon} permission={permission} active={view === value}/>
           </SidebarMenuItem>)}</SidebarMenu></SidebarGroup></SidebarContent>
-          <SidebarFooter className="px-3 pb-3"><Separator /><div className="flex items-center gap-2 px-2 pt-2 text-xs text-muted-foreground"><ShieldIcon /><span id="account-name" className="truncate">—</span><Badge id="account-role" variant="secondary" className="ml-auto">—</Badge></div></SidebarFooter>
+          <SidebarFooter className="px-3 pb-3"><Separator /><div className="flex items-center gap-2 px-2 pt-2 text-xs text-muted-foreground"><ShieldIcon /><span id="account-name" className="truncate">{account?.username || "—"}</span><Badge id="account-role" variant="secondary" className="ml-auto">{account?.role || "—"}</Badge></div></SidebarFooter>
         </Sidebar>
         <SidebarInset className="min-w-0 bg-background">
           <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur-sm sm:px-6">
@@ -124,7 +132,7 @@ export function AdminApp() {
           <main className="mx-auto w-full max-w-[1500px] min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
             <Tabs value={view} onValueChange={(value) => setView(value as AdminView)}>
               <TabsList className="sr-only" aria-label="Painéis administrativos">{navigation.map(({ value, label }) => <TabsTrigger value={value} data-view={value} key={value}>{label}</TabsTrigger>)}</TabsList>
-              <TabsContent value="overview" className="view mt-0" id="view-overview">
+              <TabsContent keepMounted value="overview" className="view mt-0" id="view-overview">
                 <div className="mb-5 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Visão geral do servidor</h1><p className="mt-1 text-sm text-muted-foreground">Recursos, rotas e tráfego do backend.</p></div><Button id="monitor-toggle" className="shrink-0"><Activity /><span data-ui-label>Ativar monitoramento</span></Button></div>
                 <section className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   <Card><CardHeader className="pb-2"><CardDescription>Domínio</CardDescription></CardHeader><CardContent><p id="domain-value" className="truncate font-semibold">—</p><p id="domain-detail" className="mt-1 break-words text-xs text-muted-foreground">Aguardando backend</p></CardContent></Card>
@@ -139,10 +147,10 @@ export function AdminApp() {
                   <div className="mt-4 grid gap-3 lg:grid-cols-2"><Card><CardHeader><CardTitle className="text-sm">CPU e RAM</CardTitle></CardHeader><CardContent><canvas id="resource-chart" className="h-56 w-full" /></CardContent></Card><Card><CardHeader><CardTitle className="text-sm">Solicitações por minuto</CardTitle></CardHeader><CardContent><canvas id="request-chart" className="h-56 w-full" /></CardContent></Card></div>
                 </div>
               </TabsContent>
-              <TabsContent value="logs" className="view mt-0" id="view-logs"><div className="mb-4"><h1 className="text-2xl font-semibold tracking-tight">Eventos do servidor</h1><p className="mt-1 text-sm text-muted-foreground">Fluxo de entrada e saída, sem conteúdo sensível.</p></div><Card><CardHeader className="flex-row items-center justify-between border-b py-3"><CardDescription id="logs-status">Desconectado</CardDescription><div className="flex gap-2"><Button id="logs-pause" variant="outline" size="sm">Pausar</Button><Button id="logs-clear" variant="outline" size="sm">Limpar tela</Button></div></CardHeader><CardContent className="p-0"><div className="max-h-[70svh] min-h-80 overflow-auto p-3 font-mono text-xs" id="logs-list"><div className="grid min-h-64 place-items-center text-center text-sm text-muted-foreground">Abra esta aba para conectar aos eventos.</div></div></CardContent></Card></TabsContent>
-              <TabsContent value="users" className="view mt-0" id="view-users"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Contas e permissões</h1><p className="mt-1 text-sm text-muted-foreground">Alterações invalidam imediatamente os tokens anteriores.</p></div><Button id="create-user"><Users />Criar usuário</Button></div><Card className="overflow-hidden"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Conta</TableHead><TableHead>Tipo</TableHead><TableHead>Permissões</TableHead><TableHead>Status</TableHead><TableHead>Ações</TableHead></TableRow></TableHeader><TableBody id="users-body" /></Table></div></Card></TabsContent>
-              <TabsContent value="services" className="view mt-0" id="view-services"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Serviços</h1><p className="mt-1 text-sm text-muted-foreground">Ações disponíveis conforme as permissões da conta.</p></div><Button id="services-refresh" variant="outline"><RefreshCw />Atualizar status</Button></div><div id="services-grid" className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3" /></TabsContent>
-              <TabsContent value="terminal" className="view mt-0" id="view-terminal"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Terminal do servidor</h1><p className="mt-1 text-sm text-muted-foreground">Shell remoto protegido por token e permissão administrativa.</p></div><Button id="terminal-connect"><TerminalSquare /><span data-ui-label>Conectar terminal</span></Button></div><Card className="overflow-hidden"><CardHeader className="flex-row items-center justify-between gap-2 border-b py-3"><CardDescription id="terminal-status">Desconectado</CardDescription><div className="flex items-center gap-1"><Tooltip><TooltipTrigger render={<Button variant="outline" size="icon-sm" id="terminal-scroll-up" aria-label="Subir no histórico"/>}><ChevronDown className="rotate-180" /></TooltipTrigger><TooltipContent>Subir no histórico</TooltipContent></Tooltip><Button variant="outline" size="icon-sm" id="terminal-scroll-down" aria-label="Descer no histórico"><ChevronDown /></Button><Button variant="outline" size="sm" id="terminal-scroll-bottom">Fim</Button><Button variant="destructive" size="sm" id="terminal-disconnect" hidden>Desconectar</Button></div></CardHeader><CardContent className="bg-background p-2"><div className="h-[min(62svh,560px)] min-h-64 overflow-auto" id="terminal-output" aria-label="Saída do terminal"/><form id="terminal-form" className="flex items-center gap-2 border-t pt-2"><span className="font-mono text-muted-foreground">$</span><Input id="terminal-input" autoComplete="off" spellCheck={false} disabled aria-label="Comando terminal" className="border-0 bg-transparent font-mono shadow-none focus-visible:ring-0" /></form></CardContent></Card></TabsContent>
+              <TabsContent keepMounted value="logs" className="view mt-0" id="view-logs"><div className="mb-4"><h1 className="text-2xl font-semibold tracking-tight">Eventos do servidor</h1><p className="mt-1 text-sm text-muted-foreground">Fluxo de entrada e saída, sem conteúdo sensível.</p></div><Card><CardHeader className="flex-row items-center justify-between border-b py-3"><CardDescription id="logs-status">Desconectado</CardDescription><div className="flex gap-2"><Button id="logs-pause" variant="outline" size="sm">Pausar</Button><Button id="logs-clear" variant="outline" size="sm">Limpar tela</Button></div></CardHeader><CardContent className="p-0"><div className="max-h-[70svh] min-h-80 overflow-auto p-3 font-mono text-xs" id="logs-list"><div className="grid min-h-64 place-items-center text-center text-sm text-muted-foreground">Abra esta aba para conectar aos eventos.</div></div></CardContent></Card></TabsContent>
+              <TabsContent keepMounted value="users" className="view mt-0" id="view-users"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Contas e permissões</h1><p className="mt-1 text-sm text-muted-foreground">Alterações invalidam imediatamente os tokens anteriores.</p></div><Button id="create-user"><Users />Criar usuário</Button></div><Card className="overflow-hidden"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Conta</TableHead><TableHead>Tipo</TableHead><TableHead>Permissões</TableHead><TableHead>Status</TableHead><TableHead>Ações</TableHead></TableRow></TableHeader><TableBody id="users-body" /></Table></div></Card></TabsContent>
+              <TabsContent keepMounted value="services" className="view mt-0" id="view-services"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Serviços</h1><p className="mt-1 text-sm text-muted-foreground">Ações disponíveis conforme as permissões da conta.</p></div><Button id="services-refresh" variant="outline"><RefreshCw />Atualizar status</Button></div><div id="services-grid" className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3" /></TabsContent>
+              <TabsContent keepMounted value="terminal" className="view mt-0" id="view-terminal"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold tracking-tight">Terminal do servidor</h1><p className="mt-1 text-sm text-muted-foreground">Shell remoto protegido por token e permissão administrativa.</p></div><Button id="terminal-connect"><TerminalSquare /><span data-ui-label>Conectar terminal</span></Button></div><Card className="overflow-hidden"><CardHeader className="flex-row items-center justify-between gap-2 border-b py-3"><CardDescription id="terminal-status">Desconectado</CardDescription><div className="flex items-center gap-1"><Tooltip><TooltipTrigger render={<Button variant="outline" size="icon-sm" id="terminal-scroll-up" aria-label="Subir no histórico"/>}><ChevronDown className="rotate-180" /></TooltipTrigger><TooltipContent>Subir no histórico</TooltipContent></Tooltip><Button variant="outline" size="icon-sm" id="terminal-scroll-down" aria-label="Descer no histórico"><ChevronDown /></Button><Button variant="outline" size="sm" id="terminal-scroll-bottom">Fim</Button><Button variant="destructive" size="sm" id="terminal-disconnect" hidden>Desconectar</Button></div></CardHeader><CardContent className="bg-background p-2"><div className="h-[min(62svh,560px)] min-h-64 overflow-auto" id="terminal-output" aria-label="Saída do terminal"/><form id="terminal-form" className="flex items-center gap-2 border-t pt-2"><span className="font-mono text-muted-foreground">$</span><Input id="terminal-input" autoComplete="off" spellCheck={false} disabled aria-label="Comando terminal" className="border-0 bg-transparent font-mono shadow-none focus-visible:ring-0" /></form></CardContent></Card></TabsContent>
             </Tabs>
           </main>
         </SidebarInset>

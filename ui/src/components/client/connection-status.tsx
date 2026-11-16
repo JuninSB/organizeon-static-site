@@ -1,0 +1,6 @@
+import { CheckCircle2, LoaderCircle, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+export function ConnectionStatus({title, detail, percent, onClose}: {title: string;detail: string;percent: number | null;onClose: () => void}) {
+ const complete = percent === 100;
+ return <div role="status" className="w-full rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-sm"><div className="flex items-start gap-3">{complete ? <CheckCircle2 className="mt-0.5 size-4 shrink-0"/> : <LoaderCircle className="mt-0.5 size-4 shrink-0 motion-safe:animate-spin"/>}<div className="min-w-0 flex-1"><p className="text-sm font-medium">{title}</p>{detail && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{detail}</p>}</div><Button size="icon-sm" variant="ghost" aria-label="Fechar notificação" onClick={onClose}><X/></Button></div>{percent !== null && !complete && <div role="progressbar" aria-label="Carregamento" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} className="mt-3 h-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-[width] duration-150" style={{width:`${percent}%`}}/></div>}</div>;
+}

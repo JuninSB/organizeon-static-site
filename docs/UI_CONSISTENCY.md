@@ -15,3 +15,16 @@ Correção da sidebar mobile: os tokens `sidebar-*` devem existir em `tailwind.c
 D2 agora oferece alternância claro/escuro no header e perfil com a mesma composição do D3: avatar, nome, nível e saída no dropdown. `use-service-theme.ts` aplica a preferência ao contêiner do Shadow DOM, incluindo os portais; persiste apenas a preferência visual em `d2-theme`. O logotipo troca para a versão preta no tema claro. Não aplicar o tema somente ao conteúdo deixando menus e diálogos fora dele.
 
 `integration/d2/panel.html` registra o HTML servido pelo backend D2. Os elementos antigos permanecem apenas como adaptadores para o fluxo existente de arquivos/autenticação e ficam ocultos desde o primeiro paint. Cada seção apresenta carregamento neutro até o mount novo completar, ou a página de erro com copiar/tentar novamente. Não exibir os adaptadores legados como fallback visual. A publicação desse HTML no servidor é separada de GitHub Pages.
+
+## Integração dos fluxos do cliente
+
+O simples build de um componente não muda a tela se seu ponto de entrada continuar chamando o renderizador antigo. `auth-client.js` agora usa `loadClientUI()` como carregador único e `mountClientPage()` como ciclo de vida para Dados e Proxy. `mountReactiveSurface()` mantém a mesma raiz React durante atualização de latências, preservando seleção e foco.
+
+- Início: `HomePage` recebe navegação e busca, sem reimplementar autenticação ou o motor de proxy. Aplicativos/Música acionam os controles reais do launcher existente.
+- Jogos: `mountCatalogToolbar` e `mountGameCard` recebem callbacks das funções existentes de cache, instalação, execução, remoção e créditos. Ao filtrar/fechar, roots são desmontadas. Atualizações de progresso alteram o label da ação sem remover o ícone. O toolbar é inline: nunca deve herdar `min-height:100%`.
+- Créditos e teclas: Dialog shadcn preserva teclas, configuração de canhoto do Tetris e fullscreen.
+- Conexão: `ConnectionStatus` usa Sonner com ID estável, progresso monocromático e Lucide. O aviso “Cliente pronto” não é mais um bloco verde paralelo.
+- Admin: `admin.html` inicia `ui-dist/admin-ui.js`. `AdminApp` publica a bridge e importa o controlador existente. Abas usam `keepMounted` pois o controlador ainda referencia IDs de painéis inativos. A conta fica no estado React: a sidebar mobile não existe no DOM enquanto fechada. Campos de permissões são preenchidos ao abrir o diálogo, sem pressupor um modal sempre montado.
+- A raiz do admin e os contêineres dos portais possuem o escopo `organizeon-ui`; sem ele, os estilos Tailwind encapsulados não alcançam os menus.
+
+O manifesto inclui também `admin-ui.js` e `admin-ui.css`. Rebuild exige regenerar hashes e `version.txt` antes de publicar. O kernel não precisa ser trocado para substituir esses assets baixados.

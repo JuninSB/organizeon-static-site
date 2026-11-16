@@ -59,7 +59,7 @@ const terminalView = new Terminal({
 let terminalOpened = false;
 setupDashboardMobileMode();
 
-document.querySelectorAll("[data-view]").forEach((button) => {
+if (!window.OrganizeOnAdminUI) document.querySelectorAll("[data-view]").forEach((button) => {
   button.addEventListener("click", () => showView(button.dataset.view));
 });
 document.getElementById("back-link").addEventListener("click", () => {
@@ -99,12 +99,8 @@ document
 document
   .getElementById("create-user")
   .addEventListener("click", openCreateUser);
-document
-  .getElementById("user-form")
-  .addEventListener("submit", createUser);
-document.querySelector(".cancel-dialog").addEventListener("click", () => {
-  document.getElementById("user-dialog").close();
-});
+document.addEventListener('submit', event => { if (event.target.id === 'user-form') void createUser(event); });
+window.addEventListener('organizeon:admin-view', event => showView(event.detail));
 document
   .getElementById("terminal-connect")
   .addEventListener("click", connectTerminal);
@@ -148,27 +144,14 @@ async function initialize() {
   const result = await response.json();
   state.account = result.account;
   state.monitoring = result.monitoring;
-  document.getElementById("account-name").textContent =
-    result.account.username;
-  document.getElementById("account-role").textContent =
-    roleLabel(result.account.role);
-
-  document.querySelectorAll("[data-permission]").forEach((button) => {
-    button.hidden = !result.account.permissions.includes(
-      button.dataset.permission,
-    );
-  });
-  document.getElementById("monitor-toggle").hidden =
-    !result.account.permissions.includes("admin.monitoring");
-  document.getElementById("monitor-activate").hidden =
-    !result.account.permissions.includes("admin.monitoring");
-  document.getElementById("services-nav").hidden = !result.account.permissions.some(
-    (permission) => permission.startsWith("services."),
-  );
+  window.OrganizeOnAdminUI.setAccount(result.account);
+  document.getElementById('monitor-toggle').hidden = !result.account.permissions.includes('admin.monitoring');
+  document.getElementById('monitor-activate').hidden = !result.account.permissions.includes('admin.monitoring');
   renderMonitoring(result.monitoring);
 }
 
 function showView(name) {
+  window.OrganizeOnAdminUI?.setView(name);
   document.querySelectorAll(".view").forEach((view) => {
     view.hidden = view.id !== `view-${name}`;
   });
@@ -233,7 +216,7 @@ async function loadServices() {
         (action === "start" && service.status?.state === "running") ||
         (action === "stop" && service.status?.state === "stopped");
       control.addEventListener("click", async () => {
-        if (!window.confirm(
+        if (!await window.OrganizeOnAdminUI.confirm(
           `${serviceActionLabel(action)} ${service.label}?`,
         )) return;
         control.disabled = true;
@@ -529,6 +512,7 @@ function renderCharts(history) {
 }
 
 function updateRequestDomainOptions(requests) {
+  if (window.OrganizeOnAdminUI) { window.OrganizeOnAdminUI.setRequestDomains((requests.byDomain || []).map(entry => entry.domain), state.requestDomain); return; }
   const select = document.getElementById("request-domain-select");
   const domains = (requests.byDomain || []).map((entry) => entry.domain);
   if (
@@ -809,9 +793,7 @@ function renderUsers(users) {
       }
     });
     password.addEventListener("click", async () => {
-      const nextPassword = window.prompt(
-        `Nova senha para ${user.username} (mínimo 8 caracteres):`,
-      );
+      const nextPassword = await window.OrganizeOnAdminUI.promptPassword(user.username);
       if (nextPassword === null) return;
       const response = await api(
         `/admin/users/${encodeURIComponent(user.username)}`,
@@ -837,7 +819,7 @@ function renderUsers(users) {
       showLoginCodeDialog(user.username, result.code, result.expiresAt);
     });
     remove.addEventListener("click", async () => {
-      if (!window.confirm(`Excluir a conta ${user.username}?`)) return;
+      if (!await window.OrganizeOnAdminUI.confirm(`Excluir a conta ${user.username}?`)) return;
       const response = await api(
         `/admin/users/${encodeURIComponent(user.username)}`,
         { method: "DELETE" },
@@ -865,6 +847,7 @@ function renderUsers(users) {
 
 function renderPermissionChecks() {
   const container = document.getElementById("permission-checks");
+  if (!container) return; // Controlled dialog mounts these fields only while open.
   container.replaceChildren();
   for (const permission of state.grantablePermissions) {
     const label = document.createElement("label");
@@ -878,17 +861,12 @@ function renderPermissionChecks() {
   }
 }
 
-function openCreateUser() {
-  document.getElementById("user-form").reset();
+async function openCreateUser() {
+  window.OrganizeOnAdminUI.setRoles(state.roles);
+  window.OrganizeOnAdminUI.openUserDialog();
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  document.getElementById('user-form')?.reset();
   renderPermissionChecks();
-  const roleSelect = document.querySelector('#user-form select[name="role"]');
-  roleSelect.replaceChildren(...state.roles.map((roleName) => {
-    const option = document.createElement("option");
-    option.value = roleName;
-    option.textContent = roleLabel(roleName);
-    return option;
-  }));
-  document.getElementById("user-dialog").showModal();
 }
 
 function roleLabel(role) {
@@ -908,6 +886,7 @@ function canManageAccess(user) {
 }
 
 function showLoginCodeDialog(username, code, expiresAt) {
+  if (window.OrganizeOnAdminUI) return window.OrganizeOnAdminUI.showLoginCode({username,code,expiresAt});
   const dialog = document.createElement("dialog");
   dialog.innerHTML = `
     <div class="modal">
@@ -948,7 +927,7 @@ async function createUser(event) {
     }),
   });
   if (!response.ok) return showToast(await apiError(response));
-  document.getElementById("user-dialog").close();
+  window.OrganizeOnAdminUI.closeUserDialog();
   showToast("Conta criada.");
   loadUsers();
 }
@@ -1117,6 +1096,7 @@ async function apiError(response) {
 }
 
 function showToast(message, autoHide = 8000) {
+  if (window.OrganizeOnAdminUI) { window.OrganizeOnAdminUI.toast(message); return; }
   const toast = document.getElementById("toast");
   toast.replaceChildren();
   const text = document.createElement("span");

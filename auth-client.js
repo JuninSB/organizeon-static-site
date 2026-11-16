@@ -1,23 +1,70 @@
-// One notification host for the client; the UI bundle owns visuals and lifecycle.
+// Shared lazy UI loader: all surfaces use the same compiled React bundle.
+let clientUIPromise;
+function loadClientUI() {
+  if (!clientUIPromise) clientUIPromise = (async () => {
+    const base = new URL(window.__groveBase || "./", document.baseURI);
+    const script = new URL("ui-dist/client-ui.js", base);
+    const css = new URL("ui-dist/client-ui.css", base);
+    const version = window.__ORGANIZEON_CLIENT_VERSION__;
+    if (version) { script.searchParams.set("v", version); css.searchParams.set("v", version); }
+    return { ui: await import(script.href), css: css.href };
+  })().catch(error => { clientUIPromise = null; throw error; });
+  return clientUIPromise;
+}
 let notificationUI;
-async function showToast(message, kind = "info") {
+async function notificationService() {
+  if (!notificationUI) notificationUI = loadClientUI().then(({ ui, css }) => {
+    const host = document.createElement("div"); host.id = "organizeon-notifications";
+    host.style.cssText = "position:fixed;inset:0;z-index:2147483647;pointer-events:none";
+    document.body.append(host); ui.mountClientToaster(host, css); return ui;
+  }).catch(error => { notificationUI = null; throw error; });
+  return notificationUI;
+}
+async function showToast(message, kind = "info", id) {
+  try { (await notificationService()).showClientToast(String(message), kind, id); }
+  catch (error) { console.warn("Falha ao exibir notificação:", error); }
+}
+async function mountClientPage(id, props) {
+  const previous = document.getElementById(id); previous?.__cleanup?.(); previous?.remove();
+  const host = document.createElement('section'); host.id = id;
+  host.style.cssText = 'position:fixed;inset:0;z-index:2147483646;overflow:auto;background:#09090b';
+  host.textContent = 'Carregando interface…'; document.body.append(host);
   try {
-    if (!notificationUI) notificationUI = (async () => {
-      const base = new URL(window.__groveBase || "./", document.baseURI);
-      const script = new URL("ui-dist/client-ui.js", base);
-      const css = new URL("ui-dist/client-ui.css", base);
-      const version = window.__ORGANIZEON_CLIENT_VERSION__;
-      if (version) { script.searchParams.set("v", version); css.searchParams.set("v", version); }
-      const ui = await import(script.href);
-      const host = document.createElement("div");
-      host.id = "organizeon-notifications";
-      host.style.cssText = "position:fixed;inset:0;z-index:2147483647;pointer-events:none";
-      document.body.append(host);
-      ui.mountClientToaster(host, css.href);
-      return ui;
-    })();
-    (await notificationUI).showClientToast(String(message), kind);
-  } catch (error) { notificationUI = null; console.warn("Falha ao exibir notificação:", error); }
+    const { ui, css } = await loadClientUI();
+    if (!host.isConnected) return null;
+    host.textContent = '';
+    const mounted = ui.mountReactiveSurface(host, props, css);
+    host.__cleanup = mounted.unmount;
+    return { host, ...mounted, close: () => { mounted.unmount(); host.remove(); } };
+  } catch (error) {
+    host.textContent = '';
+    host.style.cssText += ';display:grid;place-content:center;gap:16px;padding:24px;color:#fafafa;font:14px system-ui';
+    const title = document.createElement('h1'); title.textContent = ":'( Um erro ocorreu ao carregar esta página!";
+    const detail = document.createElement('pre');detail.textContent = String(error?.message || error);detail.style.whiteSpace = 'pre-wrap';
+    const close = document.createElement('button');close.textContent = 'Voltar';close.onclick = () => host.remove();
+    host.append(title,detail,close);return null;
+  }
+}
+
+async function showHomePanel() {
+  const previous = document.getElementById('organizeon-home'); previous?.__cleanup?.(); previous?.remove();
+  const host = document.createElement('section'); host.id = 'organizeon-home';
+  host.textContent = 'Carregando início…';
+  host.style.cssText = 'position:fixed;inset:0;overflow:auto;z-index:2147483644;background:#09090b';
+  document.body.append(host); const {ui,css} = await loadClientUI(); if (!host.isConnected) return;
+  host.textContent = '';
+  const close = () => { host.__cleanup?.();host.remove(); };
+  host.__cleanup = ui.mountHomePage(host, { username: window.organizeonAccount?.username || 'visitante',
+    onSearch: value => { close();navigateClientRoute('/search?query='+encodeURIComponent(btoa(unescape(encodeURIComponent(value))))); },
+    onNavigate: action => {
+      if(action === 'games') { void showGameCatalog();return; }
+      if(action === 'settings') { close();navigateClientRoute('/settings');return; }
+      // Use the existing launcher's actual controls, preserving its navigation contract.
+      const label = action === 'music' ? /^(music|música)$/i : /^(apps|aplicativos)$/i;
+      const original = [...document.querySelectorAll('#root button,#root a')].find(element=>label.test(element.textContent.trim()));
+      close();if(original) original.click();else void showToast('Não foi possível abrir esta seção.');
+    },
+  },css);
 }
 
 const config = window.__ORGANIZEON_CONFIG__;
@@ -196,6 +243,7 @@ async function startApplication(
       );
       await import(config.appModule);
       installInternalNavigationGuard();
+    void showHomePanel();
       showConnectionStatus(
         "Modo convidado pronto",
         "Jogos usam o GitHub; pesquisas usam somente um relay público externo.",
@@ -239,6 +287,7 @@ async function startApplication(
     // a conexão é estabelecida. A promessa sempre trata o erro acima.
     await import(config.appModule);
     installInternalNavigationGuard();
+    void showHomePanel();
     // O estado do socket pode mudar depois que a tela já está pronta; não
     // segure a navegação aguardando o timeout do handshake.
     const controlConnected = controlReady;
@@ -436,100 +485,11 @@ function publishConnectionState(state) {
   );
 }
 
-function showConnectionStatus(
-  title,
-  detail = "",
-  percent = null,
-  autoHideMs = 8000,
-) {
-  const element = ensureConnectionStatus();
-  element.querySelector(".title").textContent = title;
-  element.querySelector(".detail").textContent = detail;
-  const progress = element.querySelector(".bar span");
-  if (Number.isFinite(percent)) {
-    progress.classList.remove("indeterminate");
-    progress.style.width = `${Math.max(0, Math.min(100, percent))}%`;
-  } else {
-    progress.classList.add("indeterminate");
-    progress.style.width = "38%";
-  }
-  element.hidden = false;
-  window.clearTimeout(element.hideTimer);
-  if (autoHideMs > 0) {
-    element.hideTimer = window.setTimeout(
-      () => hideConnectionStatus(),
-      autoHideMs,
-    );
-  }
+function showConnectionStatus(title, detail = "", percent = null, autoHideMs = 8000) {
+  void notificationService().then(ui => ui.showConnectionToast(title, detail, percent, autoHideMs));
 }
-
 function hideConnectionStatus() {
-  const element = document.getElementById("organizeon-network-status");
-  if (element) element.hidden = true;
-}
-
-function ensureConnectionStatus() {
-  let element = document.getElementById("organizeon-network-status");
-  if (element) return element;
-
-  element = document.createElement("div");
-  element.id = "organizeon-network-status";
-  element.setAttribute("role", "status");
-  element.setAttribute("aria-live", "polite");
-  element.innerHTML = `
-    <style>
-      #organizeon-network-status {
-        position: fixed; right: 14px; bottom: 14px; z-index: 2147483646;
-        width: min(390px, calc(100% - 28px)); padding: 14px 16px;
-        border: 1px solid rgba(75, 247, 210, .3); border-radius: 13px;
-        color: #eafff9; background: rgba(7, 20, 18, .95);
-        box-shadow: 0 16px 48px rgba(0,0,0,.48);
-        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      }
-      #organizeon-network-status[hidden] { display: none; }
-      #organizeon-network-status .title {
-        padding-right: 28px; color: #70f2d0; font-size: 14px; font-weight: 750;
-      }
-      #organizeon-network-status .close {
-        position: absolute; top: 7px; right: 8px; width: 30px; height: 30px;
-        display: grid; place-items: center; padding: 0; border: 0;
-        border-radius: 8px; cursor: pointer; color: #9db8b1;
-        background: transparent; font: 700 19px/1 system-ui, sans-serif;
-      }
-      #organizeon-network-status .close:hover {
-        color: #fff; background: rgba(255,255,255,.08);
-      }
-      #organizeon-network-status .detail {
-        margin-top: 4px; color: #9db8b1; font-size: 12px; line-height: 1.4;
-      }
-      #organizeon-network-status .bar {
-        height: 6px; margin-top: 10px; overflow: hidden;
-        border-radius: 999px; background: rgba(95, 255, 218, .12);
-      }
-      #organizeon-network-status .bar span {
-        display: block; height: 100%; border-radius: inherit;
-        background: linear-gradient(90deg, #39d9b5, #63f2d5, #43caee);
-        transition: width .2s ease;
-      }
-      #organizeon-network-status .bar span.indeterminate {
-        animation: organizeon-status-slide 1.1s ease-in-out infinite alternate;
-      }
-      @keyframes organizeon-status-slide {
-        from { transform: translateX(-35%); }
-        to { transform: translateX(200%); }
-      }
-    </style>
-    <button class="close" type="button" aria-label="Fechar notificação">×</button>
-    <div class="title"></div>
-    <div class="detail"></div>
-    <div class="bar"><span class="indeterminate"></span></div>
-  `;
-  element.querySelector(".close").addEventListener(
-    "click",
-    hideConnectionStatus,
-  );
-  document.body.appendChild(element);
-  return element;
+  void notificationService().then(ui => ui.dismissClientToast('connection-status'));
 }
 
 window.organizeonStatus = Object.freeze({
@@ -691,7 +651,7 @@ function configureAccountNavigation(account) {
         guest: isGuest, canOpenDashboard,
         proxyLabel: selectedProxy.beta ? "BETA" : "ATIVO",
         onNavigate: (action) => {
-          if (action === "home") navigateClientRoute("/");
+          if (action === "home") { navigateClientRoute("/"); void showHomePanel(); }
           if (action === "games") void showGameCatalog();
           if (action === "settings") navigateClientRoute("/settings");
           if (action === "data") void showDataPanel();
@@ -1199,114 +1159,16 @@ async function clearGameProgress(gameId) {
 }
 
 async function showDataPanel() {
-  document.getElementById("organizeon-data-panel")?.remove();
-  const wrapper = document.createElement("section");
-  wrapper.id = "organizeon-data-panel";
-  wrapper.innerHTML = `
-    <style>
-      #organizeon-data-panel{position:fixed;inset:0;z-index:2147483647;overflow:auto;padding:22px;color:#eafff8;background:#07100e;font-family:Inter,system-ui,sans-serif}
-      #organizeon-data-panel *{box-sizing:border-box}#organizeon-data-panel .shell{width:min(720px,100%);margin:auto}#organizeon-data-panel .top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-      #organizeon-data-panel .back,#organizeon-data-panel button{min-height:42px;border:1px solid #315249;border-radius:10px;color:#dffbf3;background:#13231e;cursor:pointer;font-weight:700}
-      #organizeon-data-panel .back{width:44px;font-size:20px}#organizeon-data-panel h1{margin:0}#organizeon-data-panel .card{margin:14px 0;padding:18px;border:1px solid #263c35;border-radius:16px;background:#0d1915}
-      #organizeon-data-panel .row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#organizeon-data-panel .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:14px}
-      #organizeon-data-panel button{padding:0 13px}#organizeon-data-panel button.primary{color:#062019;background:#63e4c4}#organizeon-data-panel button.danger{color:#ffd6da;border-color:#68383d;background:#32181b}
-      #organizeon-data-panel input,#organizeon-data-panel select{min-height:42px;padding:0 11px;border:1px solid #385148;border-radius:10px;color:#fff;background:#09110e}#organizeon-data-panel .status{color:#8eaaa2;font-size:13px}
-      @media(max-width:560px){#organizeon-data-panel{padding:14px}#organizeon-data-panel .actions{grid-template-columns:1fr}}
-    
-      #organizeon-data-panel { color:#fafafa; background:#09090b; font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
-      #organizeon-data-panel .card { border-color:#27272a; border-radius:9px; background:#111113; box-shadow:none; }
-      #organizeon-data-panel button { border-color:#3f3f46; border-radius:7px; color:#d4d4d8; background:#18181b; transition:background .15s ease,border-color .15s ease; }
-      #organizeon-data-panel button:hover:not(:disabled) { background:#27272a; }
-      #organizeon-data-panel button.primary { border-color:#e4e4e7; color:#18181b; background:#e4e4e7; }
-      #organizeon-data-panel button.danger { border-color:#7f1d1d; color:#fca5a5; background:#1c1113; }
-      #organizeon-data-panel input,#organizeon-data-panel select { border-color:#3f3f46; border-radius:7px; color:#fafafa; background:#09090b; }
-      #organizeon-data-panel .status { color:#a1a1aa; }
-      #organizeon-data-panel :focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
-      @media(prefers-reduced-motion:reduce){#organizeon-data-panel *{transition:none!important}}
-
-      #organizeon-data-panel { width:100vw; max-width:100vw; overflow-x:hidden; }
-      #organizeon-data-panel .shell, #organizeon-data-panel .card, #organizeon-data-panel .actions, #organizeon-data-panel .row { min-width:0; max-width:100%; }
-      #organizeon-data-panel .actions { grid-template-columns:minmax(0,1fr); }
-      #organizeon-data-panel .actions > *, #organizeon-data-panel .row > * { min-width:0; width:100%; }
-      #organizeon-data-panel button { min-height:44px; height:auto; padding:10px 12px; font-size:14px; line-height:1.35; white-space:normal; overflow-wrap:anywhere; }
-      #organizeon-data-panel select { width:100%; max-width:100%; font-size:14px; }
-      #organizeon-data-panel .row { display:grid; grid-template-columns:minmax(0,1fr); }
-      @media (min-width:640px) { #organizeon-data-panel .actions { grid-template-columns:repeat(2,minmax(0,1fr)); } #organizeon-data-panel .actions > .row { grid-column:1/-1; grid-template-columns:minmax(0,1fr) auto; align-items:center; } #organizeon-data-panel .actions > .row > button { width:auto; } }
-</style>
-    <div class="shell"><header class="top"><button class="back">←</button><div><h1>Dados</h1><div class="status">Conta ${window.organizeonAccount?.username || ""}</div></div></header>
-      <article class="card"><div class="row"><div><strong>Backup na nuvem</strong><div class="status backup-status">Consultando…</div></div><button class="toggle primary">Carregando…</button></div><div class="actions"><button class="save">Salvar agora</button><button class="restore">Restaurar</button></div></article>
-      <article class="card"><strong>Progresso dos jogos</strong><p class="status">Os arquivos dos jogos continuam no navegador. Estas ações apagam somente saves.</p><div class="actions"><button class="danger clear-all">Apagar todos os progressos</button><span class="row"><select class="game-id" aria-label="Escolher jogo"><option value="">Carregando jogos…</option></select><button class="danger clear-one" disabled>Apagar jogo</button></span></div></article>
-      <article class="card"><strong>Preferências</strong><p class="status">Tema, proxy, identidade do navegador, teclas e configurações persistentes.</p><button class="danger clear-preferences">Apagar preferências</button></article>
-    </div>`;
-  document.body.appendChild(wrapper);
-  wrapper.querySelector(".back").onclick = () => wrapper.remove();
-  const gameSelect = wrapper.querySelector(".game-id");
-  const clearOneButton = wrapper.querySelector(".clear-one");
-  try {
-    const basePath = window.__groveBase || new URL("./", document.baseURI).pathname;
-    const catalogUrl = new URL("games/catalog.json", new URL(basePath, location.origin));
-    const catalogResponse = await fetch(catalogUrl, { cache: "no-cache" });
-    if (!catalogResponse.ok) throw new Error(`HTTP ${catalogResponse.status}`);
-    const catalogPayload = await catalogResponse.json();
-    const games = Array.isArray(catalogPayload.games) ? catalogPayload.games : [];
-    gameSelect.replaceChildren(
-      new Option("Escolha um jogo…", ""),
-      ...games
-        .filter((game) => game && game.id)
-        .sort((left, right) => String(left.name || left.id).localeCompare(String(right.name || right.id), "pt-BR"))
-        .map((game) => new Option(`${game.name || game.id} — ${game.id}`, game.id)),
-    );
-    gameSelect.title = "O texto depois do travessão é o ID usado para apagar o save.";
-  } catch (error) {
-    gameSelect.replaceChildren(new Option("Não foi possível carregar os jogos", ""));
-    gameSelect.title = "Falha ao carregar games/catalog.json";
-    console.warn("Falha ao carregar IDs dos jogos:", error);
-  }
-  gameSelect.addEventListener("change", () => {
-    clearOneButton.disabled = !gameSelect.value;
+  let page;
+  page = await mountClientPage('organizeon-data-panel', {
+    type: 'data', username: window.organizeonAccount?.username || 'Conta',
+    getStatus: async () => { const response = await apiRequest('/account/backup', { method: 'GET' }); if (!response.ok) throw Error('Falha ao consultar backup.'); return response.json(); },
+    getGames: async () => { const base = new URL(window.__groveBase || './', document.baseURI); const response = await fetch(new URL('games/catalog.json', base)); if (!response.ok) throw Error('Falha ao carregar catálogo.'); return (await response.json()).games || []; },
+    toggleBackup: async enabled => { const response = await apiRequest('/account/backup', { method: 'PATCH', body: JSON.stringify({ enabled }) }); if (!response.ok) throw Error('Falha ao alterar backup.'); cloudBackupEnabled = enabled; },
+    saveBackup: saveCloudBackup, restoreBackup: restoreCloudBackup,
+    clearAllProgress: clearAllGameProgress, clearGameProgress, clearPreferences,
+    onClose: () => page?.close(),
   });
-  const refreshStatus = async () => {
-    const response = await apiRequest("/account/backup", { method: "GET" });
-    const status = await response.json();
-    cloudBackupEnabled = status.enabled === true;
-    wrapper.querySelector(".backup-status").textContent = `${cloudBackupEnabled ? "ON" : "OFF"} · ${formatCloudBytes(status.size || 0)} / ${formatCloudBytes(status.limit || (256 * 1024 * 1024))}`;
-    wrapper.querySelector(".toggle").textContent = cloudBackupEnabled ? "Desativar" : "Ativar";
-  };
-  wrapper.querySelector(".toggle").onclick = async () => {
-    try {
-      const response = await apiRequest("/account/backup", { method: "PATCH", body: JSON.stringify({ enabled: !cloudBackupEnabled }) });
-      if (!response.ok) throw new Error("Não foi possível alterar o backup.");
-      cloudBackupEnabled = !cloudBackupEnabled;
-      if (cloudBackupEnabled) await saveCloudBackup();
-      await refreshStatus();
-    } catch (error) {
-      console.warn("Falha ao atualizar backup na nuvem:", error);
-      wrapper.querySelector(".backup-status").textContent = `Erro: ${error.message || "não foi possível salvar"}`;
-      await refreshStatus().catch(() => {});
-    }
-  };
-  wrapper.querySelector(".save").onclick = async () => {
-    try {
-      await saveCloudBackup();
-      await refreshStatus();
-    } catch (error) {
-      console.warn("Falha ao salvar backup na nuvem:", error);
-      wrapper.querySelector(".backup-status").textContent = `Erro: ${error.message || "não foi possível salvar"}`;
-    }
-  };
-  wrapper.querySelector(".restore").onclick = async () => {
-    try {
-      await restoreCloudBackup();
-      await refreshStatus();
-    } catch (error) {
-      console.warn("Falha ao restaurar backup na nuvem:", error);
-      wrapper.querySelector(".backup-status").textContent = `Erro: ${error.message || "não foi possível restaurar"}`;
-    }
-  };
-  wrapper.querySelector(".clear-all").onclick = async () => { if (confirm("Apagar todos os progressos?")) await clearAllGameProgress(); };
-  clearOneButton.onclick = async () => { const value = gameSelect.value; if (value && confirm(`Apagar o progresso de ${value}?`)) await clearGameProgress(value); };
-  wrapper.querySelector(".clear-preferences").onclick = () => { if (confirm("Apagar todas as preferências?")) clearPreferences(); };
-  await refreshStatus();
 }
 
 function formatCloudBytes(bytes) {
@@ -1423,6 +1285,7 @@ async function openQuickApp(app, navigate) {
 }
 
 async function showGameCatalog() {
+  const { ui: catalogUI, css: catalogCSS } = await loadClientUI();
   document.getElementById("organizeon-game-catalog")?.remove();
   const previousOverflow = document.body.style.overflow;
   const wrapper = document.createElement("section");
@@ -1483,7 +1346,7 @@ async function showGameCatalog() {
       #organizeon-game-catalog .filter.active {
         color: #062019; border-color: #63e4c4; background: #63e4c4;
       }
-      #organizeon-game-catalog .grid {
+      #organizeon-game-catalog .shell > .grid {
         display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
         gap: 18px;
       }
@@ -1530,7 +1393,7 @@ async function showGameCatalog() {
         min-height: 17px; margin: 0 0 11px; color: #5f8d81;
         font-size: 10px; line-height: 1.4;
       }
-      #organizeon-game-catalog .game-stats {
+      #organizeon-game-catalog .legacy-game-stats {
         display: flex; gap: 11px; min-height: 17px; margin: -5px 0 10px;
         color: #789d93; font-size: 10px; font-weight: 720;
       }
@@ -1679,7 +1542,7 @@ async function showGameCatalog() {
         border: 0; color: #062019; background: #63e4c4;
       }
       @media (max-width: 820px) {
-        #organizeon-game-catalog .grid {
+        #organizeon-game-catalog .shell > .grid {
           grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px;
         }
         #organizeon-game-catalog .topbar { flex-wrap: wrap; }
@@ -1894,7 +1757,7 @@ async function showGameCatalog() {
         }
       }
       @media (max-width: 480px) {
-        #organizeon-game-catalog .grid {
+        #organizeon-game-catalog .shell > .grid {
           grid-template-columns: minmax(0,1fr);
         }
         #organizeon-game-catalog .key-settings-grid {
@@ -1909,8 +1772,8 @@ async function showGameCatalog() {
       #organizeon-game-catalog .search { border-color:#3f3f46; border-radius:7px; color:#fafafa; background:#09090b; }
       #organizeon-game-catalog .search:focus-visible,#organizeon-game-catalog button:focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
       #organizeon-game-catalog .filter,#organizeon-game-catalog button { transition:color .15s ease,background .15s ease,border-color .15s ease; }
-      @media(max-width:700px){#organizeon-game-catalog .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
-      @media(max-width:440px){#organizeon-game-catalog .grid{grid-template-columns:1fr}#organizeon-game-catalog .topbar{flex-wrap:wrap}#organizeon-game-catalog .search{order:3;width:100%;margin:4px 0 0}}
+      @media(max-width:700px){#organizeon-game-catalog .shell > .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+      @media(max-width:440px){#organizeon-game-catalog .shell > .grid{grid-template-columns:1fr}#organizeon-game-catalog .topbar{flex-wrap:wrap}#organizeon-game-catalog .search{order:3;width:100%;margin:4px 0 0}}
       @media(prefers-reduced-motion:reduce){#organizeon-game-catalog *{transition:none!important;animation:none!important}}
 </style>
     <div class="shell">
@@ -1964,6 +1827,7 @@ async function showGameCatalog() {
   let playerUrl = null;
   let activeFilter = "all";
   let activeGame = null;
+  let toolbarUI = null;
   const isMobileViewport = matchMedia("(max-width: 700px), (pointer: coarse)").matches;
   const assetUrl = (path) => {
     const basePath = window.__groveBase || new URL("./", location.href).pathname;
@@ -1973,6 +1837,8 @@ async function showGameCatalog() {
   const close = () => {
     if (playerUrl) URL.revokeObjectURL(playerUrl);
     document.body.style.overflow = previousOverflow;
+    toolbarUI?.unmount();
+    grid.querySelectorAll("[data-game-id]").forEach(card => catalogUI.unmountGameCard(card));
     wrapper.remove();
   };
   wrapper.querySelector(".topbar .back").addEventListener("click", close);
@@ -2050,6 +1916,14 @@ async function showGameCatalog() {
       `🔎 Pesquisar entre ${catalog.length} jogos…`;
     wrapper.querySelector(".subtitle").textContent =
       `${catalog.length} jogos · baixe uma vez e jogue direto do cache.`;
+    const toolbarHost = document.createElement('div');
+    wrapper.querySelector('.topbar').style.display = "none"; filters.style.display = "none";
+    wrapper.querySelector('.shell').prepend(toolbarHost);
+    wrapper.querySelector(".shell").style.padding = "0 0 32px";
+    grid.style.padding = "0 16px";
+    toolbarUI = catalogUI.mountCatalogToolbar(toolbarHost, { count: catalog.length, categories, onBack: close,
+      onQueryChange: query => { search.value = query; void renderCatalog(query); },
+      onFilterChange: filter => { activeFilter = filter; void renderCatalog(search.value); } }, catalogCSS);
     await pruneRemovedGameCache(catalog).catch((error) => {
       console.warn("Não foi possível limpar jogos removidos do cache:", error);
     });
@@ -2118,6 +1992,7 @@ async function showGameCatalog() {
         trendingOrder.get(left.id) - trendingOrder.get(right.id)
       );
     }
+    grid.querySelectorAll("[data-game-id]").forEach(card => catalogUI.unmountGameCard(card));
     grid.innerHTML = "";
     if (!games.length) {
       const empty = document.createElement("div");
@@ -2133,13 +2008,13 @@ async function showGameCatalog() {
         if (game.type === "external-download") {
           const action = card.querySelector(".action");
           action.disabled = false;
-          action.textContent = "Baixar HTML";
+          (action.querySelector("[data-action-label]") || action).textContent = "Baixar HTML";
           return;
         }
         if (game.type === "remote") {
           const action = card.querySelector(".action");
           action.disabled = false;
-          action.textContent = "Jogar online";
+          (action.querySelector("[data-action-label]") || action).textContent = "Jogar online";
           return;
         }
         setCardInstalled(
@@ -2151,154 +2026,18 @@ async function showGameCatalog() {
   }
 
   function createGameCard(game) {
-    const card = document.createElement("article");
-    card.className = "card";
-    if (isMobileViewport && game.mobileWarning) {
-      card.classList.add("mobile-warning");
-    }
-    card.dataset.gameId = game.id;
-    const cover = document.createElement("img");
-    cover.className = "cover";
-    cover.src = assetUrl(`games/${game.cover}`).href;
-    cover.alt = `Capa de ${game.name}`;
-    cover.loading = "lazy";
-    const copy = document.createElement("div");
-    copy.className = "copy";
-    const badges = document.createElement("div");
-    badges.className = "badges";
-    const typeBadge = document.createElement("span");
-    typeBadge.className = `badge${game.type === "flash" ? " flash" : ""}`;
-    typeBadge.textContent = game.type === "flash"
-      ? "Flash · Ruffle"
-      : game.type === "external-download"
-        ? "HTML offline · GitHub"
-        : game.type === "remote"
-          ? "Multiplayer online"
-        : "HTML5";
-    badges.appendChild(typeBadge);
-    (game.platforms || ["pc"]).forEach((platform) => {
-      const badge = document.createElement("span");
-      badge.className = "badge";
-      badge.textContent = platform;
-      badges.appendChild(badge);
-    });
-    if (isMobileViewport && game.mobileWarning) {
-      const warning = document.createElement("span");
-      warning.className = "badge flash";
-      warning.textContent = "melhor com teclado/mouse";
-      badges.appendChild(warning);
-    }
-    if ((gameStats.trending || []).includes(game.id)) {
-      const hot = document.createElement("span");
-      hot.className = "badge hot";
-      hot.textContent = "🔥 Em alta";
-      badges.appendChild(hot);
-    }
-    const nameRow = document.createElement("div");
-    nameRow.className = "name-row";
-    const title = document.createElement("h2");
-    title.textContent = game.name;
-    const size = document.createElement("span");
-    size.className = "size";
-    size.textContent = game.type === "flash"
-      ? `${formatGameBytes(game.size)} + Ruffle`
-      : game.type === "external-download"
-        ? `HTML ${formatGameBytes(game.externalDownload.outputSize)}`
-        : game.type === "remote"
-          ? "Servidor BR"
-        : formatGameBytes(game.size);
-    if (game.type === "flash") {
-      size.title = "O Ruffle baixa cerca de 15 MB apenas no primeiro uso e fica em cache.";
-    }
-    nameRow.append(title, size);
-    const description = document.createElement("p");
-    description.className = "description";
-    description.textContent = game.description;
-    const attribution = document.createElement("p");
-    attribution.className = "attribution";
-    attribution.textContent = game.type === "flash"
-      ? `${game.attribution || "OrganizeOn"} · Ruffle ~15 MB no 1º uso`
-      : game.type === "external-download"
-        ? `${game.attribution || "Download externo"} · não usa o relay`
-        : game.type === "remote"
-          ? `${game.attribution || "Servidor OrganizeOn"} · multiplayer dedicado`
-        : game.attribution || "OrganizeOn";
-    const statistics = document.createElement("div");
-    statistics.className = "game-stats";
-    updateGameStatsElement(statistics, game.id);
-    const actions = document.createElement("div");
-    actions.className = "actions";
-    const action = document.createElement("button");
-    action.className = "action";
-    action.type = "button";
-    action.textContent = "Verificando…";
-    action.disabled = true;
-    action.addEventListener("click", async () => {
-      if (game.type === "external-download") {
-        await downloadExternalGame(game, card);
-        return;
-      }
-      if (game.type === "remote") {
-        await launchRemoteGame(game);
-        return;
-      }
-      if (card.classList.contains("installed")) {
-        await playGame(game);
-      } else {
-        await installGame(game, card);
-      }
-    });
-    let relayButton = null;
-    if (game.relayUrl) {
-      relayButton = document.createElement("button");
-      relayButton.className = "credits";
-      relayButton.type = "button";
-      relayButton.textContent = "Copiar relay";
-      relayButton.title = game.relaySupport || "Relay multiplayer";
-      relayButton.addEventListener("click", async () => {
-        await navigator.clipboard.writeText(game.relayUrl);
-        relayButton.textContent = "Relay copiado ✓";
-        window.setTimeout(() => { relayButton.textContent = "Copiar relay"; }, 1800);
-      });
-    }
-    const remove = document.createElement("button");
-    remove.className = "remove";
-    remove.type = "button";
-    remove.title = "Apagar jogo do cache";
-    remove.setAttribute("aria-label", `Apagar ${game.name} do cache`);
-    remove.textContent = "×";
-    remove.addEventListener("click", async () => {
-      const cache = await caches.open(gameCacheName);
-      await Promise.all(gameFiles(game).map((file) =>
-        cache.delete(gameFileUrl(file)),
-      ));
-      setCardInstalled(card, false);
-    });
-    let creditsButton = null;
-    if (game.license || game.attribution || game.source) {
-      creditsButton = document.createElement("button");
-      creditsButton.className = "credits";
-      creditsButton.type = "button";
-      creditsButton.textContent = "Créditos";
-      creditsButton.addEventListener("click", () => showGameCredits(game));
-    }
-    const progress = document.createElement("div");
-    progress.className = "progress";
-    progress.innerHTML = "<span></span>";
-    actions.append(action);
-    if (relayButton) actions.append(relayButton);
-    if (creditsButton) actions.append(creditsButton);
-    actions.append(remove);
-    copy.append(
-      badges,
-      nameRow,
-      description,
-      attribution,
-      statistics,
-      actions,
-      progress,
-    );
-    card.append(cover, copy);
+    const card = document.createElement('article'); card.className = 'modern-game-card'; card.dataset.gameId = game.id;
+    catalogUI.mountGameCard(card, { ...game, cover: assetUrl(`games/${game.cover}`).href,
+      platforms: game.platforms || ['pc'], attribution: game.attribution || 'OrganizeOn',
+      sizeLabel: game.type === 'remote' ? 'Online' : formatGameBytes(game.size || 0),
+      trending: (gameStats.trending || []).includes(game.id), hasCredits: Boolean(game.attribution || game.source || game.license),
+      onAction: async () => { if (game.type === 'external-download') await downloadExternalGame(game, card); else if (game.type === 'remote') await launchRemoteGame(game); else if (card.classList.contains('installed')) await playGame(game); else await installGame(game, card); },
+      onRemove: async () => { const cache = await caches.open(gameCacheName); await Promise.all(gameFiles(game).map(file => cache.delete(gameFileUrl(file)))); setCardInstalled(card, false); },
+      onRelay: async () => { await navigator.clipboard.writeText(game.relayUrl); void showToast('Relay copiado'); },
+      onCredits: () => showGameCredits(game),
+    }, catalogCSS);
+    // The React action receives the same cache/download lifecycle as the old card.
+    updateGameStatsElement(card.querySelector('.game-stats'), game.id);
     return card;
   }
 
@@ -2306,50 +2045,17 @@ async function showGameCatalog() {
     card.classList.toggle("installed", installed);
     const action = card.querySelector(".action");
     action.disabled = false;
-    action.textContent = installed ? "Jogar" : "Baixar";
+    const remove = card.querySelector(".remove"); if (remove) remove.hidden = !installed;
+    (action.querySelector("[data-action-label]") || action).textContent = installed ? "Jogar" : "Baixar";
   }
 
+  function dialogHost() {
+    const host = document.createElement('div'); host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none'; document.body.append(host); return host;
+  }
   function showGameCredits(game) {
-    const backdrop = document.createElement("div");
-    backdrop.className = "dialog-backdrop";
-    backdrop.setAttribute("role", "dialog");
-    backdrop.setAttribute("aria-modal", "true");
-    const dialog = document.createElement("div");
-    dialog.className = "dialog";
-    const title = document.createElement("h2");
-    title.textContent = `Créditos · ${game.name}`;
-    dialog.appendChild(title);
-    [
-      game.attribution,
-      game.copyright,
-      game.license ? `Licença: ${game.license}` : "",
-    ].filter(Boolean).forEach((value) => {
-      const line = document.createElement("p");
-      line.textContent = value;
-      dialog.appendChild(line);
-    });
-    if (game.source) {
-      const sourceLine = document.createElement("p");
-      const link = document.createElement("a");
-      link.href = game.source;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = game.sourceLabel || "Abrir código-fonte e licença";
-      sourceLine.appendChild(link);
-      dialog.appendChild(sourceLine);
-    }
-    const closeButton = document.createElement("button");
-    closeButton.className = "dialog-close";
-    closeButton.type = "button";
-    closeButton.textContent = "Fechar";
-    closeButton.addEventListener("click", () => backdrop.remove());
-    dialog.appendChild(closeButton);
-    backdrop.appendChild(dialog);
-    backdrop.addEventListener("click", (event) => {
-      if (event.target === backdrop) backdrop.remove();
-    });
-    wrapper.appendChild(backdrop);
-    closeButton.focus();
+    const host = dialogHost(); let cleanup;
+    const close = () => { cleanup?.(); host.remove(); };
+    cleanup = catalogUI.mountGameCreditsDialog(host, game, close, catalogCSS);
   }
 
   function readGameControlSettings() {
@@ -2376,115 +2082,15 @@ async function showGameCatalog() {
   }
 
   function showGameControlSettings(game) {
-    const backdrop = document.createElement("div");
-    backdrop.className = "dialog-backdrop";
-    backdrop.setAttribute("role", "dialog");
-    backdrop.setAttribute("aria-modal", "true");
-    const dialog = document.createElement("div");
-    dialog.className = "dialog key-settings";
-    const title = document.createElement("h2");
-    title.textContent = `Teclas · ${game.name}`;
-    const description = document.createElement("p");
-    description.textContent =
-      "Ligue somente as teclas usadas pelo jogo. Esta escolha fica salva neste aparelho.";
-    const grid = document.createElement("div");
-    grid.className = "key-settings-grid";
-    const selectedKeys = configuredGameKeys(game);
-    virtualGameKeyDefinitions.forEach((definition) => {
-      const choice = document.createElement("label");
-      choice.className = "key-choice";
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.value = definition.code;
-      checkbox.checked = definitionIsSelected(definition, selectedKeys);
-      const label = document.createElement("span");
-      label.textContent = definition.label;
-      choice.append(checkbox, label);
-      grid.appendChild(choice);
-    });
-    let tetrisLeftHandedInput = null;
-    const tetrisSettingsNodes = [];
-    const isClassicTetris = String(game.id || "").toLowerCase() === "classic-tetris" ||
-      String(game.entry || "").toLowerCase().endsWith("classic-tetris.html") ||
-      String(game.name || "").trim().toLowerCase() === "tetris";
-    if (isClassicTetris) {
-      const optionsTitle = document.createElement("p");
-      optionsTitle.textContent = "Opções do Tetris";
-      optionsTitle.style.cssText = "margin:16px 0 8px;color:#d9f5ed;font-weight:800";
-      const choice = document.createElement("label");
-      choice.className = "key-choice";
-      tetrisLeftHandedInput = document.createElement("input");
-      tetrisLeftHandedInput.type = "checkbox";
-      tetrisLeftHandedInput.checked = localStorage.getItem("organizeon-tetris-left-handed") === "1";
-      const label = document.createElement("span");
-      label.textContent = "Sou canhoto (ações à esquerda)";
-      choice.append(tetrisLeftHandedInput, label);
-      const fullscreen = document.createElement("button");
-      fullscreen.className = "settings-action";
-      fullscreen.type = "button";
-      fullscreen.textContent = "⛶ Tela cheia";
-      fullscreen.style.cssText = "width:100%;min-height:42px;margin-top:9px;border:1px solid rgba(99,228,196,.25);border-radius:10px;color:#78e8cd;background:rgba(99,228,196,.08);font-weight:800;cursor:pointer";
-      fullscreen.addEventListener("click", async () => {
-        try {
-          if (document.fullscreenElement) await document.exitFullscreen();
-          else await (frame.requestFullscreen?.() || frame.contentDocument?.documentElement?.requestFullscreen?.());
-        } catch (error) {
-          console.warn("Tela cheia indisponível:", error);
-        }
-      });
-      tetrisSettingsNodes.push(optionsTitle, choice, fullscreen);
-    }
-    const actions = document.createElement("div");
-    actions.className = "key-settings-actions";
-    const reset = document.createElement("button");
-    reset.className = "keys-reset";
-    reset.type = "button";
-    reset.textContent = "Restaurar padrão";
-    reset.addEventListener("click", () => {
-      grid.querySelectorAll("input").forEach((checkbox) => {
-        const definition = virtualGameKeyDefinitions.find(
-          (item) => item.code === checkbox.value,
-        );
-        checkbox.checked = definitionIsSelected(
-          definition,
-          game.keys || [],
-        );
-      });
-      if (tetrisLeftHandedInput) tetrisLeftHandedInput.checked = false;
-    });
-    const save = document.createElement("button");
-    save.className = "keys-save";
-    save.type = "button";
-    save.textContent = "Salvar";
-    save.addEventListener("click", () => {
-      const settings = readGameControlSettings();
-      settings[game.id] = Array.from(
-        grid.querySelectorAll("input:checked"),
-        (checkbox) => checkbox.value,
-      );
-      localStorage.setItem(
-        gameControlSettingsStorageKey,
-        JSON.stringify(settings),
-      );
-      if (tetrisLeftHandedInput) {
-        const leftHanded = tetrisLeftHandedInput.checked;
-        localStorage.setItem("organizeon-tetris-left-handed", leftHanded ? "1" : "0");
-        frame.contentWindow?.postMessage({
-          type: "organizeon-tetris-settings",
-          leftHanded,
-        }, "*");
-      }
-      buildVirtualControls(game);
-      backdrop.remove();
-    });
-    actions.append(reset, save);
-    dialog.append(title, description, grid, ...tetrisSettingsNodes, actions);
-    backdrop.appendChild(dialog);
-    backdrop.addEventListener("click", (event) => {
-      if (event.target === backdrop) backdrop.remove();
-    });
-    wrapper.appendChild(backdrop);
-    save.focus();
+    const host = dialogHost(); let cleanup;
+    const close = () => { cleanup?.();host.remove(); };
+    const isTetris = String(game.id || '').toLowerCase() === 'classic-tetris' || String(game.entry || '').toLowerCase().endsWith('classic-tetris.html') || String(game.name || '').toLowerCase() === 'tetris';
+    cleanup = catalogUI.mountGameControlSettingsDialog(host, {
+      name: game.name, definitions: virtualGameKeyDefinitions, selectedKeys: configuredGameKeys(game), defaultKeys: game.keys || [], isTetris,
+      initialLeftHanded: localStorage.getItem('organizeon-tetris-left-handed') === '1', onClose: close,
+      onSave: (keys, leftHanded) => { const settings = readGameControlSettings();settings[game.id] = keys;localStorage.setItem(gameControlSettingsStorageKey, JSON.stringify(settings));if(isTetris) {localStorage.setItem('organizeon-tetris-left-handed',leftHanded?'1':'0');frame.contentWindow?.postMessage({type:'organizeon-tetris-settings',leftHanded},'*');}buildVirtualControls(game);close(); },
+      onFullscreen: async () => { if(document.fullscreenElement) await document.exitFullscreen();else await frame.requestFullscreen?.(); },
+    }, catalogCSS);
   }
 
   async function pruneRemovedGameCache(games) {
@@ -2532,7 +2138,7 @@ async function showGameCatalog() {
     const bar = card.querySelector(".progress span");
     card.classList.add("downloading");
     action.disabled = true;
-    action.textContent = "Conectando ao GitHub…";
+    (action.querySelector("[data-action-label]") || action).textContent = "Conectando ao GitHub…";
     try {
       const response = await fetch(download.url, { cache: "no-store" });
       if (!response.ok) throw new Error(`GitHub respondeu HTTP ${response.status}`);
@@ -2550,7 +2156,7 @@ async function showGameCatalog() {
             Math.round((received / Math.max(1, download.size)) * 100),
           );
           bar.style.width = `${percent}%`;
-          action.textContent =
+          (action.querySelector("[data-action-label]") || action).textContent =
             `GitHub ${formatGameBytes(received)}/${formatGameBytes(download.size)} · ${percent}%`;
         }
       } else {
@@ -2569,7 +2175,7 @@ async function showGameCatalog() {
         throw new Error("o SHA-256 recebido não corresponde à revisão fixada");
       }
 
-      action.textContent = download.format === "zip-single-html"
+      (action.querySelector("[data-action-label]") || action).textContent = download.format === "zip-single-html"
         ? "Extraindo HTML…"
         : "Verificando HTML…";
       const html = download.format === "zip-single-html"
@@ -2596,9 +2202,9 @@ async function showGameCatalog() {
       reportGameEvent(game, "download");
       window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
       bar.style.width = "100%";
-      action.textContent = "HTML baixado";
+      (action.querySelector("[data-action-label]") || action).textContent = "HTML baixado";
     } catch (error) {
-      action.textContent = "Tentar novamente";
+      (action.querySelector("[data-action-label]") || action).textContent = "Tentar novamente";
       window.alert(
         `Não foi possível baixar ${game.name}: ${
           error instanceof Error ? error.message : "erro desconhecido"
@@ -2609,8 +2215,8 @@ async function showGameCatalog() {
       window.setTimeout(() => {
         card.classList.remove("downloading");
         bar.style.width = "0";
-        if (action.textContent === "HTML baixado") {
-          action.textContent = "Baixar novamente";
+        if ((action.querySelector("[data-action-label]") || action).textContent === "HTML baixado") {
+          (action.querySelector("[data-action-label]") || action).textContent = "Baixar novamente";
         }
       }, 900);
     }
@@ -2682,7 +2288,7 @@ async function showGameCatalog() {
     const bar = card.querySelector(".progress span");
     card.classList.add("downloading");
     action.disabled = true;
-    action.textContent = "Baixando 0%";
+    (action.querySelector("[data-action-label]") || action).textContent = "Baixando 0%";
     try {
       const cache = await caches.open(gameCacheName);
       const files = gameFiles(game);
@@ -2741,7 +2347,7 @@ async function showGameCatalog() {
       bar.style.width = "100%";
     } catch (error) {
       action.disabled = false;
-      action.textContent = "Tentar novamente";
+      (action.querySelector("[data-action-label]") || action).textContent = "Tentar novamente";
       window.alert(
         `Não foi possível baixar ${game.name}: ${
           error instanceof Error ? error.message : "erro desconhecido"
@@ -2760,7 +2366,7 @@ async function showGameCatalog() {
         Math.round((received / Math.max(1, total)) * 100),
       );
       bar.style.width = `${percent}%`;
-      action.textContent = fileCount > 1
+      (action.querySelector("[data-action-label]") || action).textContent = fileCount > 1
         ? `Baixando ${file}/${fileCount} · ${percent}%`
         : `Baixando ${percent}%`;
     }
@@ -2897,9 +2503,9 @@ async function showGameCatalog() {
     const statistics = gameStats.games[gameId] || {};
     element.textContent = "";
     const downloads = document.createElement("span");
-    downloads.textContent = `↓ ${formatGameCount(statistics.downloads)} downloads`;
+    downloads.textContent = `${formatGameCount(statistics.downloads)} downloads`;
     const plays = document.createElement("span");
-    plays.textContent = `▶ ${formatGameCount(statistics.plays)} jogadas`;
+    plays.textContent = `${formatGameCount(statistics.plays)} jogadas`;
     element.append(downloads, plays);
   }
 
@@ -3512,181 +3118,22 @@ function hideDefaultHomepageShortcuts() {
   apply();
 }
 
-function showProxyServerDialog() {
-  document.getElementById("organizeon-proxy-dialog")?.remove();
-  const availableOptions = guestMode
-    ? proxyServerOptions.filter((option) => option.id !== "organizeon")
-    : proxyServerOptions;
-  const current = getSelectedProxyServer(guestMode);
-  let pendingId = current.id;
-  const wrapper = document.createElement("div");
-  wrapper.id = "organizeon-proxy-dialog";
-  wrapper.innerHTML = `
-    <style>
-      #organizeon-proxy-dialog {
-        position: fixed; inset: 0; z-index: 2147483647;
-        display: grid; place-items: center; padding: 22px;
-        color: #eafff9; background: rgba(1, 7, 6, .76);
-        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-        backdrop-filter: blur(10px);
-      }
-      #organizeon-proxy-dialog * { box-sizing: border-box; }
-      #organizeon-proxy-dialog .panel {
-        width: min(100%, 520px); padding: 24px;
-        border: 1px solid rgba(104, 241, 210, .22); border-radius: 18px;
-        background: #091512; box-shadow: 0 28px 90px rgba(0,0,0,.55);
-      }
-      #organizeon-proxy-dialog h2 { margin: 0; font-size: 22px; }
-      #organizeon-proxy-dialog .intro {
-        margin: 7px 0 18px; color: #91aaa3; font-size: 13px;
-        line-height: 1.5;
-      }
-      #organizeon-proxy-dialog .option {
-        width: 100%; margin: 8px 0; padding: 14px;
-        display: flex; align-items: flex-start; gap: 12px;
-        border: 1px solid rgba(255,255,255,.1); border-radius: 13px;
-        color: #dcebe7; background: rgba(255,255,255,.025);
-        cursor: pointer; text-align: left;
-      }
-      #organizeon-proxy-dialog .option:hover {
-        border-color: rgba(97,239,207,.35);
-      }
-      #organizeon-proxy-dialog .option.selected {
-        border-color: #54e3c2; background: rgba(72,224,190,.09);
-      }
-      #organizeon-proxy-dialog .radio {
-        width: 17px; height: 17px; margin-top: 2px; flex: 0 0 auto;
-        border: 2px solid #58716a; border-radius: 50%;
-      }
-      #organizeon-proxy-dialog .selected .radio {
-        border: 5px solid #54e3c2;
-      }
-      #organizeon-proxy-dialog strong { font-size: 14px; }
-      #organizeon-proxy-dialog .description {
-        display: block; margin-top: 4px; color: #8ea69f;
-        font-size: 12px; line-height: 1.4;
-      }
-      #organizeon-proxy-dialog .connection {
-        display: flex; align-items: center; gap: 6px; margin-top: 7px;
-        color: #88a099; font-size: 11px; font-weight: 650;
-      }
-      #organizeon-proxy-dialog .connection::before {
-        width: 7px; height: 7px; border-radius: 50%;
-        background: #71817d; content: "";
-      }
-      #organizeon-proxy-dialog .connection.online {
-        color: #66e8c9;
-      }
-      #organizeon-proxy-dialog .connection.online::before {
-        background: #4ee0bd; box-shadow: 0 0 9px rgba(78,224,189,.7);
-      }
-      #organizeon-proxy-dialog .connection.offline {
-        color: #ff9da5;
-      }
-      #organizeon-proxy-dialog .connection.offline::before {
-        background: #ff6b75;
-      }
-      #organizeon-proxy-dialog .option.best {
-        box-shadow: inset 0 0 0 1px rgba(84,227,194,.18);
-      }
-      #organizeon-proxy-dialog .beta {
-        margin-left: 7px; padding: 2px 6px; border-radius: 999px;
-        color: #fbd38d; background: rgba(245,158,11,.13);
-        font-size: 9px; letter-spacing: .05em;
-      }
-      #organizeon-proxy-dialog .warning {
-        margin: 16px 0; padding: 11px 12px;
-        border: 1px solid rgba(245,158,11,.22); border-radius: 10px;
-        color: #d7b97b; background: rgba(245,158,11,.07);
-        font-size: 11px; line-height: 1.45;
-      }
-      #organizeon-proxy-dialog .actions {
-        display: flex; justify-content: flex-end; gap: 9px;
-      }
-      #organizeon-proxy-dialog .actions button {
-        min-height: 40px; padding: 0 15px; border-radius: 10px;
-        border: 1px solid rgba(255,255,255,.12); cursor: pointer;
-        color: #dcebe7; background: transparent; font-weight: 700;
-      }
-      #organizeon-proxy-dialog .actions .apply {
-        border-color: #54e3c2; color: #062018; background: #54e3c2;
-      }
-    
-      #organizeon-proxy-dialog { color:#fafafa; background:rgba(0,0,0,.58); backdrop-filter:blur(4px); }
-      #organizeon-proxy-dialog .panel { border-color:#27272a; border-radius:9px; background:#111113; box-shadow:0 20px 60px rgba(0,0,0,.35); }
-      #organizeon-proxy-dialog .option { border-color:#27272a; border-radius:7px; color:#d4d4d8; background:#18181b; transition:background .15s ease,border-color .15s ease; }
-      #organizeon-proxy-dialog .option:hover,#organizeon-proxy-dialog .option.selected { border-color:#71717a; background:#27272a; box-shadow:none; }
-      #organizeon-proxy-dialog .radio { border-color:#71717a; }
-      #organizeon-proxy-dialog .selected .radio { border-color:#e4e4e7; }
-      #organizeon-proxy-dialog .intro,#organizeon-proxy-dialog .description { color:#a1a1aa; }
-      #organizeon-proxy-dialog button { border-radius:7px; }
-      #organizeon-proxy-dialog :focus-visible { outline:2px solid #a1a1aa; outline-offset:2px; }
-      @media(max-width:520px){#organizeon-proxy-dialog{padding:12px}#organizeon-proxy-dialog .panel{padding:18px}}
-      @media(prefers-reduced-motion:reduce){#organizeon-proxy-dialog *{transition:none!important}}
-</style>
-    <section class="panel" role="dialog" aria-modal="true"
-      aria-labelledby="organizeon-proxy-title">
-      <h2 id="organizeon-proxy-title">Escolher servidor proxy</h2>
-      <p class="intro">
-        ${guestMode
-          ? "Convidados podem usar apenas os WISP públicos externos; o relay OrganizeOn e a API privada permanecem isolados."
-          : "Isto escolhe o servidor WISP. Ultraviolet e Scramjet continuam disponíveis separadamente em Settings → Proxy."}
-        A latência abaixo é o tempo completo para abrir o WebSocket neste
-        dispositivo, não ping ICMP.
-      </p>
-      <div class="options"></div>
-      <p class="warning">
-        Servidores BETA são externos, podem ficar lentos ou sair do ar e o
-        tráfego de navegação não passará pelo backend OrganizeOn.
-      </p>
-      <div class="actions">
-        <button class="cancel" type="button">Cancelar</button>
-        <button class="apply" type="button">Aplicar e reiniciar</button>
-      </div>
-    </section>
-  `;
-  const options = wrapper.querySelector(".options");
-  for (const option of availableOptions) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className =
-      "option" + (option.id === pendingId ? " selected" : "");
-    button.dataset.proxyId = option.id;
-    button.innerHTML = `
-      <span class="radio"></span>
-      <span>
-        <strong></strong>
-        ${option.beta ? '<small class="beta">BETA</small>' : ""}
-        <span class="description"></span>
-        <span class="connection">Medindo latência WebSocket…</span>
-      </span>
-    `;
-    button.querySelector("strong").textContent = option.name;
-    button.querySelector(".description").textContent =
-      option.description;
-    button.addEventListener("click", () => {
-      pendingId = option.id;
-      options.querySelectorAll(".option").forEach((item) => {
-        item.classList.toggle(
-          "selected",
-          item.dataset.proxyId === pendingId,
-        );
-      });
-    });
-    options.appendChild(button);
-  }
-  wrapper.querySelector(".cancel").addEventListener("click", () => {
-    wrapper.remove();
-  });
-  wrapper.querySelector(".apply").addEventListener("click", () => {
-    localStorage.setItem(proxyServerStorageKey, pendingId);
-    restartClientAtMain();
-  });
-  wrapper.addEventListener("click", (event) => {
-    if (event.target === wrapper) wrapper.remove();
-  });
-  document.body.appendChild(wrapper);
-  measureProxyServerOptions(wrapper, availableOptions);
+async function showProxyServerDialog() {
+  const availableOptions = guestMode ? proxyServerOptions.filter(option => option.id !== 'organizeon') : proxyServerOptions;
+  const latency = Object.fromEntries(availableOptions.map(option => [option.id, { label: 'Medindo conexão…', state: 'pending' }]));
+  let page;
+  const props = { type: 'proxy', options: availableOptions, currentId: getSelectedProxyServer(guestMode).id, latency, guestMode,
+    onClose: () => page?.close(),
+    onApply: id => { localStorage.setItem(proxyServerStorageKey, id); restartClientAtMain(); } };
+  page = await mountClientPage('organizeon-proxy-dialog', props);
+  if (!page) return;
+  const token = guestMode ? null : localStorage.getItem(tokenStorageKey);
+  await Promise.all(availableOptions.map(async option => {
+    const result = await measureWispHandshake(guestMode ? option.url : buildProxyWispUrl(option, token));
+    if (!page.host.isConnected) return;
+    latency[option.id] = { label: result.online ? `${result.latencyMs} ms` : result.reason, state: result.online ? 'online' : 'offline' };
+    page.update({ ...props, latency: { ...latency } });
+  }));
 }
 
 async function measureProxyServerOptions(

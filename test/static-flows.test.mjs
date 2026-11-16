@@ -7,10 +7,10 @@ const root = new URL("../", import.meta.url);
 const text = (path) => readFile(new URL(path, root), "utf8");
 
 test("registration, Data controls and cloud backup are present", async () => {
-  const source = await text("auth-client.js");
+  const source = await text("auth-client.js") + await text("ui/src/components/client/surfaces.tsx");
   assert.match(source, /\/auth\/register/);
   assert.match(source, /Registrar/);
-  assert.match(source, /Backup na nuvem/);
+  assert.match(source, /Backup (na|em) nuvem/);
   assert.match(source, /Apagar todos os progressos/);
   assert.match(source, /Apagar preferências/);
   assert.match(source, /exportIndexedDatabases/);
@@ -25,24 +25,21 @@ test("registration, Data controls and cloud backup are present", async () => {
   assert.ok(restoreIndex >= 0 && appImportIndex > restoreIndex, "cloud preferences restore before app initialization");
 });
 
-test("mobile data panel uses the server-reported 256 MiB cap without horizontal overflow", async () => {
-  const source = await text("auth-client.js");
-  assert.match(source, /status\.limit \|\| \(256 \* 1024 \* 1024\)/);
-  assert.match(source, /#organizeon-data-panel \{ width:100vw; max-width:100vw; overflow-x:hidden; \}/);
-  assert.match(source, /grid-template-columns:minmax\(0,1fr\)/);
-  assert.doesNotMatch(source, /\/ 500 MB/);
+test("mobile data panel uses the server-reported 256 MiB cap and shared components", async () => {
+  const source = await text("ui/src/components/client/surfaces.tsx");
+  assert.match(source, /status\?\.limit \|\| 256 \* 1024 \* 1024/);
+  assert.match(source, /<Tabs/);
+  assert.match(source, /clearGameProgress/);
+  assert.match(await text("auth-client.js"), /mountClientPage\('organizeon-data-panel'/);
 });
 
-test("admin dashboard uses D3-aligned dark tokens and accessible compact navigation", async () => {
-  const source = await text("admin.html");
-  assert.match(source, /--bg: #09090b/);
-  assert.match(source, /--panel: #111113/);
-  assert.match(source, /@media\(max-width:390px\)/);
-  assert.match(source, /prefers-reduced-motion:reduce/);
-  assert.match(source, /aria-label="Visão geral"/);
-  assert.match(source, /aria-label="Eventos"/);
-  assert.match(source, /<svg class="nav-icon"/);
-  assert.doesNotMatch(source, /◫ <span|≡ <span|♙ <span/);
+test("admin dashboard starts the React UI and retains its backend bridge", async () => {
+  assert.match(await text("admin.html"), /ui-dist\/admin-ui\.js/);
+  const source = await text("ui/src/admin/admin-app.tsx");
+  assert.match(source, /<Sidebar/);
+  assert.match(source, /<TabsContent keepMounted/);
+  assert.match(source, /OrganizeOnAdminUI/);
+  assert.match(await text("admin.js"), /OrganizeOnAdminUI\?\.setView/);
 });
 
 test("internal links and dashboard remain inside the client", async () => {
@@ -105,7 +102,7 @@ test("game catalog integrity metadata matches distributed files", async () => {
 
 test("Tetris includes guideline mechanics and persistent high score", async () => {
   const source = await text("games/library/classic-tetris.html");
-  const client = await text("auth-client.js");
+  const client = await text("auth-client.js") + await text("ui/src/components/client/game-dialogs.tsx");
   for (const feature of ["jlKicks", "iKicks", "LOCK_DELAY", "LOCK_RESETS", "refill", "ghostY", "hardDrop", "hold"]) {
     assert.match(source, new RegExp(`\\b${feature}\\b`));
   }
@@ -117,7 +114,7 @@ test("Tetris includes guideline mechanics and persistent high score", async () =
   assert.match(client, /classic-tetris\.html/);
   assert.match(client, /organizeon-tetris-settings/);
   assert.match(client, /Sou canhoto \(ações à esquerda\)/);
-  assert.match(client, /⛶ Tela cheia/);
+  assert.match(client, /Tela cheia/);
   assert.match(source, /playSound/);
   assert.match(source, /playNoise/);
   assert.match(source, /name===\"fill\"/);

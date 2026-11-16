@@ -43,7 +43,7 @@ export function GameCard({ game }: { game: GameCardData }) {
       <p className="min-h-4 text-[10px] leading-relaxed text-muted-foreground">{game.attribution}</p>
       <div className="game-stats flex min-h-4 flex-wrap gap-3 text-[10px] text-muted-foreground" aria-label="Estatísticas do jogo" />
       <div className="flex flex-wrap gap-2">
-        <Button className="action min-w-0 flex-1" type="button" disabled>{game.type === "external-download" ? <Download /> : game.type === "remote" ? <Radio /> : <Play />}<span data-action-label>Verificando…</span></Button>
+        <Button className="action min-w-0 flex-1" type="button" disabled onClick={game.onAction}>{game.type === "external-download" ? <Download /> : game.type === "remote" ? <Radio /> : <Play />}<span data-action-label>Verificando…</span></Button>
         {game.relayUrl && <Button className="credits" variant="outline" type="button" title={game.relaySupport || "Relay multiplayer"} onClick={game.onRelay}>Copiar relay</Button>}
         {game.hasCredits && <Button className="credits" variant="outline" type="button" onClick={game.onCredits}><FileText />Créditos</Button>}
         <Button className="remove" variant="destructive" size="icon" type="button" title="Apagar jogo do cache" aria-label={`Apagar ${game.name} do cache`} hidden onClick={game.onRemove}><Trash2 /></Button>

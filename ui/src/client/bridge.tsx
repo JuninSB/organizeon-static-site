@@ -1,3 +1,5 @@
+import { HomePage, type HomeProps } from "@/components/client/home-page";
+import { ConnectionStatus } from "@/components/client/connection-status";
 import { createRoot, type Root } from "react-dom/client";
 import { flushSync } from "react-dom";
 import type { ComponentProps, ReactNode } from "react";
@@ -45,7 +47,7 @@ export function unmountGameCard(host: HTMLElement) {
 export function mountCatalogToolbar(host: HTMLElement, props: CatalogToolbarProps, stylesheetHref: string) {
   ensureDocumentStylesheet(stylesheetHref);
   const root = createRoot(host);
-  const render = (next: CatalogToolbarProps) => flushSync(() => root.render(<div className="organizeon-ui dark"><CatalogToolbar {...next} /></div>));
+  const render = (next: CatalogToolbarProps) => flushSync(() => root.render(<div className="organizeon-ui organizeon-inline-ui dark"><CatalogToolbar {...next} /></div>));
   render(props);
   return {
     update: (count: number, categories: string[]) => render({ ...props, count, categories }),
@@ -67,6 +69,7 @@ export function unmountPreferenceCard(host: HTMLElement) {
 }
 
 export function mountClientDialog(host: HTMLElement, dialog: ReactNode, stylesheetHref: string) {
+  host.classList.add("organizeon-ui", "organizeon-overlay-root", "dark");
   ensureDocumentStylesheet(stylesheetHref);
   const root = createRoot(host);
   flushSync(() => root.render(<div className="organizeon-ui dark"><PortalContextProvider container={host}>{dialog}</PortalContextProvider></div>));
@@ -123,7 +126,7 @@ export function mountClientSurface(host: HTMLElement, props: SurfaceProps, style
   shadow.append(container);
   const root = createRoot(container);
   root.render(
-    <PortalContextProvider container={shadow}>
+    <PortalContextProvider container={container}>
       <TooltipProvider>
         <ClientSurface {...props} />
       </TooltipProvider>
@@ -187,7 +190,7 @@ export function mountClientToaster(host: HTMLElement, stylesheetHref: string) {
   container.className = "organizeon-ui organizeon-overlay-root dark";
   shadow.append(container);
   const root = createRoot(container);
-  root.render(<PortalContextProvider container={shadow}><Toaster position="bottom-right" theme="dark" closeButton richColors={false} /></PortalContextProvider>);
+  root.render(<PortalContextProvider container={container}><Toaster position="bottom-right" theme="dark" closeButton richColors={false} /></PortalContextProvider>);
   mounts.set(host, { root, shadow, container });
   return () => { root.unmount(); shadow.replaceChildren(); mounts.delete(host); };
 }
@@ -197,3 +200,23 @@ export function showClientToast(message: string, kind: "success" | "error" | "in
 }
 
 export function dismissClientToast(id?: string) { toast.dismiss(id); }
+
+/** One root per surface; updates preserve local selection and focus. */
+export function mountReactiveSurface(host: HTMLElement, props: SurfaceProps, stylesheetHref: string) {
+ const shadow = host.attachShadow({ mode: 'open' });
+ const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = stylesheetHref;
+ const container = document.createElement('div'); container.className = 'organizeon-ui dark';
+ shadow.append(link, container); const root = createRoot(container);
+ const update = (next: SurfaceProps) => flushSync(() => root.render(<PortalContextProvider container={container}><TooltipProvider><ClientSurface {...next}/></TooltipProvider></PortalContextProvider>));
+ update(props);
+ return { update, unmount: () => { root.unmount(); shadow.replaceChildren(); } };
+}
+export function showConnectionToast(title: string, detail: string, percent: number | null, duration: number) {
+ toast.custom(id => <ConnectionStatus title={title} detail={detail} percent={percent} onClose={() => toast.dismiss(id)}/>, { id: 'connection-status', duration: duration > 0 ? duration : Infinity });
+}
+
+export function mountHomePage(host: HTMLElement, props: HomeProps, stylesheetHref: string) {
+ const shadow = host.attachShadow({mode:'open'}); const link=document.createElement('link');link.rel='stylesheet';link.href=stylesheetHref;
+ const container=document.createElement('div');container.className='organizeon-ui dark';shadow.append(link,container);const root=createRoot(container);
+ flushSync(()=>root.render(<HomePage {...props}/>));return ()=>{root.unmount();shadow.replaceChildren();};
+}
