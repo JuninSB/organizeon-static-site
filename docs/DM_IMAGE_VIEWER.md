@@ -26,6 +26,8 @@ Não se cria endpoint público de mídia nem se altera a autorização dos anexo
 
 O documento de teste e o harness não são entradas dos builds nem rotas publicadas. O processo de testes fecha navegador e Vite ao terminar. O módulo é sincronizado para D3 por `scripts/sync-profile-ui.mjs`; os painéis reutilizam os mesmos componentes, sem serviços novos.
 
+`ui/e2e/media-viewer-integration.cjs` valida também o bundle compilado, dentro do ShadowRoot e do painel de DMs real, ligado ao store/handler HTTP reais em memória. Confirma anexo privado, estrela persistida e encaminhamento com anexo para outra conversa de teste. `MEDIA_PUBLIC=1` repete usando os bundles do GitHub Pages. Não altera a base de produção.
+
 Referências: [Web Share](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share), [Pointer Capture](https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture).
 
 ## Correção associada no D4
@@ -35,3 +37,7 @@ Mover para a lixeira ou restaurar uma mensagem volta à lista da pasta de origem
 ## Publicação e rollback
 
 Somente arquivos estáticos. Preservar os assets com hashes antigos no Android, guardar índices D3/D4 e template D2 antes da troca atômica. O client/D2 usa bundles do GitHub Pages: rollback exige republicar os artefatos anteriores pelo Git, além de restaurar o template, se necessário. D3/D4 podem retornar aos índices anteriores porque os assets antigos permanecem. Não reiniciar backend, túnel, SSH, Xiaomi ou serviços de e-mail.
+
+Fonte `f84617a`, build `8cbdcb0`, Pages `44193171098` concluído. D2 usa revisão `dm-viewer-f84617a`; hashes dos quatro bundles públicos client/admin conferidos. Backup de índices, template e módulos D3 em `~/organizeon/backend/staging/dm-viewer-20261117-194831/backup/`. Backend PID 23616, D3 PID 7602, D4 PID 4047 e tmux Xiaomi mantidos.
+
+TypeScript, builds client/admin/D3/D4, 17 testes relevantes da interface e 13 testes de distribuição passaram. O teste completo do visualizador passou em mobile/desktop; a integração com o store real isolado passou localmente e com os bundles públicos. O teste D4 também passou com o build publicado, confirmando que mover à lixeira retorna à pasta de origem. Capturas dos dois testes de navegador foram inspecionadas.
