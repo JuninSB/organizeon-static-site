@@ -13,3 +13,11 @@ Publicação de arquivos estáticos sem reinício de serviços. Código `d9ffa51
 Após a publicação, a mesma verificação de navegador passou novamente nos quatro logins usando os arquivos públicos, sem interceptação dos bundles. Preferência, formulário e contraste da marca conferidos também nessa etapa.
 
 Rollback: `~/organizeon/backend/staging/login-themes-20261117-100435/` guarda índices anteriores D3/D4, login D3 e template D2. Restaurar índices/template e, se necessário, o fonte de login; não remover assets antigos. Backend principal, D3, D4 e tmux Xiaomi mantiveram seus processos durante a publicação.
+
+## Mesclagem dos ícones
+
+As versões clara/escura da marca agora permanecem montadas e sobrepostas no mesmo espaço, com carregamento eager e decode antecipado. A troca de tema altera somente a opacidade, em 200 ms. Sol e lua também permanecem no mesmo botão e fazem crossfade. Isso elimina a troca de `src` e a recriação dos ícones a cada clique; a gestão física da memória continua sendo do navegador. Movimento reduzido é respeitado.
+
+Aplicação: logins/client e cabeçalhos D2/D4 usam componentes compartilhados; D3 adapta a marca existente para grid sobreposto e opacidade. O teste de navegador confirma duas imagens carregadas, referências DOM/src preservadas e ambas parcialmente visíveis durante a transição. TypeScript, os três builds de interface e treze testes de distribuição passaram. Código `8d53b23`, distribuição `9ce75fa`; rollback em `~/organizeon/backend/staging/icon-fade-20261117-101422/`. Somente arquivos estáticos foram publicados.
+
+Validação pública concluída nos quatro logins, incluindo retenção dos SVGs e preferência de movimento reduzido. Pages `44090744576` concluído; hashes dos quatro bundles client/admin públicos conferidos. D2 usa revisão `icon-fade-9ce75fa`. Os processos backend, D3, D4 e a sessão Xiaomi permaneceram ativos. Uma primeira amostragem temporal do D3 não capturou a fase intermediária; a repetição completa passou. Teste realizado em Chromium mobile emulado, sem aparelho físico.
