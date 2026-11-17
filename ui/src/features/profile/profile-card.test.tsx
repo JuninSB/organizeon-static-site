@@ -5,7 +5,8 @@ it('supports background images for normal accounts and preserves fit without exp
  const onEdit=vi.fn();const profile={...defaultProfile('fixture'),bannerImage:'data:image/jpeg;base64,fixture',bannerFit:'fill' as const};
  const {rerender}=render(<ProfileCard username="fixture" role="Usuário" profile={profile} onEdit={onEdit}/>);
  expect(screen.getByAltText('Fundo do perfil')).toHaveStyle({objectFit:'fill'});
- await userEvent.setup().click(screen.getByRole('button',{name:'Editar fundo do perfil'}));expect(onEdit).toHaveBeenCalledWith('background');
+ await userEvent.setup().click(screen.getByRole('button',{name:'Editar aparência'}));expect(onEdit).toHaveBeenCalledWith('appearance');
+ expect(screen.queryByRole('button',{name:'Editar fundo do perfil'})).toBeNull();
  rerender(<ProfileCard username="fixture" role="Usuário" profile={profile}/>);expect(screen.queryByRole('button')).toBeNull();
 });
 

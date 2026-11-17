@@ -1,14 +1,16 @@
 # Imagem no fundo do perfil
 
-Em **Perfil → lápis do banner → Editar fundo do perfil**, qualquer conta autenticada pode escolher PNG, JPEG ou WebP de até 5 MB e 24 megapixels. O editor compartilhado permite recorte, zoom, posição e giros de 90°. **Esticar para preencher** começa desligado: sem ele, a proporção é preservada com recorte; ativado, a imagem inteira é ajustada ao banner. Remover fundo restaura o visual anterior, inclusive a animação quando a conta possui o emblema necessário.
+Em **Perfil → lápis de aparência → Fundo do perfil → Imagem**, qualquer conta autenticada pode escolher PNG, JPEG ou WebP de até 5 MB e 24 megapixels. Há um único lápis para o fundo. Imagem é um estilo no mesmo seletor de Bolhas/Estrelas; opções animadas preservam a exigência de emblema. O editor compartilhado permite recorte, zoom, posição e giros de 90°. **Esticar para preencher** começa desligado: sem ele, a proporção é preservada com recorte; ativado, a imagem inteira é ajustada ao banner. Remover fundo seleciona Cor sólida; selecionar outro estilo substitui a imagem.
 
 ## Contrato e armazenamento
 
-`Profile.bannerImage` é uma imagem JPEG em data URI ou null; `Profile.bannerFit` aceita cover ou fill (padrão). A rotação é aplicada aos pixels pelo canvas. Saída 768×256, até 96 KB, com compressão adaptativa. O canvas intermediário é limitado a 1536px para conter consumo de memória. Nenhuma URL externa é aceita no backend. PNG/WebP de entrada são convertidos no navegador; SVG e arquivos inválidos são recusados.
+`Profile.bannerImage` é uma imagem JPEG em data URI ou null; `Profile.bannerStyle` inclui image; `Profile.bannerFit` aceita cover ou fill (padrão). A rotação é aplicada aos pixels pelo canvas. Saída 768×256, até 96 KB, com compressão adaptativa. O canvas intermediário é limitado a 1536px para conter consumo de memória. Nenhuma URL externa é aceita no backend. PNG/WebP de entrada são convertidos no navegador; SVG e arquivos inválidos são recusados.
 
 O PATCH autenticado `/account/profile` usa a mesma persistência e as mesmas sessões existentes. O backend valida MIME, assinatura, codificação, tamanho e dimensões. Atualizações de outros campos preservam imagem e ajuste. A configuração vale para perfil próprio e público; a edição aparece somente no próprio perfil. Os controles de emblema/animação mantêm suas permissões anteriores. Não há alteração de senha, cargo ou tokens.
 
 ## Módulos
+
+Imagem usa o mesmo editor `appearance` dos demais estilos. O campo separado `background` e seu lápis foram removidos. O backend projeta imagens já salvas como `bannerStyle: image`; alterações em outros campos as preservam. Selecionar um estilo diferente limpa `bannerImage`, evitando sobreposição. Selecionar image sem arquivo é recusado. Esta mudança não cria campos editáveis novos no seletor de emblemas nem libera animações para quem não possui emblema.
 
 - `ui/src/features/profile/avatar-editor.tsx`: editor compartilhado de foto/banner, rotação e compressão.
 - `profile-field-editor.tsx`, `profile-card.tsx`, `profile-dialog.tsx`: seleção, apresentação e ciclo de vida.

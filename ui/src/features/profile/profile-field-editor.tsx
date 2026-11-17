@@ -39,13 +39,14 @@ export function ProfileFieldEditor({
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const input = useRef<HTMLInputElement>(null);
-  const isBanner = field === "background";
+  const isBanner = field === "appearance" && draft.bannerStyle === "image";
   return (
     <form
       className="grid gap-4"
       onSubmit={async (event) => {
         event.preventDefault();
         if (busy || photo) return;
+        if (isBanner && !draft.bannerImage) {setError("Escolha uma imagem para o fundo.");return;}
         setBusy(true);
         setError("");
         try {
@@ -54,10 +55,8 @@ export function ProfileFieldEditor({
               ? { displayName: draft.displayName, nameColor: draft.nameColor }
               : field === "bio"
                 ? { bio: draft.bio }
-                : field === "background"
-                  ? { bannerImage: draft.bannerImage || null, bannerFit: draft.bannerFit || "cover" }
                 : field === "appearance"
-                  ? { showGoldBadge: draft.showGoldBadge !== false, bannerStyle: draft.bannerStyle || "solid", bannerColor: draft.bannerColor || null }
+                  ? { showGoldBadge: !!draft.goldBadge && draft.showGoldBadge !== false, bannerStyle: draft.bannerStyle || "solid", bannerColor: draft.bannerColor || null, bannerImage: isBanner ? draft.bannerImage || null : null, bannerFit: draft.bannerFit || "cover" }
                   : { avatar: draft.avatar, avatarShape: draft.avatarShape },
           );
         } catch (e) {
@@ -67,18 +66,20 @@ export function ProfileFieldEditor({
         }
       }}
     >
-      {field === "appearance" && profile.goldBadge && <>
+      {field === "appearance" && <>
         <div className="oo-profile-banner h-28 rounded-lg border border-border bg-card" role="img" aria-label="Prévia do fundo" style={{background:`color-mix(in srgb, ${draft.bannerColor || draft.nameColor} 18%, rgb(var(--card)))`}}>
-          {draft.bannerStyle !== "solid" && !!draft.bannerStyle && <LavaBanner seed={draft.bannerSeed || "preview"} color={draft.bannerColor || draft.nameColor} material={draft.bannerStyle === "lava" ? undefined : draft.bannerStyle === "magma" ? "lava" : draft.bannerStyle} />}
+          {isBanner ? draft.bannerImage && <img src={draft.bannerImage} alt="Prévia do fundo" className="size-full" style={{objectFit:draft.bannerFit || "cover"}} /> : draft.goldBadge && draft.bannerStyle !== "solid" && !!draft.bannerStyle && <LavaBanner seed={draft.bannerSeed || "preview"} color={draft.bannerColor || draft.nameColor} material={draft.bannerStyle === "lava" ? undefined : draft.bannerStyle === "magma" ? "lava" : draft.bannerStyle} />}
         </div>
+        {profile.goldBadge && !isBanner && <>
         <label className="flex items-center gap-3 text-sm"><Checkbox checked={!draft.bannerColor} disabled={busy} onCheckedChange={(follow) => setDraft({...draft,bannerColor:follow ? null : draft.nameColor})}/>Usar a cor do nick no fundo</label>
         {draft.bannerColor && <label className="flex items-center justify-between gap-3 text-sm">Cor do fundo<Input aria-label="Cor do fundo" type="color" className="h-10 w-16 p-1" value={draft.bannerColor} disabled={busy} onChange={event => setDraft({...draft,bannerColor:event.target.value})}/></label>}
         <BannerSeedControl profile={draft} disabled={busy} onUpdated={(next) => {setDraft(current => ({...current,bannerSeed:next.bannerSeed,bannerRerollAvailableAt:next.bannerRerollAvailableAt,bannerRerollUnlimited:next.bannerRerollUnlimited}));onRerolled?.(next);}} />
-        <label className="flex items-center gap-3 text-sm"><Checkbox checked={draft.showGoldBadge !== false} disabled={busy} onCheckedChange={(value) => setDraft({ ...draft, showGoldBadge: !!value })} />Exibir emblema dourado no perfil</label>
+        </>}
+        {profile.goldBadge && <label className="flex items-center gap-3 text-sm"><Checkbox checked={draft.showGoldBadge !== false} disabled={busy} onCheckedChange={(value) => setDraft({ ...draft, showGoldBadge: !!value })} />Exibir emblema dourado no perfil</label>}
         <label className="grid gap-2 text-sm">Fundo do perfil
-          <Select value={draft.bannerStyle || "solid"} disabled={busy} onValueChange={(value) => {if(value && ["solid","lava","bubbles","gradient","stars","rainbow"].includes(value))setDraft({ ...draft, bannerStyle: value as Profile["bannerStyle"] });}}>
-            <SelectTrigger><SelectValue>{({solid:"Cor sólida",lava:"Fluidos — 12 composições",bubbles:"Bolhas",gradient:"Gradiente",stars:"Estrelas",rainbow:"Arcos de cor"}[(draft.bannerStyle === "slime" || draft.bannerStyle === "magma" ? "solid" : draft.bannerStyle) || "solid"])}</SelectValue></SelectTrigger>
-            <SelectContent><SelectItem value="solid">Cor sólida</SelectItem><SelectItem value="lava">Fluidos — 12 composições</SelectItem><SelectItem value="bubbles">Bolhas</SelectItem><SelectItem value="gradient">Gradiente</SelectItem><SelectItem value="stars">Estrelas</SelectItem><SelectItem value="rainbow">Arcos de cor</SelectItem></SelectContent>
+          <Select value={draft.bannerStyle || "solid"} disabled={busy || !!photo} onValueChange={(value) => {if(value && ["solid","image","lava","bubbles","gradient","stars","rainbow"].includes(value))setDraft({ ...draft, bannerStyle: value as Profile["bannerStyle"] });}}>
+            <SelectTrigger aria-label="Estilo do fundo"><SelectValue>{({solid:"Cor sólida",image:"Imagem",lava:"Fluidos — 12 composições",bubbles:"Bolhas",gradient:"Gradiente",stars:"Estrelas",rainbow:"Arcos de cor"}[(draft.bannerStyle === "slime" || draft.bannerStyle === "magma" ? "solid" : draft.bannerStyle) || "solid"])}</SelectValue></SelectTrigger>
+            <SelectContent><SelectItem value="solid">Cor sólida</SelectItem><SelectItem value="image">Imagem</SelectItem>{profile.goldBadge && <><SelectItem value="lava">Fluidos — 12 composições</SelectItem><SelectItem value="bubbles">Bolhas</SelectItem><SelectItem value="gradient">Gradiente</SelectItem><SelectItem value="stars">Estrelas</SelectItem><SelectItem value="rainbow">Arcos de cor</SelectItem></>}</SelectContent>
           </Select>
         </label>
       </>}
@@ -140,7 +141,7 @@ export function ProfileFieldEditor({
       {(field === "photo" || isBanner) && (
         <>
           <div className="flex items-center gap-4">
-            {isBanner ? <div className="h-20 w-36 shrink-0 overflow-hidden rounded-lg border bg-muted">{draft.bannerImage && <img src={draft.bannerImage} alt="Prévia do fundo" className="size-full" style={{objectFit:draft.bannerFit || "cover"}} />}</div> : <ProfileAvatar profile={draft} className="size-16" />}
+            {!isBanner && <ProfileAvatar profile={draft} className="size-16" />}
             <div className="flex flex-wrap gap-2">
               <input
                 ref={input}
@@ -181,7 +182,7 @@ export function ProfileFieldEditor({
                   type="button"
                   variant="ghost"
                   disabled={busy}
-                  onClick={() => setDraft(isBanner ? { ...draft, bannerImage: null } : { ...draft, avatar: null })}
+                  onClick={() => setDraft(isBanner ? { ...draft, bannerImage: null, bannerStyle: "solid" } : { ...draft, avatar: null })}
                 >
                   {isBanner ? "Remover fundo" : "Remover foto"}
                 </Button>
