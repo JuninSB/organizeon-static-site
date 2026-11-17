@@ -53,9 +53,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.answer(200 if mid else 404,{'id':mid,'accepted':bool(mid)})
         if path=='/d4/internal/health':return self.answer(200,{'ok':True})
         owner=self.headers.get('X-D4-User','')
-        if not owner:return self.answer(401,{'error':'Autenticação necessária.'})
         api='/d4/api/'
         if path.startswith(api):
+            if not owner:return self.answer(401,{'error':'Autenticação necessária.'})
             action=path[len(api):].strip('/');parts=action.split('/')
             data=json.loads(self.body()) if self.command in ('POST','PATCH','PUT') else {}
             if action=='mailboxes':
