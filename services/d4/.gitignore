@@ -1,0 +1,7 @@
+private/
+config/
+data/
+venv/
+frontend/dist/
+__pycache__/
+*.pyc

@@ -46,7 +46,7 @@ export const profileService = {
 };
 
 export function finishPasswordChange() {
-  if (/^\/d[23](\/|$)/.test(location.pathname)) {
+  if (/^\/d[234](\/|$)/.test(location.pathname)) {
     location.replace(location.pathname.slice(0, 3) + "/login");
     return;
   }

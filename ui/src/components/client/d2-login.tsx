@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-export function D2Login({ onSubmit }: { onSubmit: (username: string, password: string) => Promise<void> }) {
+export function D2Login({ onSubmit, endpoint = 2, label = 'Painel de arquivos' }: { onSubmit: (username: string, password: string) => Promise<void>; endpoint?: number; label?: string }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,8 +19,8 @@ export function D2Login({ onSubmit }: { onSubmit: (username: string, password: s
   return <main className="grid min-h-svh place-items-center px-4 py-10">
     <Card className="w-full max-w-[380px] border-border bg-card shadow-none animate-ui-enter">
       <CardHeader className="space-y-5">
-        <div className="flex items-center gap-3"><img className="size-10 object-contain" src="https://organizeon.com.br/d3/assets/organizeon-icon.png" alt="" /><div><p className="text-sm font-semibold">OrganizeOn <span className="font-normal text-muted-foreground">D2</span></p><p className="text-xs text-muted-foreground">Painel de arquivos</p></div></div>
-        <div className="space-y-1.5"><CardTitle className="text-xl">Entrar no painel</CardTitle><CardDescription>Autentique-se para acessar o conteúdo do Endpoint 2.</CardDescription></div>
+        <div className="flex items-center gap-3"><img className="size-10 object-contain" src="https://organizeon.com.br/d3/assets/organizeon-icon.png" alt="" /><div><p className="text-sm font-semibold">OrganizeOn <span className="font-normal text-muted-foreground">D{endpoint}</span></p><p className="text-xs text-muted-foreground">{label}</p></div></div>
+        <div className="space-y-1.5"><CardTitle className="text-xl">Entrar no painel</CardTitle><CardDescription>Autentique-se para acessar o conteúdo do Endpoint {endpoint}.</CardDescription></div>
       </CardHeader>
       <CardContent><form className="grid gap-4" onSubmit={(event) => void submit(event)}>
         <label className="grid gap-1.5 text-sm font-medium">Usuário<Input autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} required disabled={pending} /></label>

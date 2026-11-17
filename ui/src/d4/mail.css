@@ -1,0 +1,9 @@
+.organizeon-ui{min-height:100svh;background:rgb(var(--background));color:rgb(var(--foreground));font-family:'Geist Variable',system-ui,sans-serif}
+.organizeon-ui *, .organizeon-ui *::before,.organizeon-ui *::after{box-sizing:border-box}
+.organizeon-ui button,.organizeon-ui input,.organizeon-ui textarea,.organizeon-ui select{font:inherit}
+.d4-mail-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;width:100%;padding:16px 20px;text-align:left;border:0;border-bottom:1px solid rgb(var(--border));background:transparent;color:inherit;cursor:pointer;transition:background 150ms}
+.d4-mail-row:hover{background:rgb(var(--muted))}.d4-mail-row:focus-visible{outline:2px solid rgb(var(--ring));outline-offset:-2px}
+.d4-select{width:100%;min-height:40px;padding:8px 10px;border:1px solid rgb(var(--border));border-radius:8px;background:rgb(var(--background));color:inherit}
+.d4-textarea{min-height:220px;width:100%;resize:vertical;padding:12px;border:1px solid rgb(var(--border));border-radius:8px;background:rgb(var(--background));color:inherit;line-height:1.6}
+.d4-content{animation:d4-enter 150ms ease-out}@keyframes d4-enter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.d4-content{animation:none}}

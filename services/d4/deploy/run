@@ -1,0 +1,6 @@
+#!/data/data/com.termux/files/usr/bin/sh
+exec 2>&1
+umask 077
+export D4_HOME=/data/data/com.termux/files/home/organizeon/d4
+cd "$D4_HOME"
+exec "$D4_HOME/venv/bin/python" -u backend/server.py
