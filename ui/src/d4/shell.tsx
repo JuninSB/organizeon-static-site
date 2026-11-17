@@ -4,7 +4,6 @@ import {
   Send,
   FilePenLine,
   Trash2,
-  Settings,
   AtSign,
   Plus,
   RefreshCw,
@@ -39,7 +38,6 @@ import { Boundary } from "./boundary";
 const MailList = lazy(() => import("./pages/list"));
 const MessagePage = lazy(() => import("./pages/message"));
 const Compose = lazy(() => import("./pages/compose"));
-const SettingsPage = lazy(() => import("./pages/settings"));
 const Addresses = lazy(() => import("./pages/addresses"));
 const links = [
   ["inbox", "Caixa de entrada", Inbox],
@@ -48,7 +46,6 @@ const links = [
   ["failed", "Falhas de envio", TriangleAlert],
   ["trash", "Lixeira", Trash2],
   ["addresses", "Endereços", AtSign],
-  ["settings", "Configurações", Settings],
 ] as const;
 function Navigation() {
   const { setOpenMobile } = useSidebar();
@@ -104,6 +101,9 @@ export default function Shell({
     }
   }, []);
   useEffect(() => {
+    if (route === "settings") location.replace("#/inbox");
+  }, [route]);
+  useEffect(() => {
     const stop = configureAccountTransport((path, options) =>
       api(path.replace(/^\/account\//, "/"), options),
     );
@@ -123,9 +123,7 @@ export default function Shell({
     links.find((x) => x[0] === route)?.[1] ||
     (route.startsWith("compose") ? "Nova mensagem" : "Mensagem");
   const page =
-    route === "settings" ? (
-      <SettingsPage />
-    ) : route === "addresses" ? (
+    route === "addresses" ? (
       <Addresses boxes={boxes} refresh={refresh} />
     ) : route.startsWith("message/") ? (
       <MessagePage id={route.split("/")[1]} refresh={refresh} />
@@ -142,7 +140,7 @@ export default function Shell({
         refresh={refresh}
       />
     ) : (
-      <MailList mailbox={box} folder={route} revision={revision} />
+      <MailList mailbox={box} folder={route === "settings" ? "inbox" : route} revision={revision} />
     );
   return (
     <div ref={rootRef} className="contents">

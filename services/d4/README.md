@@ -2,6 +2,8 @@
 
 Aplicação em `https://organizeon.com.br/d4/`. Login em `/d4/login`, navegação interna por hash. Contas OrganizeOn com cargo `ultra_admin`, `super_admin` ou `owner`. Cada conta possui seus próprios endereços, mensagens, anexos e configuração de envio. Não há limite artificial de quantidade de caixas; disco do Android e cotas da Cloudflare continuam finitos.
 
+Estado atual: SMTP fixado na Brevo e gerenciado pelo servidor. A aba Configurações foi removida; `#/settings` redireciona para `#/inbox`. Alterações pela API de configurações são recusadas com 405. Configurações antigas por usuário são ignoradas na seleção do transporte; os outros adaptadores descritos abaixo são históricos e não podem ser selecionados na aplicação.
+
 ## Estrutura
 
 - Frontend: repositório organizeon-static-site, `ui/src/d4/` (React/TypeScript, componentes compartilhados de sidebar, login, perfil, mensagens, botões, formulários e portal). Páginas carregadas sob demanda e isoladas por boundary.

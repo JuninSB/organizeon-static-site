@@ -101,7 +101,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.answer(200,row['data'],'application/octet-stream',{'Content-Disposition':"attachment; filename*=UTF-8''"+quote(row['name'],safe=''),'Content-Security-Policy':"sandbox; default-src 'none'"})
             if action=='settings':
                 if self.command=='GET':return self.answer(200,STORE.settings(owner))
-                if self.command=='PUT':return self.answer(200,STORE.save_settings(owner,data))
+                if self.command=='PUT':return self.answer(405,{'error':'O envio é gerenciado pelo OrganizeOn e não pode ser alterado.'})
             return self.answer(404,{'error':'Recurso não encontrado.'})
         if self.command not in ('GET','HEAD'):return self.answer(405,{'error':'Método inválido.'})
         relative=path.removeprefix('/d4/').lstrip('/')

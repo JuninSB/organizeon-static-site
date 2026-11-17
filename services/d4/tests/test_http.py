@@ -53,5 +53,14 @@ class LoginAssetsTests(unittest.TestCase):
                 urlopen(Request(self.base + '/d4/api/mailboxes', headers=headers))
             self.assertEqual(error.exception.code, status)
             error.exception.close()
+    def test_smtp_settings_cannot_be_changed(self):
+        headers={'X-D4-Internal':'fixture-internal','X-D4-User':'fixture-owner','Content-Type':'application/json'}
+        with self.assertRaises(HTTPError) as error:
+            urlopen(Request(self.base+'/d4/api/settings',data=b'{"mode":"direct"}',method='PUT',headers=headers))
+        self.assertEqual(error.exception.code,405)
+        error.exception.close()
+        with urlopen(Request(self.base+'/d4/api/settings',headers=headers)) as response:
+            import json
+            self.assertEqual(json.load(response)['mode'],'brevo')
 
 if __name__ == '__main__': unittest.main()

@@ -50,18 +50,9 @@ const { chromium } = require("/tmp/replay-browser/node_modules/playwright");
   const nav = page.getByRole("button", { name: "Abrir ou recolher navegação" });
   if (await nav.count()) await nav.click();
   else await page.getByRole("button", { name: "Toggle Sidebar" }).click();
-  await page
-    .getByRole("button", { name: "Configurações", exact: true })
-    .click();
-  await page
-    .getByRole("heading", { name: "Envio de e-mail", exact: true })
-    .waitFor();
-  await page.locator("main select").last().selectOption("relay");
-  await page.getByLabel("Servidor", { exact: true }).fill("smtp.example.org");
-  await page.screenshot({
-    path: "/tmp/d4-settings-mobile.png",
-    fullPage: true,
-  });
+  if(await page.getByRole("button",{name:"Configurações",exact:true}).count())throw Error("SMTP settings must not appear in navigation");
+  await page.goto("https://organizeon.com.br/d4/#/settings");
+  await page.waitForURL("https://organizeon.com.br/d4/#/inbox");
   await page.goto("https://organizeon.com.br/d4/#/addresses");
   await page.getByRole("heading", { name: "Seus endereços" }).waitFor();
   const local = "d4-ui-check-" + Date.now();

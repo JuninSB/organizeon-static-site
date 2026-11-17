@@ -146,8 +146,8 @@ class MailStore:
         if folder not in ('trash','inbox'): raise ValueError('Destino inválido.')
         with self.connect() as db: db.execute('UPDATE messages SET folder=? WHERE id=? AND folder NOT IN (\'sending\')',(folder,mid))
     def settings(self,owner,public=True):
-        with self.connect() as db: row=db.execute('SELECT data FROM settings WHERE owner=?',(owner,)).fetchone()
-        data=json.loads(row['data']) if row else dict(BREVO)
+        # SMTP is managed centrally. Historical per-account settings cannot override Brevo.
+        data=dict(BREVO)
         if data.get('mode')=='brevo':
             data={**data,**BREVO}
             data.pop('password',None)

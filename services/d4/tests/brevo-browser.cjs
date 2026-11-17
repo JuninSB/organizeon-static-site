@@ -165,11 +165,9 @@ const { chromium } = require("/tmp/replay-browser/node_modules/playwright");
     if (hash(await downloaded.body()) !== hash(bytes))
       throw Error("Forwarded attachment changed");
     await page.goto("https://organizeon.com.br/d4/#/settings");
-    await page
-      .getByText("Credencial configurada no servidor.", { exact: true })
-      .waitFor();
+    await page.waitForURL("https://organizeon.com.br/d4/#/inbox");
     await page.screenshot({
-      path: "/tmp/d4-brevo-settings-mobile.png",
+      path: "/tmp/d4-brevo-inbox-mobile.png",
       fullPage: true,
     });
     if (
