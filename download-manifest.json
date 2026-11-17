@@ -1,7 +1,7 @@
 {
-  "version": "v2-94fe264a975d4ecd",
-  "generatedAt": "2026-11-17T22:45:11.737Z",
-  "totalBytes": 13611813,
+  "version": "v2-b7bc9c2ba86264b1",
+  "generatedAt": "2026-11-17T23:55:48.696Z",
+  "totalBytes": 13623552,
   "files": [
     {
       "path": "404.html",
@@ -11,7 +11,7 @@
     {
       "path": "admin.html",
       "size": 731,
-      "sha256": "14341de1ec79c37e14779957a155771e4530de124b0fe9367f907d7223b8e058"
+      "sha256": "9a9fcbd642621f473a9b8608e8a30b6e8bb8c9bc5b7604622b4cdb7ec346f38d"
     },
     {
       "path": "admin.js",
@@ -335,8 +335,8 @@
     },
     {
       "path": "auth-client.js",
-      "size": 141313,
-      "sha256": "16907816d0e20eab350e759d4cffe702d750d7e157f220e3c7f6d0756feb31ed"
+      "size": 141416,
+      "sha256": "3a3a8b18ca7ee89b9eae4fac78f7b3d14fbb987b5077a67a01fb09d1b1d729f8"
     },
     {
       "path": "config.js",
@@ -775,23 +775,23 @@
     },
     {
       "path": "ui-dist/client-ui.js",
-      "size": 1199805,
-      "sha256": "8cd90818b11497eb6125da7727b1f569734b67c7781a11fc9d9c524c9d725978"
+      "size": 1205183,
+      "sha256": "74afc0cac8b1b6fc390e9fc7f741039d7db6859757a2529b263354ff1acaddd3"
     },
     {
       "path": "ui-dist/client-ui.css",
-      "size": 198475,
-      "sha256": "69472329b9c6f6ac229585b2096e3c81405d33501dff219b5ae91519a114d31a"
+      "size": 198793,
+      "sha256": "2301266bbf92e0c7445d00338d3491d943b774b401695e90c75872af65cdf517"
     },
     {
       "path": "ui-dist/admin-ui.js",
-      "size": 1624376,
-      "sha256": "8681e9ffb3dc710ec273cdd2e4fa7e1a705c5d50d1adaebe212efb397d091bc8"
+      "size": 1629998,
+      "sha256": "b93b1d583a6e03d767b522fa91afc9a0b8af992864c97db00cf5646ff12b172c"
     },
     {
       "path": "ui-dist/admin-ui.css",
-      "size": 198475,
-      "sha256": "69472329b9c6f6ac229585b2096e3c81405d33501dff219b5ae91519a114d31a"
+      "size": 198793,
+      "sha256": "2301266bbf92e0c7445d00338d3491d943b774b401695e90c75872af65cdf517"
     },
     {
       "path": "core/proxy/scramjet-bootstrap.js",
