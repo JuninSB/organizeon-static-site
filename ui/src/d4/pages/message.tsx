@@ -219,6 +219,11 @@ export default function MessagePage({
           ))}
         </section>
       )}
+      <footer className="pb-6 pt-4" aria-label="Fim da mensagem">
+        <p className="border-t pt-4 text-center text-xs text-muted-foreground">
+          Organizeon • Mail
+        </p>
+      </footer>
     </article>
   );
 }
