@@ -15,6 +15,7 @@ const root=path.resolve(__dirname,'../..');
   await page.route('https://profile-bg.test/**',route=>{
    const url=new URL(route.request().url());
    if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:'<meta name="viewport" content="width=device-width,initial-scale=1"><div id="nav"></div><script type="module">import{mountNavigation}from"/ui-dist/client-ui.js";mountNavigation(document.querySelector("#nav"),{type:"account",username:"Teste",role:"user",guest:false,canOpenDashboard:false,proxyLabel:"OrganizeOn",onNavigate(){}},"/ui-dist/client-ui.css");</script>'});
+   if(process.env.PROFILE_PUBLIC==='1'&&url.pathname.startsWith('/ui-dist/'))return route.fetch({url:'https://juninsb.github.io/organizeon-static-site'+url.pathname+'?v=profile-background-20261117',maxRetries:2}).then(response=>route.fulfill({response}));
    const file=path.join(root,url.pathname);return fs.existsSync(file)?route.fulfill({path:file,contentType:file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':undefined}):route.fulfill({status:404});
   });
   const openProfile=async()=>{await page.getByRole('button',{name:'Abrir menu',exact:true}).click();await page.getByRole('button',{name:'Perfil de Teste'}).click();await page.getByRole('menuitem',{name:'Perfil',exact:true}).click();await page.getByRole('dialog',{name:'Meu perfil',exact:true}).waitFor();};
