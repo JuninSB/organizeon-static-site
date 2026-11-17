@@ -41,7 +41,7 @@ const root=path.resolve(__dirname,'../..');
   const saved=validateProfile(patches.at(-1),{username:'fixture'});if(saved.bannerImage!==profile.bannerImage||saved.bannerFit!=='fill')throw Error('Backend rejects cropped image');
   await page.reload();await openProfile();await page.getByAltText('Fundo do perfil').waitFor();
   await page.screenshot({path:'/tmp/profile-background-saved.png',fullPage:true});
-  await page.setViewportSize({width:1365,height:900});await page.getByAltText('Fundo do perfil').waitFor();
+  await page.setViewportSize({width:1365,height:900});await page.reload();await openProfile();await page.getByAltText('Fundo do perfil').waitFor();
   await page.screenshot({path:'/tmp/profile-background-desktop.png',fullPage:true});
   await page.getByRole('button',{name:'Editar fundo do perfil'}).click();
   await page.getByRole('button',{name:'Ajustar imagem'}).click();await page.getByRole('button',{name:'Girar 90°'}).waitFor();
