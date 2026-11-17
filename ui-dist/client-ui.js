@@ -34158,15 +34158,45 @@ function XX({ theme: e, onToggle: t }) {
 		onClick: t,
 		"aria-label": n,
 		title: n,
-		children: e === "dark" ? /* @__PURE__ */ (0, Z.jsx)(mr, {}) : /* @__PURE__ */ (0, Z.jsx)(an, {})
+		children: /* @__PURE__ */ (0, Z.jsxs)("span", {
+			className: "grid size-4",
+			"aria-hidden": "true",
+			children: [/* @__PURE__ */ (0, Z.jsx)(mr, {
+				className: "transition-opacity duration-200 motion-reduce:transition-none",
+				style: {
+					gridArea: "1 / 1",
+					opacity: +(e === "dark")
+				}
+			}), /* @__PURE__ */ (0, Z.jsx)(an, {
+				className: "transition-opacity duration-200 motion-reduce:transition-none",
+				style: {
+					gridArea: "1 / 1",
+					opacity: +(e === "light")
+				}
+			})]
+		})
 	});
 }
 // src/components/layout/brand-mark.tsx
 function ZX({ theme: e, className: t = "size-10" }) {
-	return /* @__PURE__ */ (0, Z.jsx)("img", {
-		alt: "",
-		className: `${t} shrink-0 object-contain`,
-		src: e === "dark" ? "https://organizeon.com.br/d3/assets/organizeon-icon.png" : "https://organizeon.com.br/d3/assets/organizeon_preto_separado_1024.png"
+	return /* @__PURE__ */ (0, Z.jsx)("span", {
+		className: `${t} inline-grid shrink-0`,
+		"aria-hidden": "true",
+		children: [["dark", "organizeon-icon.png"], ["light", "organizeon_preto_separado_1024.png"]].map(([t, n]) => /* @__PURE__ */ (0, Z.jsx)("img", {
+			alt: "",
+			loading: "eager",
+			fetchPriority: "high",
+			decoding: "async",
+			onLoad: (e) => {
+				e.currentTarget.decode().catch(() => {});
+			},
+			className: "h-full w-full object-contain transition-opacity duration-200 motion-reduce:transition-none",
+			style: {
+				gridArea: "1 / 1",
+				opacity: +(e === t)
+			},
+			src: "https://organizeon.com.br/d3/assets/" + n
+		}, t))
 	});
 }
 // src/hooks/use-service-theme.ts
@@ -35144,10 +35174,9 @@ function fZ({ children: e, username: t, role: n, logout: r, refresh: i, refreshi
 							children: /* @__PURE__ */ (0, Z.jsxs)("a", {
 								href: "#/dashboard",
 								className: "flex min-h-10 items-center gap-2.5 rounded-md px-2 text-sm font-semibold",
-								children: [/* @__PURE__ */ (0, Z.jsx)("img", {
-									className: "size-7 shrink-0",
-									src: s === "dark" ? "https://organizeon.com.br/d3/assets/organizeon-icon.png" : "https://organizeon.com.br/d3/assets/organizeon_icon_black_128.png",
-									alt: ""
+								children: [/* @__PURE__ */ (0, Z.jsx)(ZX, {
+									theme: s,
+									className: "size-7"
 								}), /* @__PURE__ */ (0, Z.jsxs)("span", {
 									className: "truncate",
 									children: ["OrganizeOn ", /* @__PURE__ */ (0, Z.jsx)("span", {
@@ -35178,12 +35207,9 @@ function fZ({ children: e, username: t, role: n, logout: r, refresh: i, refreshi
 								className: "flex-1 text-sm font-medium",
 								children: "Meus arquivos"
 							}),
-							/* @__PURE__ */ (0, Z.jsx)(X, {
-								variant: "ghost",
-								size: "icon",
-								onClick: c,
-								"aria-label": s === "dark" ? "Ativar tema claro" : "Ativar tema escuro",
-								children: s === "dark" ? /* @__PURE__ */ (0, Z.jsx)(mr, {}) : /* @__PURE__ */ (0, Z.jsx)(an, {})
+							/* @__PURE__ */ (0, Z.jsx)(XX, {
+								theme: s,
+								onToggle: c
 							}),
 							/* @__PURE__ */ (0, Z.jsx)(X, {
 								variant: "ghost",
