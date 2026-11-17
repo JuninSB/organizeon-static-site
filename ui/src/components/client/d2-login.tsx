@@ -3,8 +3,12 @@ import { LoaderCircle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { BrandMark } from "@/components/layout/brand-mark";
+import { useServiceTheme } from "@/hooks/use-service-theme";
 
 export function D2Login({ onSubmit, endpoint = 2, label = 'Painel de arquivos' }: { onSubmit: (username: string, password: string) => Promise<void>; endpoint?: number; label?: string }) {
+  const {rootRef,theme,toggleTheme}=useServiceTheme(`d${endpoint}-theme`);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,10 +20,10 @@ export function D2Login({ onSubmit, endpoint = 2, label = 'Painel de arquivos' }
     catch (reason) { setError(reason instanceof Error ? reason.message : "Não foi possível entrar."); }
     finally { setPending(false); }
   }
-  return <main className="grid min-h-svh place-items-center px-4 py-10">
+  return <div ref={rootRef} className="contents"><main className="grid min-h-svh place-items-center px-4 py-10">
     <Card className="w-full max-w-[380px] border-border bg-card shadow-none animate-ui-enter">
       <CardHeader className="space-y-5">
-        <div className="flex items-center gap-3"><img className="size-10 object-contain" src="https://organizeon.com.br/d3/assets/organizeon-icon.png" alt="" /><div><p className="text-sm font-semibold">OrganizeOn <span className="font-normal text-muted-foreground">D{endpoint}</span></p><p className="text-xs text-muted-foreground">{label}</p></div></div>
+        <div className="flex items-center gap-3"><BrandMark theme={theme}/><div className="flex-1"><p className="text-sm font-semibold">OrganizeOn <span className="font-normal text-muted-foreground">D{endpoint}</span></p><p className="text-xs text-muted-foreground">{label}</p></div><ThemeToggle theme={theme} onToggle={toggleTheme}/></div>
         <div className="space-y-1.5"><CardTitle className="text-xl">Entrar no painel</CardTitle><CardDescription>Autentique-se para acessar o conteúdo do Endpoint {endpoint}.</CardDescription></div>
       </CardHeader>
       <CardContent><form className="grid gap-4" onSubmit={(event) => void submit(event)}>
@@ -30,5 +34,5 @@ export function D2Login({ onSubmit, endpoint = 2, label = 'Painel de arquivos' }
       </form></CardContent>
       <CardFooter className="gap-2 border-t border-border pt-4 text-xs text-muted-foreground"><ShieldCheck className="size-4" />Acesse com sua conta OrganizeOn.</CardFooter>
     </Card>
-  </main>;
+  </main></div>;
 }

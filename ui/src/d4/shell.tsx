@@ -35,6 +35,7 @@ import { configureAccountTransport } from "@/services/account-api";
 import { useServiceTheme } from "@/hooks/use-service-theme";
 import { api, post, type Mailbox } from "./api";
 import { Boundary } from "./boundary";
+import { BrandMark } from "@/components/layout/brand-mark";
 const MailList = lazy(() => import("./pages/list"));
 const MessagePage = lazy(() => import("./pages/message"));
 const Compose = lazy(() => import("./pages/compose"));
@@ -153,11 +154,7 @@ export default function Shell({
                   href="#/inbox"
                   className="flex items-center gap-3 text-sm font-semibold"
                 >
-                  <img
-                    alt=""
-                    src="https://organizeon.com.br/d3/assets/organizeon-icon.png"
-                    className="size-6 object-contain"
-                  />
+                  <BrandMark theme={theme} className="size-6"/>
                   OrganizeOn <span className="text-muted-foreground">D4</span>
                 </a>
                 <Button

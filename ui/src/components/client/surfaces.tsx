@@ -14,6 +14,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { BrandMark } from "@/components/layout/brand-mark";
+import { useServiceTheme } from "@/hooks/use-service-theme";
 
 export type SurfaceProps = {
   type: "login" | "data" | "proxy" | "account";
@@ -52,6 +55,7 @@ type ProxyProps = {
 };
 
 function LoginSurface({ initialMessage = "", onSubmit, onGuest }: LoginProps) {
+  const {rootRef,theme,toggleTheme}=useServiceTheme("client-login-theme");
   const [mode, setMode] = useState<"login" | "register" | "code">("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -74,10 +78,10 @@ function LoginSurface({ initialMessage = "", onSubmit, onGuest }: LoginProps) {
   };
 
   return (
-    <main className="fixed inset-0 z-[2147483647] grid min-h-svh place-items-center overflow-y-auto bg-background px-4 py-10">
+    <div ref={rootRef} className="contents"><main className="fixed inset-0 z-[2147483647] grid min-h-svh place-items-center overflow-y-auto bg-background px-4 py-10">
       <Card className="w-full max-w-[380px] animate-ui-enter border-border bg-card shadow-none">
         <CardHeader className="space-y-5">
-          <div className="flex items-center gap-3"><img className="size-10 object-contain" src="https://organizeon.com.br/d3/assets/organizeon-icon.png" alt="" /><div><p className="text-sm font-semibold">OrganizeOn</p><p className="text-xs text-muted-foreground">Cliente</p></div></div>
+          <div className="flex items-center gap-3"><BrandMark theme={theme}/><div className="flex-1"><p className="text-sm font-semibold">OrganizeOn</p><p className="text-xs text-muted-foreground">Cliente</p></div><ThemeToggle theme={theme} onToggle={toggleTheme}/></div>
           <div className="space-y-1.5"><CardTitle className="text-xl">{mode === "register" ? "Criar conta" : mode === "code" ? "Entrar com código" : "Entrar no OrganizeOn"}</CardTitle>
           <CardDescription>Autentique-se para acessar seus jogos e configurações.</CardDescription></div>
         </CardHeader>
@@ -113,7 +117,7 @@ function LoginSurface({ initialMessage = "", onSubmit, onGuest }: LoginProps) {
         </CardContent>
         <CardFooter className="gap-2 border-t border-border pt-4 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />Acesse com sua conta OrganizeOn.</CardFooter>
       </Card>
-    </main>
+    </main></div>
   );
 }
 
