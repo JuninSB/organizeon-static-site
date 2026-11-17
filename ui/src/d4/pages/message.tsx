@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { emailDocument } from "../email-document";
 import { ArrowLeft, Reply, Forward, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api, date, type Message } from "../api";
@@ -15,9 +16,14 @@ export default function MessagePage({
     [html, setHtml] = useState(false);
   useEffect(() => {
     let active = true;
+    setMessage(null);
+    setError("");
     api("/messages/" + id)
       .then((value) => {
-        if (active) setMessage(value);
+        if (active) {
+          setMessage(value);
+          setHtml(Boolean(value.html?.trim()));
+        }
       })
       .catch((e) => {
         if (active) setError(e.message);
@@ -26,6 +32,7 @@ export default function MessagePage({
       active = false;
     };
   }, [id]);
+  const document = useMemo(() => emailDocument(message?.html || ""), [message?.html]);
   if (error)
     return (
       <p role="alert" className="text-destructive">
@@ -171,13 +178,10 @@ export default function MessagePage({
         {html ? (
           <iframe
             title="Conteúdo do e-mail"
-            sandbox=""
+            sandbox="allow-popups allow-popups-to-escape-sandbox"
             referrerPolicy="no-referrer"
             className="h-[55vh] w-full rounded bg-white"
-            srcDoc={
-              '<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src data:; font-src data:; form-action &#39;none&#39;; base-uri &#39;none&#39;"><style>body{font:14px system-ui;overflow-wrap:anywhere}</style>' +
-              message.html
-            }
+            srcDoc={document}
           />
         ) : (
           <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7">
