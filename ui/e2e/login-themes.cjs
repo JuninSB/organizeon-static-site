@@ -9,7 +9,7 @@ const local=process.env.THEME_TEST_LOCAL==='1';
    browser=await chromium.launch({headless:true,args:['--no-sandbox','--no-zygote','--single-process','--no-proxy-server','--in-process-gpu','--disable-gpu-sandbox']});
    const context=await browser.newContext({viewport:{width:390,height:844}});
    const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
-   if(local||service==='client')await page.route('https://juninsb.github.io/organizeon-static-site/ui-dist/**',route=>{
+   if(local)await page.route('https://juninsb.github.io/organizeon-static-site/ui-dist/**',route=>{
     const file=path.join(repo,'ui-dist',new URL(route.request().url()).pathname.split('/').at(-1));
     if(fs.existsSync(file))return route.fulfill({path:file,headers:{'Access-Control-Allow-Origin':'*'},contentType:file.endsWith('.css')?'text/css':'text/javascript'});
     return route.continue();
@@ -22,7 +22,8 @@ const local=process.env.THEME_TEST_LOCAL==='1';
     return route.continue();
    });
    if(service==='client'){
-    await page.route('https://client-theme.test/',route=>route.fulfill({contentType:'text/html',body:`<meta name="viewport" content="width=device-width,initial-scale=1"><div id="host"></div><script type="module">import{mountClientSurface}from'https://juninsb.github.io/organizeon-static-site/ui-dist/client-ui.js';mountClientSurface(document.getElementById('host'),{type:'login',onSubmit:async()=>{},onGuest:()=>{}},'https://juninsb.github.io/organizeon-static-site/ui-dist/client-ui.css');</script>`}));
+    const revision=process.env.THEME_ASSET_REVISION||'login-theme-check';
+    await page.route('https://client-theme.test/',route=>route.fulfill({contentType:'text/html',body:`<meta name="viewport" content="width=device-width,initial-scale=1"><div id="host"></div><script type="module">import{mountClientSurface}from'https://juninsb.github.io/organizeon-static-site/ui-dist/client-ui.js?v=${revision}';mountClientSurface(document.getElementById('host'),{type:'login',onSubmit:async()=>{},onGuest:()=>{}},'https://juninsb.github.io/organizeon-static-site/ui-dist/client-ui.css?v=${revision}');</script>`}));
     await page.goto('https://client-theme.test/');
    }else await page.goto('https://organizeon.com.br/'+service+'/login');
    const toggle=page.getByRole('button',{name:'Ativar tema claro',exact:true});await toggle.waitFor();
