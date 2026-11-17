@@ -52,12 +52,12 @@ export function ProfileCard({
             ? {
                 ...profileBannerPattern(profile.bannerSeed || username),
                 "--profile-color": profile.nameColor,
-                background: `color-mix(in srgb, ${profile.nameColor} 18%, rgb(var(--card)))`,
+                background: `color-mix(in srgb, ${profile.bannerColor || profile.nameColor} 18%, rgb(var(--card)))`,
               } as CSSProperties
             : { ...profileBannerPattern(profile.bannerSeed || username), "--profile-color": profile.nameColor } as CSSProperties
         }
       >
-        {profile.goldBadge && profile.bannerStyle !== "solid" && !!profile.bannerStyle && <LavaBanner seed={profile.bannerSeed || username} color={profile.nameColor} material={profile.bannerStyle === "lava" ? undefined : profile.bannerStyle === "magma" ? "lava" : profile.bannerStyle} />}
+        {profile.goldBadge && profile.bannerStyle !== "solid" && !!profile.bannerStyle && <LavaBanner seed={profile.bannerSeed || username} color={profile.bannerColor || profile.nameColor} material={profile.bannerStyle === "lava" ? undefined : profile.bannerStyle === "magma" ? "lava" : profile.bannerStyle} />}
         {profile.goldBadge && onEdit && <div className="absolute right-3 top-3">{pencil("appearance", "Editar aparência")}</div>}
       </div>
       <div className="px-5 pb-5 sm:px-6 sm:pb-6">
@@ -73,7 +73,7 @@ export function ProfileCard({
             />
           </div>
           <div className="flex items-center gap-2">
-            {profile.goldBadge && profile.showGoldBadge !== false && <GoldBadge />}
+            {profile.goldBadge && profile.showGoldBadge !== false && <GoldBadge color={profile.nameColor} />}
             {pencil("photo", "Editar foto de perfil")}
           </div>
         </div>

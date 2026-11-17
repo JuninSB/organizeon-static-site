@@ -2,6 +2,7 @@ import { accountRequest } from "./account-api";
 export type Profile = {
   displayName: string;
   nameColor: string;
+  bannerColor?: string | null;
   bio: string;
   avatarShape: "circle" | "square" | "rounded";
   avatar: string | null;

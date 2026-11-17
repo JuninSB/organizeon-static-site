@@ -54,7 +54,7 @@ export function ProfileFieldEditor({
               : field === "bio"
                 ? { bio: draft.bio }
                 : field === "appearance"
-                  ? { showGoldBadge: draft.showGoldBadge !== false, bannerStyle: draft.bannerStyle || "solid" }
+                  ? { showGoldBadge: draft.showGoldBadge !== false, bannerStyle: draft.bannerStyle || "solid", bannerColor: draft.bannerColor || null }
                   : { avatar: draft.avatar, avatarShape: draft.avatarShape },
           );
         } catch (e) {
@@ -65,9 +65,11 @@ export function ProfileFieldEditor({
       }}
     >
       {field === "appearance" && profile.goldBadge && <>
-        <div className="oo-profile-banner h-28 rounded-lg border border-border bg-card" role="img" aria-label="Prévia do fundo" style={{background:`color-mix(in srgb, ${draft.nameColor} 18%, rgb(var(--card)))`}}>
-          {draft.bannerStyle !== "solid" && !!draft.bannerStyle && <LavaBanner seed={draft.bannerSeed || "preview"} color={draft.nameColor} material={draft.bannerStyle === "lava" ? undefined : draft.bannerStyle === "magma" ? "lava" : draft.bannerStyle} />}
+        <div className="oo-profile-banner h-28 rounded-lg border border-border bg-card" role="img" aria-label="Prévia do fundo" style={{background:`color-mix(in srgb, ${draft.bannerColor || draft.nameColor} 18%, rgb(var(--card)))`}}>
+          {draft.bannerStyle !== "solid" && !!draft.bannerStyle && <LavaBanner seed={draft.bannerSeed || "preview"} color={draft.bannerColor || draft.nameColor} material={draft.bannerStyle === "lava" ? undefined : draft.bannerStyle === "magma" ? "lava" : draft.bannerStyle} />}
         </div>
+        <label className="flex items-center gap-3 text-sm"><Checkbox checked={!draft.bannerColor} disabled={busy} onCheckedChange={(follow) => setDraft({...draft,bannerColor:follow ? null : draft.nameColor})}/>Usar a cor do nick no fundo</label>
+        {draft.bannerColor && <label className="flex items-center justify-between gap-3 text-sm">Cor do fundo<Input aria-label="Cor do fundo" type="color" className="h-10 w-16 p-1" value={draft.bannerColor} disabled={busy} onChange={event => setDraft({...draft,bannerColor:event.target.value})}/></label>}
         <BannerSeedControl profile={draft} disabled={busy} onUpdated={(next) => {setDraft(current => ({...current,bannerSeed:next.bannerSeed,bannerRerollAvailableAt:next.bannerRerollAvailableAt,bannerRerollUnlimited:next.bannerRerollUnlimited}));onRerolled?.(next);}} />
         <label className="flex items-center gap-3 text-sm"><Checkbox checked={draft.showGoldBadge !== false} disabled={busy} onCheckedChange={(value) => setDraft({ ...draft, showGoldBadge: !!value })} />Exibir emblema dourado no perfil</label>
         <label className="grid gap-2 text-sm">Fundo do perfil
