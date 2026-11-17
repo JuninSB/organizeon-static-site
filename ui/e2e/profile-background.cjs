@@ -7,6 +7,7 @@ const root=path.resolve(__dirname,'../..');
  try{
   const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   let profile={displayName:'Teste',nameColor:'#FAFAFA',bio:'Descrição preservada',avatarShape:'circle',avatar:null,bannerImage:null,bannerFit:'cover'};
+  if(process.env.PROFILE_GOLD==='1')profile={...profile,goldBadge:true,showGoldBadge:true,bannerStyle:'solid',bannerSeed:'0123456789abcdef0123456789abcdef'};
   const errors=[],patches=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://api.organizeon.com.br/**',route=>{
    if(route.request().method()==='PATCH'){const patch=route.request().postDataJSON();patches.push(patch);profile={...profile,...patch};}
@@ -15,7 +16,7 @@ const root=path.resolve(__dirname,'../..');
   await page.route('https://profile-bg.test/**',route=>{
    const url=new URL(route.request().url());
    if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:'<meta name="viewport" content="width=device-width,initial-scale=1"><div id="nav"></div><script type="module">import{mountNavigation}from"/ui-dist/client-ui.js";mountNavigation(document.querySelector("#nav"),{type:"account",username:"Teste",role:"user",guest:false,canOpenDashboard:false,proxyLabel:"OrganizeOn",onNavigate(){}},"/ui-dist/client-ui.css");</script>'});
-   if(process.env.PROFILE_PUBLIC==='1'&&url.pathname.startsWith('/ui-dist/'))return route.fetch({url:'https://juninsb.github.io/organizeon-static-site'+url.pathname+'?v=profile-image-style-20261117',maxRetries:2}).then(response=>route.fulfill({response}));
+   if(process.env.PROFILE_PUBLIC==='1'&&url.pathname.startsWith('/ui-dist/'))return route.fetch({url:'https://juninsb.github.io/organizeon-static-site'+url.pathname+'?v=profile-image-style-17978ac',maxRetries:2}).then(response=>route.fulfill({response}));
    const file=path.join(root,url.pathname);return fs.existsSync(file)?route.fulfill({path:file,contentType:file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':undefined}):route.fulfill({status:404});
   });
   const openProfile=async()=>{await page.getByRole('button',{name:'Abrir menu',exact:true}).click();await page.getByRole('button',{name:'Perfil de Teste'}).click();await page.getByRole('menuitem',{name:'Perfil',exact:true}).click();await page.getByRole('dialog',{name:'Meu perfil',exact:true}).waitFor();};
@@ -23,6 +24,7 @@ const root=path.resolve(__dirname,'../..');
   if(await page.getByRole('button',{name:'Editar fundo do perfil'}).count())throw Error('Separate background pencil remains');
   await page.getByRole('button',{name:'Editar aparência'}).click();
   await page.getByRole('combobox',{name:'Estilo do fundo'}).click();
+  if(process.env.PROFILE_GOLD==='1'){await page.getByRole('option',{name:'Bolhas',exact:true}).waitFor();await page.getByRole('option',{name:'Estrelas',exact:true}).waitFor();}
   await page.getByRole('option',{name:'Imagem',exact:true}).click();
   const checkbox=page.getByRole('checkbox',{name:'Esticar para preencher'});
   if(await checkbox.isChecked())throw Error('Stretch must default off');
@@ -42,7 +44,7 @@ const root=path.resolve(__dirname,'../..');
   fs.writeFileSync('/tmp/profile-background-crop.jpg',Buffer.from(profile.bannerImage.split(',')[1],'base64'));
   const backend=process.env.PROFILE_BACKEND_SOURCE||path.resolve(root,'../backend-cleanup/organizeon-backend/src/profiles.mjs');
   const {validateProfile}=await import(pathToFileURL(backend));
-  const saved=validateProfile(patches.at(-1),{username:'fixture'});if(saved.bannerImage!==profile.bannerImage||saved.bannerFit!=='fill')throw Error('Backend rejects cropped image');
+  const saved=validateProfile(patches.at(-1),{username:'fixture',...(process.env.PROFILE_GOLD==='1'?{goldBadge:{awardedBy:'fixture_owner'}}:{})});if(saved.bannerImage!==profile.bannerImage||saved.bannerFit!=='fill')throw Error('Backend rejects cropped image');
   await page.reload();await openProfile();await page.getByAltText('Fundo do perfil').waitFor();
   await page.screenshot({path:'/tmp/profile-background-saved.png',fullPage:true});
   await page.setViewportSize({width:1365,height:900});await page.reload();await openProfile();await page.getByAltText('Fundo do perfil').waitFor();
