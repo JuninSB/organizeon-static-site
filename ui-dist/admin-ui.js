@@ -24804,7 +24804,7 @@ function EL({ username: e, role: t, profile: n, onEdit: r, frameless: i = !1 }) 
 				color: n.bannerColor || n.nameColor,
 				material: n.bannerStyle === "lava" ? void 0 : n.bannerStyle === "magma" ? "lava" : n.bannerStyle
 			}), r && /* @__PURE__ */ (0, DL.jsxs)("div", {
-				className: "absolute right-3 top-3 flex gap-1 rounded-lg bg-background/80",
+				className: "absolute left-3 top-3 flex gap-1 rounded-lg bg-background/80",
 				children: [a("background", "Editar fundo do perfil"), n.goldBadge && a("appearance", "Editar aparência")]
 			})]
 		}), /* @__PURE__ */ (0, DL.jsxs)("div", {
