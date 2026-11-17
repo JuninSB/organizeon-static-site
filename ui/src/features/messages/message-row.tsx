@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Bookmark, CheckCheck, MoreHorizontal, Pin, Reply } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProfileAvatar } from "@/features/profile/profile-avatar";
@@ -42,6 +42,8 @@ export function MessageRow({
   read,
   onReply,
   onActions,
+  onForward,
+  onBookmark,
   onMention,
   onProfile,
   onReact,
@@ -56,6 +58,8 @@ export function MessageRow({
   read: boolean;
   onReply: (m: DmMessage) => void;
   onActions: (m: DmMessage) => void;
+  onForward?: (m: DmMessage) => void;
+  onBookmark?: (m: DmMessage) => Promise<unknown>;
   onMention: (username: string) => void;
   onProfile: (person: DmPerson) => void;
   onReact: (m: DmMessage, emoji: string) => void;
@@ -77,8 +81,11 @@ export function MessageRow({
       .some((part) => part.toLowerCase() === "@" + viewer.toLowerCase());
   const gesture = useMessageGestures({ reply, actions });
   const [hover, setHover] = useState(false);
+  const row = useRef<HTMLElement>(null);
   return (
     <article
+      ref={row}
+      tabIndex={-1}
       {...gesture.handlers}
       data-message-id={message.id}
       className={`group relative flex min-w-0 gap-3 rounded-md px-3 ${mentioned ? "oo-dm-mentioned" : ""} ${compact ? "py-0.5" : "pb-1 pt-3"} hover:bg-accent/20`}
@@ -183,7 +190,37 @@ export function MessageRow({
         </p>
         {!message.deleted &&
           message.attachments.map((attachment) => (
-            <MessageMedia key={attachment.id} attachment={attachment} />
+            <MessageMedia
+              key={attachment.id}
+              attachment={attachment}
+              metadata={
+                <div className="flex items-center gap-3">
+                  <ProfileAvatar profile={person.profile} className="size-9" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {person.profile.displayName}
+                    </p>
+                    <time className="text-xs text-zinc-400">
+                      {new Date(message.createdAt).toLocaleString("pt-BR")}
+                    </time>
+                  </div>
+                </div>
+              }
+              onForward={onForward ? () => onForward(message) : undefined}
+              onBookmark={onBookmark ? () => onBookmark(message) : undefined}
+              onReact={() => onActions(message)}
+              bookmarked={message.bookmarked}
+              onJump={() => {
+                row.current?.scrollIntoView({
+                  block: "center",
+                  behavior: matchMedia("(prefers-reduced-motion: reduce)")
+                    .matches
+                    ? "auto"
+                    : "smooth",
+                });
+                row.current?.focus({ preventScroll: true });
+              }}
+            />
           ))}
         {!message.deleted && message.reactions.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1">

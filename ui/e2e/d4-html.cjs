@@ -8,11 +8,12 @@ const realLogo = 'http://cdn.mcauto-images-production.sendgrid.net/956b73cc4c6df
   const context = await browser.newContext({viewport:{width:390,height:844}});
   await context.route('https://example.org/verify', route => route.fulfill({body:'Fixture destination',contentType:'text/html'}));
   const page = await context.newPage();
-  const errors=[]; page.on('pageerror', e => errors.push(e.message));
+  const errors=[];let movedTo=null; page.on('pageerror', e => errors.push(e.message));
   await page.route('https://organizeon.com.br/d4/**', route => {
    const url=new URL(route.request().url());
    if(url.pathname.includes('/api/')) {
     const endpoint=url.pathname.split('/api/')[1];
+    if(endpoint.startsWith('messages/')&&route.request().method()==='PATCH')movedTo=route.request().postDataJSON().folder;
     let data={};
     if(endpoint==='session')data={authenticated:true,username:'fixture',role:'ultra_admin'};
     if(endpoint==='mailboxes')data={items:[{id:'box',address:'fixture@organizeon.com.br',label:'Teste'}]};
@@ -73,6 +74,9 @@ const realLogo = 'http://cdn.mcauto-images-production.sendgrid.net/956b73cc4c6df
   await page.screenshot({path:'/tmp/d4-sender-inbox-mobile.png',fullPage:true});
   await page.getByRole('button').filter({hasText:'Teste do leitor HTML'}).click();
   await page.getByRole('button',{name:'Ver texto',exact:true}).waitFor();
-  console.log('PASS automatic HTML, images, button popup, text toggle, sandbox, sender avatars/cards, inbox navigation, mobile/desktop');
+  await page.getByRole('button',{name:'Mover para lixeira',exact:true}).click();
+  await page.waitForFunction(()=>location.hash==='#/inbox');
+  if(movedTo!=='trash')throw Error('Trash operation was not sent');
+  console.log('PASS automatic HTML, images, button popup, text toggle, sandbox, sender avatars/cards, inbox navigation, trash keeps source folder, mobile/desktop');
  } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});

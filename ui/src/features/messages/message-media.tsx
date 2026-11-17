@@ -4,12 +4,31 @@ import { Download, File, Image, LoaderCircle, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dmService } from "@/services/messages-service";
 import type { DmAttachment } from "./types";
+import type { ReactNode } from "react";
+import { ImageViewer } from "@/features/media/image-viewer";
 function bytes(value: number) {
   return value >= 1048576
     ? (value / 1048576).toFixed(1) + " MB"
     : Math.max(1, Math.round(value / 1024)) + " KB";
 }
-export function MessageMedia({ attachment }: { attachment: DmAttachment }) {
+export function MessageMedia({
+  attachment,
+  metadata,
+  onForward,
+  onJump,
+  onReact,
+  onBookmark,
+  bookmarked,
+}: {
+  attachment: DmAttachment;
+  metadata?: ReactNode;
+  onForward?: () => void;
+  onJump?: () => void;
+  onReact?: () => void;
+  onBookmark?: () => Promise<unknown>;
+  bookmarked?: boolean;
+}) {
+  const [viewing, setViewing] = useState(false);
   const host = useRef<HTMLDivElement>(null),
     alive = useRef(true),
     inFlight = useRef(false),
@@ -97,14 +116,21 @@ export function MessageMedia({ attachment }: { attachment: DmAttachment }) {
     >
       {url ? (
         type === "image" ? (
-          <m.img
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            src={url}
-            alt={attachment.name}
-            loading="lazy"
-            className="max-h-72 max-w-full rounded object-contain"
-          />
+          <button
+            type="button"
+            className="block cursor-zoom-in border-0 bg-transparent p-0"
+            aria-label={`Ampliar ${attachment.name}`}
+            onClick={() => setViewing(true)}
+          >
+            <m.img
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              src={url}
+              alt={attachment.name}
+              loading="lazy"
+              className="max-h-72 max-w-full rounded object-contain"
+            />
+          </button>
         ) : type === "video" ? (
           <video controls src={url} className="max-h-72 max-w-full rounded" />
         ) : (
@@ -145,6 +171,20 @@ export function MessageMedia({ attachment }: { attachment: DmAttachment }) {
         <p role="alert" className="mt-1 max-w-60 text-xs text-destructive">
           {error}
         </p>
+      )}
+      {url && type === "image" && (
+        <ImageViewer
+          open={viewing}
+          onOpenChange={setViewing}
+          src={url}
+          name={attachment.name}
+          metadata={metadata}
+          onForward={onForward}
+          onJump={onJump}
+          onReact={onReact}
+          onBookmark={onBookmark}
+          bookmarked={bookmarked}
+        />
       )}
     </div>
   );

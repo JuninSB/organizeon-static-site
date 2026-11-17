@@ -99,7 +99,11 @@ export function MessageThread({
     };
   }, [conversation.id, search, filter, state.inbox?.cursor]);
   const list = filtered || thread?.messages || [];
-  const pending = useMessageOutbox().pending.filter(row=>row.conversationId===conversation.id&&!list.some(message=>message.clientNonce===row.nonce));
+  const pending = useMessageOutbox().pending.filter(
+    (row) =>
+      row.conversationId === conversation.id &&
+      !list.some((message) => message.clientNonce === row.nonce),
+  );
   useLayoutEffect(() => {
     if (bottom.current && scroller.current)
       scroller.current.scrollTop = scroller.current.scrollHeight;
@@ -477,6 +481,10 @@ export function MessageThread({
                   read={message.seq <= conversation.peerReadSeq}
                   onReply={reply}
                   onActions={setAction}
+                  onForward={(message) => context("forward", message)}
+                  onBookmark={(message) =>
+                    messagesStore.action(message, "bookmark")
+                  }
                   onMention={(username) => composer.current?.mention(username)}
                   onProfile={onProfile}
                   onReact={(m, emoji) =>
@@ -490,7 +498,9 @@ export function MessageThread({
             );
           })
         )}
-        {pending.map(message => <PendingMessageRow key={message.id} message={message} person={me} />)}
+        {pending.map((message) => (
+          <PendingMessageRow key={message.id} message={message} person={me} />
+        ))}
       </div>
       {(error || thread?.error) && (
         <p

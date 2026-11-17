@@ -6,6 +6,8 @@ const target = process.argv[2];
 if (!target)
   throw Error("Usage: node scripts/sync-profile-ui.mjs /path/to/d3/src");
 const files = [
+  "features/media/image-viewer.tsx",
+  "features/media/image-viewer.css",
   "components/layout/account-menu.tsx",
   "components/layout/rotating-icon.tsx",
   "components/admin/password-dialog.tsx",

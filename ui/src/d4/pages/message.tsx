@@ -88,8 +88,7 @@ export default function MessagePage({
                 }),
               });
               await refresh();
-              location.hash =
-                "/" + (message.folder === "trash" ? "inbox" : "trash");
+              location.hash = "/" + message.folder;
             } catch (e) {
               setError((e as Error).message);
             } finally {
