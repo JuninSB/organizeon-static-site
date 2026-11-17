@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { emailDocument } from "../email-document";
+import { SenderProfile } from "../sender-profile";
+import { senderIdentity } from "../sender";
 import { ArrowLeft, Reply, Forward, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api, date, type Message } from "../api";
@@ -119,7 +121,13 @@ export default function MessagePage({
         <h1 className="break-words text-xl font-semibold">
           {message.subject || "(Sem assunto)"}
         </h1>
-        <p className="break-all text-sm">De: {message.sender}</p>
+        <div className="flex min-w-0 items-center gap-3">
+          <SenderProfile sender={message.sender} messageId={id} />
+          <div className="min-w-0">
+            <p className="break-words text-sm font-medium">{senderIdentity(message.sender).name}</p>
+            <p className="break-all text-xs text-muted-foreground">{senderIdentity(message.sender).address}</p>
+          </div>
+        </div>
         <p className="break-all text-sm text-muted-foreground">
           Para: {message.recipients.join(", ")}
         </p>

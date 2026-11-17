@@ -3,6 +3,8 @@ import { Search, MailOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { api, date, type Message } from "../api";
+import { SenderProfile } from "../sender-profile";
+import { senderIdentity } from "../sender";
 export default function MailList({
   mailbox,
   folder,
@@ -74,9 +76,11 @@ export default function MailList({
         </div>
       ) : items.length ? (
         items.map((item) => (
+          <div className="d4-mail-row" key={item.id}>
+          <SenderProfile sender={item.sender} messageId={item.id} />
           <button
-            className="d4-mail-row"
-            key={item.id}
+            type="button"
+            className="d4-mail-open"
             onClick={() =>
               (location.hash =
                 folder === "drafts"
@@ -91,7 +95,7 @@ export default function MailList({
                   (item.unread ? "font-semibold" : "text-muted-foreground")
                 }
               >
-                {item.sender}
+                {senderIdentity(item.sender).name}
               </p>
               <p className="truncate text-sm">
                 {item.subject || "(Sem assunto)"}
@@ -104,6 +108,7 @@ export default function MailList({
               {date(item.created)}
             </time>
           </button>
+          </div>
         ))
       ) : (
         <div className="grid justify-items-center gap-3 px-4 py-16 text-center">
