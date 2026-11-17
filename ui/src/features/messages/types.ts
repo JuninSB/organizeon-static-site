@@ -31,6 +31,7 @@ export type DmMessage = {
 };
 export type DmConversation = {
   id: string;
+  resetVersion?: number;
   status: "pending" | "accepted";
   direction: "incoming" | "outgoing";
   peer: DmPerson;

@@ -18,6 +18,14 @@ class MailTests(unittest.TestCase):
         self.store=MailStore(Path(self.directory.name)/'data/mail.sqlite3')
         self.box=self.store.create_mailbox('alice','fixture','Pessoal')
     def tearDown(self):self.directory.cleanup()
+    def test_mark_read_is_scoped_and_boolean(self):
+        mid=self.store.ingest(self.box['address'],b'From: sender@example.org\r\nSubject: test\r\n\r\nBody','sender@example.org')
+        self.store.set_unread('alice',mid,False)
+        self.assertFalse(self.store.list_messages('alice',self.box['id'],'inbox')['items'][0]['unread'])
+        self.store.set_unread('alice',mid,True)
+        self.assertTrue(self.store.list_messages('alice',self.box['id'],'inbox')['items'][0]['unread'])
+        with self.assertRaises(ValueError):self.store.set_unread('bob',mid,False)
+        with self.assertRaises(ValueError):self.store.set_unread('alice',mid,'yes')
     def test_address_uniqueness_and_ownership(self):
         with self.assertRaises(ValueError):self.store.create_mailbox('bob','fixture','')
         with self.assertRaises(ValueError):self.store.mailbox('bob',self.box['id'])

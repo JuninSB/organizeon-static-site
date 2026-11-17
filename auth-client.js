@@ -224,7 +224,7 @@ async function startApplication(
       installInternalNavigationGuard();
       showConnectionStatus(
         "Modo convidado pronto",
-        "Jogos usam o GitHub; pesquisas usam somente um relay público externo.",
+        window.__ORGANIZEON_LIVE__ ? "Jogos disponíveis no OrganizeOn; pesquisas usam o relay selecionado." : "Jogos usam o GitHub; pesquisas usam somente um relay público externo.",
         100,
         8000,
       );

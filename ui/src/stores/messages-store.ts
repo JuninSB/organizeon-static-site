@@ -62,6 +62,7 @@ let state = initial(),
   cursor: number | null = null;
 // Dirty cached messages survive inbox polling while a conversation is hidden.
 const pendingChanges = new Map<string, Set<string>>();
+const threadEpochs = new Map<string, number>();
 const listeners = new Set<() => void>();
 const emptyThread = (): Thread => ({
   messages: [],
@@ -204,6 +205,19 @@ function updateMessage(message: DmMessage) {
       messages: merge(current.messages, [message]),
     });
 }
+function resetThread(id: string) {
+  threadEpochs.set(id, (threadEpochs.get(id) || 0) + 1);
+  pendingChanges.delete(id);
+  messageOutbox.clearConversation(id);
+  dmService.invalidateConversation(id);
+  set({
+    threads: { ...state.threads, [id]: emptyThread() },
+    drafts: { ...state.drafts, [id]: emptyDraft() },
+    notices: state.notices.filter((notice) => notice.conversationId !== id),
+  });
+}
+const conversationResetVersion = (id: string) =>
+  state.inbox?.conversations.find((c) => c.id === id)?.resetVersion || 0;
 export const messagesStore = {
   get: () => state,
   subscribe: (listener: () => void) => {
@@ -216,6 +230,7 @@ export const messagesStore = {
     if (state.username !== username) {
       generation++;
       pendingChanges.clear();
+      threadEpochs.clear();
       optimisticMetadata.clear();
       messageOutbox.clear();
       operationFeedback.dismiss();
@@ -234,6 +249,7 @@ export const messagesStore = {
       if (--references <= 0) {
         generation++;
         pendingChanges.clear();
+        threadEpochs.clear();
         optimisticMetadata.clear();
         messageOutbox.clear();
         operationFeedback.dismiss();
@@ -297,6 +313,7 @@ export const messagesStore = {
     const current = state.threads[id] || emptyThread();
     if (current.loading) return;
     const version = generation;
+    const threadEpoch = threadEpochs.get(id) || 0;
     threadPatch(id, { loading: true, error: "" });
     try {
       const page = await dmService.messages(
@@ -305,7 +322,8 @@ export const messagesStore = {
           ? { before: current.messages[0].seq }
           : {},
       );
-      if (version !== generation) return;
+      if (version !== generation || threadEpoch !== (threadEpochs.get(id) || 0))
+        return;
       threadPatch(id, {
         messages: merge(state.threads[id]?.messages || [], page.messages),
         hasMore: page.hasMore,
@@ -313,7 +331,7 @@ export const messagesStore = {
         loading: false,
       });
     } catch (error) {
-      if (version === generation)
+      if (version === generation && threadEpoch === (threadEpochs.get(id) || 0))
         threadPatch(id, {
           error:
             error instanceof Error
@@ -325,18 +343,49 @@ export const messagesStore = {
   },
   async send(id: string) {
     const draft = messagesStore.draft(id);
-    if (!draft.text.trim() && !draft.attachments.length && !messageOutbox.get().drafts[id]?.length) return;
-    const task = messageOutbox.enqueue({ conversationId: id, content: draft.text, replyId: draft.reply?.id || null, attachmentIds: draft.attachments.map(item => item.id) }, message => { updateMessage(message); void messagesStore.refresh(); });
-    messagesStore.setDraft(id, { text: "", reply: null, attachments: [], retry: null });
+    if (
+      !draft.text.trim() &&
+      !draft.attachments.length &&
+      !messageOutbox.get().drafts[id]?.length
+    )
+      return;
+    const threadEpoch = threadEpochs.get(id) || 0;
+    const task = messageOutbox.enqueue(
+      {
+        conversationId: id,
+        resetVersion: conversationResetVersion(id),
+        content: draft.text,
+        replyId: draft.reply?.id || null,
+        attachmentIds: draft.attachments.map((item) => item.id),
+      },
+      (message) => {
+        if (threadEpoch !== (threadEpochs.get(id) || 0)) return;
+        updateMessage(message);
+        void messagesStore.refresh();
+      },
+    );
+    messagesStore.setDraft(id, {
+      text: "",
+      reply: null,
+      attachments: [],
+      retry: null,
+    });
     await task;
   },
   async upload(id: string, file: File) {
     const version = generation;
+    const threadEpoch = threadEpochs.get(id) || 0;
     const draft = messagesStore.draft(id);
     if (draft.attachments.length >= 4)
       throw Error("Você pode adicionar até quatro arquivos.");
-    const result = await dmService.upload(id, file);
-    if (version !== generation) return;
+    const result = await dmService.upload(
+      id,
+      file,
+      undefined,
+      conversationResetVersion(id),
+    );
+    if (version !== generation || threadEpoch !== (threadEpochs.get(id) || 0))
+      return;
     messagesStore.setDraft(id, {
       attachments: [
         ...messagesStore.draft(id).attachments,
@@ -370,34 +419,82 @@ export const messagesStore = {
       set({ inbox: { ...state.inbox, settings: result.settings } });
   },
   async action(message: DmMessage, action: string, value?: string) {
+    const epoch = threadEpochs.get(message.conversationId) || 0,
+      session = generation;
     await dmService.action(message.id, action, value);
+    if (
+      session !== generation ||
+      epoch !== (threadEpochs.get(message.conversationId) || 0)
+    )
+      return;
     if (action === "unread") {
       set({ selectedId: null, view: "inbox" });
     } else {
       const result = await dmService.message(message.id);
+      if (
+        session !== generation ||
+        epoch !== (threadEpochs.get(message.conversationId) || 0)
+      )
+        return;
       updateMessage(result.message);
     }
     await messagesStore.refresh();
   },
   async edit(message: DmMessage, content: string) {
+    const epoch = threadEpochs.get(message.conversationId) || 0,
+      session = generation;
     const result = await dmService.edit(message.id, content);
+    if (
+      session !== generation ||
+      epoch !== (threadEpochs.get(message.conversationId) || 0)
+    )
+      return;
     updateMessage(result.message);
     void messagesStore.refresh();
   },
   async remove(message: DmMessage) {
+    const epoch = threadEpochs.get(message.conversationId) || 0,
+      session = generation;
     await dmService.remove(message.id);
     const result = await dmService.message(message.id);
+    if (
+      session !== generation ||
+      epoch !== (threadEpochs.get(message.conversationId) || 0)
+    )
+      return;
     updateMessage(result.message);
     void messagesStore.refresh();
   },
   async forward(message: DmMessage, target: string) {
+    const epoch = threadEpochs.get(target) || 0,
+      session = generation;
     const result = await dmService.send(target, {
       forwardId: message.id,
       nonce: uniqueId(),
+      resetVersion: conversationResetVersion(target),
     });
+    if (session !== generation || epoch !== (threadEpochs.get(target) || 0))
+      return;
     updateMessage(result.message);
     await messagesStore.refresh();
     messagesStore.select(target);
+  },
+  async resetConversation(conversation: DmConversation) {
+    const currentGeneration = generation;
+    const result = await dmService.reset(conversation);
+    if (currentGeneration !== generation) return;
+    revision++;
+    resetThread(conversation.id);
+    if (state.inbox)
+      set({
+        inbox: {
+          ...state.inbox,
+          conversations: state.inbox.conversations.map((c) =>
+            c.id === conversation.id ? result.conversation : c,
+          ),
+        },
+      });
+    await messagesStore.refresh();
   },
   async conversation(
     id: string,
@@ -446,7 +543,7 @@ async function poll() {
       dmService.inbox(cursor),
       pageRequest,
     ]);
-    const inbox = overlayMetadata(rawInbox);
+    let inbox = overlayMetadata(rawInbox);
     if (version !== generation) return;
     if (
       !Array.isArray(inbox.conversations) ||
@@ -455,6 +552,33 @@ async function poll() {
     )
       throw Error("As mensagens estão temporariamente indisponíveis.");
     if (stamp !== revision) return;
+    const resets = new Set(
+      inbox.events
+        .filter((event) => event.kind === "reset")
+        .map((event) => event.conversationId),
+    );
+    for (const conversation of inbox.conversations) {
+      const old = state.inbox?.conversations.find(
+        (c) => c.id === conversation.id,
+      );
+      if (old && (old.resetVersion || 0) !== (conversation.resetVersion || 0))
+        resets.add(conversation.id);
+    }
+    if (nextPage && selectedAtStart) {
+      const known = inbox.conversations.find((c) => c.id === selectedAtStart);
+      if (
+        (nextPage.conversation.resetVersion || 0) > (known?.resetVersion || 0)
+      ) {
+        resets.add(selectedAtStart);
+        inbox = {
+          ...inbox,
+          conversations: inbox.conversations.map((c) =>
+            c.id === selectedAtStart ? nextPage.conversation : c,
+          ),
+        };
+      }
+    }
+    for (const id of resets) resetThread(id);
     for (const event of inbox.events) {
       if (
         !event.messageId ||
@@ -483,7 +607,10 @@ async function poll() {
       selectedAtStart === selected
     ) {
       const current = state.threads[selected] || emptyThread();
-      const page = nextPage;
+      const page = resets.has(selected)
+        ? await dmService.messages(selected)
+        : nextPage;
+      if (version !== generation || stamp !== revision) return;
       if (version !== generation || stamp !== revision) return;
       let data = merge(current.messages, page.messages);
       const changed = pendingChanges.get(selected);
@@ -522,10 +649,28 @@ async function poll() {
         });
       }
     }
-    if (inbox.goldBadgeNotificationPending && !document.hidden && document.hasFocus()) {
+    if (
+      inbox.goldBadgeNotificationPending &&
+      !document.hidden &&
+      document.hasFocus()
+    ) {
       const award = await dmService.claimGoldBadge();
       if (version !== generation) return;
-      if (award.claimed) { updateProfile(inbox.me.username,inbox.me.profile); set({notices:[...state.notices.filter(notice=>notice.kind!=="gold_badge"),{id:-1,conversationId:"",person:inbox.me,text:"Você ganhou o emblema dourado OrganizeOn.",kind:"gold_badge"}].slice(-3)}); }
+      if (award.claimed) {
+        updateProfile(inbox.me.username, inbox.me.profile);
+        set({
+          notices: [
+            ...state.notices.filter((notice) => notice.kind !== "gold_badge"),
+            {
+              id: -1,
+              conversationId: "",
+              person: inbox.me,
+              text: "Você ganhou o emblema dourado OrganizeOn.",
+              kind: "gold_badge",
+            },
+          ].slice(-3),
+        });
+      }
     }
     const desktopAllowed =
       inbox.settings.desktop &&
@@ -587,6 +732,7 @@ async function poll() {
       if (error instanceof AccountApiError && error.status === 401) {
         cursor = null;
         pendingChanges.clear();
+        threadEpochs.clear();
         set({
           inbox: null,
           threads: {},

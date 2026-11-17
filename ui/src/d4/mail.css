@@ -17,7 +17,7 @@
 }
 .d4-mail-row {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr) 36px;
   align-items: start;
   gap: 12px;
   width: 100%;

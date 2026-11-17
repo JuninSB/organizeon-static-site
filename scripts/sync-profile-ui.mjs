@@ -43,6 +43,7 @@ const files = [
   "features/messages/gesture-config.ts",
   "features/messages/conversation-row.tsx",
   "features/messages/conversation-actions.tsx",
+  "features/messages/conversation-reset-dialog.tsx",
   "features/messages/messages.css",
   "components/ui/drawer.css",
   "components/ui/checkbox.tsx",

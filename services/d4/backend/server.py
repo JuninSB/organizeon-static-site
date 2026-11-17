@@ -78,7 +78,10 @@ class Handler(BaseHTTPRequestHandler):
                 mid=parts[1]
                 if len(parts)==2:
                     if self.command=='GET':return self.answer(200,STORE.message(owner,mid))
-                    if self.command=='PATCH':STORE.move(owner,mid,data.get('folder','trash'));return self.answer(200,{'ok':True})
+                    if self.command=='PATCH':
+                        if set(data)=={'unread'}:STORE.set_unread(owner,mid,data['unread'])
+                        else:STORE.move(owner,mid,data.get('folder','trash'))
+                        return self.answer(200,{'ok':True})
                     if self.command=='DELETE':
                         current=STORE.message(owner,mid)
                         if current['folder']!='trash':raise ValueError('Mova a mensagem para a lixeira antes de excluir definitivamente.')

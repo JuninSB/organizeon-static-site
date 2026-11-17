@@ -17,7 +17,31 @@ const conversationCache = new Map<
   { version?: string; conversation: DmConversation }
 >();
 export const dmService = {
-  claimGoldBadge: () => accountRequest<{claimed:boolean}>("/dm/awards/gold-badge/claim", {method:"POST"}),
+  invalidateConversation(conversationId: string) {
+    epoch++;
+    conversationCache.delete(conversationId);
+    inboxCache = null;
+  },
+  reset: async (conversation: DmConversation) => {
+    const result = await accountRequest<{ conversation: DmConversation }>(
+      "/dm/conversations/" + id(conversation.id) + "/reset",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          confirm: true,
+          conversationId: conversation.id,
+          expectedLastSeq: conversation.lastMessage?.seq || 0,
+          resetVersion: conversation.resetVersion || 0,
+        }),
+      },
+    );
+    dmService.invalidateConversation(conversation.id);
+    return result;
+  },
+  claimGoldBadge: () =>
+    accountRequest<{ claimed: boolean }>("/dm/awards/gold-badge/claim", {
+      method: "POST",
+    }),
   inbox: async (after: number | null): Promise<Inbox> => {
     if (after === null) {
       epoch++;
@@ -89,6 +113,7 @@ export const dmService = {
       replyId?: string | null;
       attachmentIds?: string[];
       forwardId?: string;
+      resetVersion?: number;
     },
   ) =>
     accountRequest<{ message: DmMessage }>(
@@ -154,7 +179,12 @@ export const dmService = {
       method: "POST",
       body: JSON.stringify({ seq }),
     }),
-  upload: async (conversationId: string, file: File, onProgress?: (loaded:number,total:number)=>void) => {
+  upload: async (
+    conversationId: string,
+    file: File,
+    onProgress?: (loaded: number, total: number) => void,
+    resetVersion = 0,
+  ) => {
     if (file.size > 8 * 1024 * 1024)
       throw Error("Cada arquivo pode ter até 8 MB.");
     const session = accountSession.get();
@@ -164,7 +194,8 @@ export const dmService = {
       reader.onerror = () => reject(Error("Não foi possível ler o arquivo."));
       reader.readAsDataURL(file);
     });
-    if (accountSession.get().revision !== session.revision) throw Error("Sua sessão mudou. Selecione o arquivo novamente.");
+    if (accountSession.get().revision !== session.revision)
+      throw Error("Sua sessão mudou. Selecione o arquivo novamente.");
     return accountRequest<{ attachment: DmAttachment }>(
       "/dm/conversations/" + id(conversationId) + "/attachments",
       {
@@ -174,6 +205,7 @@ export const dmService = {
           name: file.name,
           mime: file.type || "application/octet-stream",
           data,
+          resetVersion,
         }),
       },
     );

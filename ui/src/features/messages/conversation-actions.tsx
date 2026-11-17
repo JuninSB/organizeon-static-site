@@ -7,6 +7,7 @@ import {
   CheckCheck,
   BellOff,
   Bell,
+  RotateCcw,
 } from "lucide-react";
 import {
   Drawer,
@@ -15,7 +16,8 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { ProfileAvatar } from "@/features/profile/profile-avatar";
-import { messagesStore } from "@/stores/messages-store";
+import { messagesStore, useMessagesState } from "@/stores/messages-store";
+import { ConversationResetDialog } from "./conversation-reset-dialog";
 import type { DmConversation, DmPerson } from "./types";
 import { m } from "@/core/motion";
 import "./messages.css";
@@ -33,6 +35,10 @@ export function ConversationActions({
   if (c) held.current = c;
   const current = c || held.current;
   const [error, setError] = useState("");
+  const [resetTarget, setResetTarget] = useState<DmConversation | null>(null);
+  const role = useMessagesState().inbox?.me.role;
+  const canReset =
+    !!role && ["ultra_admin", "super_admin", "owner"].includes(role);
   const choose = (fn: () => void | Promise<unknown>) => {
     if (!c || pending.current) return;
     pending.current = () => {
@@ -125,9 +131,27 @@ export function ConversationActions({
                 ))}
               </div>
             ))}
+            {canReset && (
+              <div className="oo-dm-action-group">
+                <m.button
+                  type="button"
+                  className="oo-dm-action-row text-orange-500"
+                  style={{ color: "#f97316" }}
+                  whileTap={{ scale: 0.985 }}
+                  onClick={() => choose(() => setResetTarget(current))}
+                >
+                  <RotateCcw />
+                  Resetar conversa
+                </m.button>
+              </div>
+            )}
           </div>
         </DrawerContent>
       </Drawer>
+      <ConversationResetDialog
+        conversation={resetTarget}
+        onClose={() => setResetTarget(null)}
+      />
       {error && (
         <p
           role="alert"

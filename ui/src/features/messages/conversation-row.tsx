@@ -50,8 +50,8 @@ export function ConversationRow({
         onOpen();
       }}
       onPointerDown={(event) => {
-        if (event.pointerType === "mouse") return;
         held.current = false;
+        if (event.pointerType === "mouse") return;
         origin.current = { x: event.clientX, y: event.clientY };
         clear();
         timer.current = setTimeout(() => {

@@ -101,6 +101,11 @@ class MailStore:
         with self.connect() as db:
             rows=db.execute('SELECT id,mailbox,folder,subject,sender,recipients,substr(body,1,140) AS snippet,created,unread,delivery FROM messages WHERE mailbox=? AND folder=? AND (subject LIKE ? OR body LIKE ? OR sender LIKE ?) ORDER BY created DESC LIMIT 51 OFFSET ?', (mailbox,folder,*(['%'+query[:200]+'%']*3),page*50)).fetchall()
         return {'items':[dict(r) for r in rows[:50]],'hasMore':len(rows)>50}
+    def set_unread(self,owner,mid,unread):
+        if type(unread) is not bool:raise ValueError('Estado de leitura inválido.')
+        with self.connect() as db:
+            result=db.execute('UPDATE messages SET unread=? WHERE id=? AND mailbox IN (SELECT id FROM mailboxes WHERE owner=?)',(int(unread),mid,owner))
+            if not result.rowcount:raise ValueError('Mensagem não encontrada.')
     def message(self,owner,mid):
         with self.connect() as db:
             row=db.execute('SELECT m.* FROM messages m JOIN mailboxes b ON m.mailbox=b.id WHERE m.id=? AND b.owner=?',(mid,owner)).fetchone()

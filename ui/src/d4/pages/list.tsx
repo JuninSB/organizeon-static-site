@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { Search, MailOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { api, date, type Message } from "../api";
-import { SenderProfile } from "../sender-profile";
-import { senderIdentity } from "../sender";
-import { emailText } from "../email-document";
+import { api, type Message } from "../api";
+import { MailRow } from "../mail-row";
+import { MailActions } from "../mail-actions";
 export default function MailList({
   mailbox,
   folder,
@@ -15,6 +14,8 @@ export default function MailList({
   folder: string;
   revision: number;
 }) {
+  const [action, setAction] = useState<Message | null>(null),
+    [actionRevision, setActionRevision] = useState(0);
   const [items, setItems] = useState<Message[]>([]),
     [query, setQuery] = useState(""),
     [page, setPage] = useState(0),
@@ -55,7 +56,7 @@ export default function MailList({
       active = false;
       clearTimeout(timer);
     };
-  }, [mailbox, folder, revision, query, page]);
+  }, [mailbox, folder, revision, actionRevision, query, page]);
   return (
     <section className="overflow-hidden rounded-lg border">
       <div className="flex items-center gap-3 border-b p-4">
@@ -77,39 +78,12 @@ export default function MailList({
         </div>
       ) : items.length ? (
         items.map((item) => (
-          <div className="d4-mail-row" key={item.id}>
-          <SenderProfile sender={item.sender} messageId={item.id} />
-          <button
-            type="button"
-            className="d4-mail-open"
-            onClick={() =>
-              (location.hash =
-                folder === "drafts"
-                  ? "/compose/" + item.id
-                  : "/message/" + item.id)
-            }
-          >
-            <div className="min-w-0">
-              <p
-                className={
-                  "truncate text-sm " +
-                  (item.unread ? "font-semibold" : "text-muted-foreground")
-                }
-              >
-                {senderIdentity(item.sender).name}
-              </p>
-              <p className="truncate text-sm">
-                {item.subject || "(Sem assunto)"}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {emailText(item.snippet || "")}
-              </p>
-            </div>
-            <time className="text-xs text-muted-foreground">
-              {date(item.created)}
-            </time>
-          </button>
-          </div>
+          <MailRow
+            key={item.id}
+            item={item}
+            folder={folder}
+            onActions={setAction}
+          />
         ))
       ) : (
         <div className="grid justify-items-center gap-3 px-4 py-16 text-center">
@@ -140,6 +114,12 @@ export default function MailList({
           <ChevronRight />
         </Button>
       </div>
+      <MailActions
+        item={action}
+        folder={folder}
+        onClose={() => setAction(null)}
+        refresh={() => setActionRevision((value) => value + 1)}
+      />
     </section>
   );
 }

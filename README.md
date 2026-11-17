@@ -31,3 +31,5 @@ Os nomes dos chunks estão referenciados em outros arquivos, inclusive no kernel
 Execute `npm test` para verificar fluxos, catálogo e integridade dos arquivos listados no manifesto. O teste não substitui o uso do cliente em navegador, nem valida todas as operações de rede e autenticação. Ao alterar arquivos distribuídos, atualize o manifesto e a versão de forma compatível com o kernel; verifique também os clientes que ainda utilizam versões anteriores. Nunca inclua credenciais, cookies, tokens ou dados de usuários no repositório.
 
 O backend de produção e os painéis D2/D3 possuem código e implantação separados deste repositório. Verifique a instalação real antes de mudar rotas ou serviços.
+
+Client hospedado diretamente em `/d1/live/`, reset privilegiado de DMs e opções por e-mail: [documentação](docs/DM_RESET_AND_LIVE.md).
