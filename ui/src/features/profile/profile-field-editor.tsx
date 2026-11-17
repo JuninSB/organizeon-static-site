@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ImagePlus } from "lucide-react";
+import { Crop, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ export function ProfileFieldEditor({
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const isBanner = field === "background";
   return (
     <form
       className="grid gap-4"
@@ -53,6 +54,8 @@ export function ProfileFieldEditor({
               ? { displayName: draft.displayName, nameColor: draft.nameColor }
               : field === "bio"
                 ? { bio: draft.bio }
+                : field === "background"
+                  ? { bannerImage: draft.bannerImage || null, bannerFit: draft.bannerFit || "cover" }
                 : field === "appearance"
                   ? { showGoldBadge: draft.showGoldBadge !== false, bannerStyle: draft.bannerStyle || "solid", bannerColor: draft.bannerColor || null }
                   : { avatar: draft.avatar, avatarShape: draft.avatarShape },
@@ -134,17 +137,17 @@ export function ProfileFieldEditor({
           </span>
         </label>
       )}
-      {field === "photo" && (
+      {(field === "photo" || isBanner) && (
         <>
           <div className="flex items-center gap-4">
-            <ProfileAvatar profile={draft} className="size-16" />
+            {isBanner ? <div className="h-20 w-36 shrink-0 overflow-hidden rounded-lg border bg-muted">{draft.bannerImage && <img src={draft.bannerImage} alt="Prévia do fundo" className="size-full" style={{objectFit:draft.bannerFit || "cover"}} />}</div> : <ProfileAvatar profile={draft} className="size-16" />}
             <div className="flex flex-wrap gap-2">
               <input
                 ref={input}
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
                 className="sr-only"
-                aria-label="Selecionar foto de perfil"
+                aria-label={isBanner ? "Selecionar imagem de fundo" : "Selecionar foto de perfil"}
                 onChange={(event) => {
                   const file = event.target.files?.[0];
                   event.target.value = "";
@@ -171,33 +174,43 @@ export function ProfileFieldEditor({
                 onClick={() => input.current?.click()}
               >
                 <ImagePlus className="size-4" />
-                Escolher foto
+                {isBanner ? "Escolher imagem" : "Escolher foto"}
               </Button>
-              {draft.avatar && (
+              {(isBanner ? draft.bannerImage : draft.avatar) && (
                 <Button
                   type="button"
                   variant="ghost"
                   disabled={busy}
-                  onClick={() => setDraft({ ...draft, avatar: null })}
+                  onClick={() => setDraft(isBanner ? { ...draft, bannerImage: null } : { ...draft, avatar: null })}
                 >
-                  Remover foto
+                  {isBanner ? "Remover fundo" : "Remover foto"}
                 </Button>
               )}
+              {isBanner && draft.bannerImage && !photo && <Button type="button" variant="outline" disabled={busy} onClick={() => {
+                try {
+                  const bytes=Uint8Array.from(atob(draft.bannerImage!.split(",")[1]),char=>char.charCodeAt(0));
+                  setPhoto(new File([bytes],"fundo.jpg",{type:"image/jpeg"}));
+                  setError("");
+                } catch {setError("Não foi possível abrir a imagem. Escolha o arquivo novamente.");}
+              }}><Crop />Ajustar imagem</Button>}
             </div>
           </div>
+          {isBanner && <label className="flex items-center gap-3 text-sm"><Checkbox checked={draft.bannerFit === "fill"} disabled={busy} onCheckedChange={value => setDraft({...draft,bannerFit:value ? "fill" : "cover"})} />Esticar para preencher</label>}
           {photo && (
             <AvatarEditor
               key={photo.name + photo.lastModified}
               file={photo}
               shape={draft.avatarShape}
+              variant={isBanner ? "banner" : "avatar"}
+              stretch={isBanner && draft.bannerFit === "fill"}
               onCancel={() => setPhoto(null)}
               onSave={(avatar) => {
-                setDraft({ ...draft, avatar });
+                setDraft(isBanner ? { ...draft, bannerImage: avatar } : { ...draft, avatar });
                 setPhoto(null);
               }}
             />
           )}
-          <label className="grid gap-1.5 text-sm">
+          {!isBanner && <label className="grid gap-1.5 text-sm">
             Formato da foto
             <Select
               value={draft.avatarShape}
@@ -221,7 +234,7 @@ export function ProfileFieldEditor({
                 ))}
               </SelectContent>
             </Select>
-          </label>
+          </label>}
         </>
       )}
       {error && (

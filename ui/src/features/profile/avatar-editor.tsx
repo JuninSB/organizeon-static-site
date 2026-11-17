@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { RotateCw } from "lucide-react";
 import { avatarRadius } from "./profile-avatar";
 import type { Profile } from "@/services/profile-service";
 export function AvatarEditor({
@@ -7,15 +8,21 @@ export function AvatarEditor({
   shape,
   onSave,
   onCancel,
+  variant = "avatar",
+  stretch = false,
 }: {
   file: File;
   shape: Profile["avatarShape"];
   onSave: (avatar: string) => void;
   onCancel: () => void;
+  variant?: "avatar" | "banner";
+  stretch?: boolean;
 }) {
+  const width = variant === "banner" ? 768 : 256, height = 256;
   const canvas = useRef<HTMLCanvasElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [error, setError] = useState("");
   const drag = useRef<{
@@ -41,23 +48,35 @@ export function AvatarEditor({
     if (!image || !canvas.current) return;
     const context = canvas.current.getContext("2d");
     if (!context) return;
-    const side = Math.min(image.naturalWidth, image.naturalHeight) / zoom;
-    const x = ((image.naturalWidth - side) * (1 + pan.x)) / 2,
-      y = ((image.naturalHeight - side) * (1 + pan.y)) / 2;
+    const rotated = document.createElement("canvas");
+    const swap = rotation % 180 !== 0;
+    const scale = Math.min(1, 1536 / Math.max(image.naturalWidth, image.naturalHeight));
+    const scaledWidth = image.naturalWidth * scale, scaledHeight = image.naturalHeight * scale;
+    rotated.width = Math.round(swap ? scaledHeight : scaledWidth);
+    rotated.height = Math.round(swap ? scaledWidth : scaledHeight);
+    const source = rotated.getContext("2d");
+    if (!source) return;
+    source.translate(rotated.width / 2, rotated.height / 2);
+    source.rotate(rotation * Math.PI / 180);
+    source.drawImage(image, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
+    const cropHeight = stretch ? rotated.height : Math.min(rotated.height, rotated.width / (width / height)) / zoom;
+    const cropWidth = stretch ? rotated.width : cropHeight * (width / height);
+    const x = ((rotated.width - cropWidth) * (1 + pan.x)) / 2,
+      y = ((rotated.height - cropHeight) * (1 + pan.y)) / 2;
     context.fillStyle = "#111113";
-    context.fillRect(0, 0, 256, 256);
-    context.drawImage(image, x, y, side, side, 0, 0, 256, 256);
-  }, [image, zoom, pan]);
+    context.fillRect(0, 0, width, height);
+    context.drawImage(rotated, x, y, cropWidth, cropHeight, 0, 0, width, height);
+  }, [image, zoom, pan, width, height, rotation, stretch]);
   return (
     <div className="grid gap-3 rounded-lg border p-4">
-      <p className="text-sm font-medium">Recortar foto</p>
+      <p className="text-sm font-medium">{variant === "banner" ? "Recortar fundo" : "Recortar foto"}</p>
       <canvas
         ref={canvas}
-        width={256}
-        height={256}
+        width={width}
+        height={height}
         aria-label="Prévia do recorte"
-        className="mx-auto aspect-square w-full max-w-56 touch-none bg-muted"
-        style={{ borderRadius: avatarRadius(shape) }}
+        className={`mx-auto w-full touch-none bg-muted ${variant === "banner" ? "aspect-[3/1] rounded-lg" : "aspect-square max-w-56"}`}
+        style={{ borderRadius: variant === "banner" ? undefined : avatarRadius(shape) }}
         onPointerDown={(event) => {
           drag.current = { x: event.clientX, y: event.clientY, pan };
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -89,7 +108,8 @@ export function AvatarEditor({
           {error}
         </p>
       )}
-      <label className="grid gap-1 text-xs">
+      <Button type="button" variant="outline" disabled={!image} onClick={() => setRotation(value => (value + 90) % 360)}><RotateCw />Girar 90°</Button>
+      {!stretch && <><label className="grid gap-1 text-xs">
         Zoom
         <input
           aria-label="Zoom do recorte"
@@ -121,6 +141,7 @@ export function AvatarEditor({
           </label>
         ))}
       </div>
+      </>}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar recorte
@@ -129,8 +150,13 @@ export function AvatarEditor({
           type="button"
           disabled={!image || !!error}
           onClick={() => {
-            if (canvas.current)
-              onSave(canvas.current.toDataURL("image/jpeg", 0.86));
+            if (canvas.current) {
+              for (const quality of [0.86, 0.7, 0.55, 0.4]) {
+                const result = canvas.current.toDataURL("image/jpeg", quality);
+                if (result.length < 131000) {onSave(result);return;}
+              }
+              setError("A imagem ficou muito grande. Escolha uma imagem mais simples.");
+            }
           }}
         >
           Usar recorte

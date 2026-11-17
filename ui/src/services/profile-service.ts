@@ -3,6 +3,8 @@ export type Profile = {
   displayName: string;
   nameColor: string;
   bannerColor?: string | null;
+  bannerImage?: string | null;
+  bannerFit?: "cover" | "fill";
   bio: string;
   avatarShape: "circle" | "square" | "rounded";
   avatar: string | null;

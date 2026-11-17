@@ -24,6 +24,7 @@ const titles = {
   bio: "Editar descrição",
   photo: "Editar foto",
   appearance: "Editar aparência",
+  background: "Editar fundo do perfil",
 };
 function useCompactProfile() {
   const [compact, setCompact] = useState(

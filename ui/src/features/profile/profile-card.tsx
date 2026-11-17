@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Profile } from "@/services/profile-service";
 import { ProfileAvatar, avatarRadius } from "./profile-avatar";
-export type ProfileField = "identity" | "bio" | "photo" | "appearance";
+export type ProfileField = "identity" | "bio" | "photo" | "appearance" | "background";
 /** Presentation is shared by own/public profiles; editing is an explicit capability. */
 export function ProfileCard({
   username,
@@ -45,7 +45,7 @@ export function ProfileCard({
       }
     >
       <div
-        data-lava={profile.goldBadge && profile.bannerStyle !== "solid" && !!profile.bannerStyle ? "" : undefined}
+        data-lava={!profile.bannerImage && profile.goldBadge && profile.bannerStyle !== "solid" && !!profile.bannerStyle ? "" : undefined}
         className={`oo-profile-banner ${frameless ? "h-28" : "h-20 border-b border-border"} bg-card`}
         style={
           frameless
@@ -57,8 +57,8 @@ export function ProfileCard({
             : { ...profileBannerPattern(profile.bannerSeed || username), "--profile-color": profile.nameColor } as CSSProperties
         }
       >
-        {profile.goldBadge && profile.bannerStyle !== "solid" && !!profile.bannerStyle && <LavaBanner seed={profile.bannerSeed || username} color={profile.bannerColor || profile.nameColor} material={profile.bannerStyle === "lava" ? undefined : profile.bannerStyle === "magma" ? "lava" : profile.bannerStyle} />}
-        {profile.goldBadge && onEdit && <div className="absolute right-3 top-3">{pencil("appearance", "Editar aparência")}</div>}
+        {profile.bannerImage ? <img src={profile.bannerImage} alt="Fundo do perfil" className="absolute inset-0 size-full" style={{objectFit:profile.bannerFit || "cover"}} /> : profile.goldBadge && profile.bannerStyle !== "solid" && !!profile.bannerStyle && <LavaBanner seed={profile.bannerSeed || username} color={profile.bannerColor || profile.nameColor} material={profile.bannerStyle === "lava" ? undefined : profile.bannerStyle === "magma" ? "lava" : profile.bannerStyle} />}
+        {onEdit && <div className="absolute right-3 top-3 flex gap-1 rounded-lg bg-background/80">{pencil("background", "Editar fundo do perfil")}{profile.goldBadge && pencil("appearance", "Editar aparência")}</div>}
       </div>
       <div className="px-5 pb-5 sm:px-6 sm:pb-6">
         <div className="relative -mt-10 mb-4 flex items-end justify-between gap-3">
