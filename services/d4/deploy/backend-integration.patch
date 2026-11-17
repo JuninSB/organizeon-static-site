@@ -1,0 +1,59 @@
+--- a/src/server.mjs
++++ b/src/server.mjs
+@@ -1,4 +1,5 @@
+ import { homedir } from "node:os";
++import { createD4Gateway } from "./d4-gateway.mjs";
+ import { join } from "node:path";
+ import {createDirectMessagesStore} from "./direct-messages/store.mjs";
+ import {createDirectMessagesHandler} from "./direct-messages/http.mjs";
+@@ -167,6 +168,7 @@
+ });
+ const directMessages=createDirectMessagesStore({filePath:env.DM_DATABASE_FILE || join(homedir(),'.local','share','organizeon','direct-messages.sqlite3'),resolveAccount:username=>accounts.get(username)});
+ const handleDirectMessages=createDirectMessagesHandler({store:directMessages,grantGoldBadge:(actor,username)=>accounts.grantGoldBadge(actor,username),claimGoldBadge:actor=>accounts.claimGoldBadgeNotification(actor),rerollBanner:actor=>accounts.rerollProfileBanner(actor),authenticate,originAllowed:isAccountOriginAllowed,readJson,sendJson});
++const handleD4=createD4Gateway({authenticate,sendJson,login:handleD3Login,originAllowed:isD3OriginAllowed});
+ const serviceControl = createServiceControl({
+   definitions: [
+     {
+@@ -353,9 +355,15 @@
+       "http://download.invalid",
+     );
+     const downloadPath = downloadRequestUrl.pathname;
+-    for(const base of ['/d2/api/dm','/d3/api/dm'])if(downloadPath===base||downloadPath.startsWith(base+'/'))return handleDirectMessages(request,response,downloadRequestUrl,base);
+-    if (["/d2/api/profile","/d3/api/profile"].includes(downloadPath)) return handleAccountProfile(request,response,downloadRequestUrl);
+-    if (["/d2/api/password","/d3/api/password"].includes(downloadPath)) return handleOwnPassword(request,response,downloadRequestUrl);
++    if (downloadPath === '/d4/api/profile' || downloadPath === '/d4/api/password' || downloadPath.startsWith('/d4/api/dm')) {
++      const account=authenticate(request,downloadRequestUrl);
++      if (!account) return sendJson(response,401,{error:'authentication_required'});
++      if (!['ultra_admin','super_admin','owner'].includes(account.role)) return sendJson(response,403,{error:'permission_required'});
++    }
++    for(const base of ['/d2/api/dm','/d3/api/dm','/d4/api/dm'])if(downloadPath===base||downloadPath.startsWith(base+'/'))return handleDirectMessages(request,response,downloadRequestUrl,base);
++    if (["/d2/api/profile","/d3/api/profile","/d4/api/profile"].includes(downloadPath)) return handleAccountProfile(request,response,downloadRequestUrl);
++    if (["/d2/api/password","/d3/api/password","/d4/api/password"].includes(downloadPath)) return handleOwnPassword(request,response,downloadRequestUrl);
++    if (downloadPath === '/d4' || downloadPath.startsWith('/d4/')) return handleD4(request,response,downloadRequestUrl);
+     if (downloadPath === "/d3" || downloadPath.startsWith("/d3/")) {
+       if (downloadPath === "/d3/api/login" && request.method === "POST") {
+         return handleD3Login(request, response);
+@@ -1839,7 +1847,7 @@
+   );
+ }
+ 
+-async function handleD3Login(request, response) {
++async function handleD3Login(request, response, endpoint = 'd3') {
+   if (!isD3OriginAllowed(request)) {
+     return sendJson(response, 403, { error: "origin_not_allowed" });
+   }
+@@ -1858,12 +1866,12 @@
+     ? accounts.authenticate(body.username, body.password)
+     : null;
+   if (!account) return sendJson(response, 401, { error: "invalid_credentials" });
+-  if (!canAccessD3(account)) return sendJson(response, 403, { error: "permission_required" });
++  if (endpoint === 'd4' ? !['ultra_admin','super_admin','owner'].includes(account.role) : !canAccessD3(account)) return sendJson(response, 403, { error: "permission_required" });
+   loginAttempts.delete(clientIp);
+   const token = createSessionToken(account, sessionSecret);
+   const attributes = [
+     `${COOKIE_NAME}=${encodeURIComponent(token)}`,
+-    "Path=/d3/",
++    `Path=/${endpoint}/`,
+     `Max-Age=${SESSION_TTL_SECONDS}`,
+     "HttpOnly",
+     cookieSecure ? "Secure" : "",

@@ -67,6 +67,9 @@ def deliver(store,owner,mid):
         folder='sent' if accepted else 'failed'
     except Exception as error:
         # DATA may have reached the peer before a connection failure: never claim rejection or resend automatically.
-        result={'status':'error_or_uncertain','error':str(error)[:500],'recipients':outcomes,'at':now(),'messageId':str(mime['Message-ID'])};folder='failed'
+        detail=str(error)
+        for secret in [settings.get('password',''),locals().get('token','')]:
+            if secret:detail=detail.replace(secret,'[redacted]')
+        result={'status':'error_or_uncertain','error':detail[:500],'recipients':outcomes,'at':now(),'messageId':str(mime['Message-ID'])};folder='failed'
     with store.connect() as db:db.execute('UPDATE messages SET folder=?,delivery=?,raw=? WHERE id=?',(folder,json.dumps(result),mime.as_bytes(),mid))
     return store.message(owner,mid)

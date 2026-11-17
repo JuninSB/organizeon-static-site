@@ -8,7 +8,7 @@ Aplicação em `https://organizeon.com.br/d4/`. Login em `/d4/login`, navegaçã
 - Gateway: `backend/src/d4-gateway.mjs`. Reutiliza autenticação, assinaturas de sessão, expiração/revogação, rate limit do login e usuários do backend existente. Cookie D4 Secure, HttpOnly, SameSite=Strict e Path=/d4/. Verificação de cargo em todas as APIs de e-mail.
 - Serviço Python: `~/organizeon/d4/backend`, somente `127.0.0.1:8340`. Configuração privada e SQLite em `~/.local/share/organizeon/d4/`. Nunca expor essa porta diretamente.
 - Recebedor Cloudflare: `worker/email.js`, Worker `organizeon-d4-mail`. Catch-all encaminha para o Worker; caixas inexistentes são rejeitadas quando backend disponível. Endereços existentes permanecem exclusivos da conta que os criou.
-- Fila Workers KV: namespace `organizeon-d4-mail-pending`. Persiste MIME bruto antes da entrega HTTPS assinada ao Android. Cron a cada cinco minutos tenta até vinte itens por execução. Mensagem entregue é removida da fila. Repetições são deduplicadas no SQLite pelo destinatário+MIME. Endereços e corpo não aparecem em logs.
+- Fila Workers KV: namespace `organizeon-d4-mail-pending`. Persiste MIME bruto antes da entrega HTTPS assinada ao Android. Cron a cada cinco minutos tenta até dez itens por execução. Mensagem entregue é removida da fila. Repetições são deduplicadas no SQLite pelo destinatário+MIME. Endereços e corpo não aparecem em logs.
 
 ## Recebimento
 

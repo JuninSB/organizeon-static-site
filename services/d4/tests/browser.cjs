@@ -1,49 +1,119 @@
-const fs=require('fs');
-const {chromium}=require('/tmp/replay-browser/node_modules/playwright');
-(async()=>{
- const browser=await chromium.launch({headless:true,args:['--no-sandbox','--no-zygote','--single-process','--no-proxy-server','--in-process-gpu','--disable-gpu-sandbox']});
- const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
- const cookie=fs.readFileSync(process.env.D4_COOKIE_FILE,'utf8').trim();
- await context.addCookies([{name:'organizeon_session',value:cookie.slice(cookie.indexOf('=')+1),domain:'organizeon.com.br',path:'/d4/',secure:true,httpOnly:true,sameSite:'Strict'}]);
- const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('https://organizeon.com.br/d4/login');
- await page.waitForURL('https://organizeon.com.br/d4/');
- await page.getByRole('combobox',{name:'Caixa postal'}).waitFor();
- await page.getByRole('button').filter({hasText:'OrganizeOn D4 — verificação real de recebimento'}).waitFor();
- await page.waitForTimeout(200);
- await page.screenshot({path:'/tmp/d4-inbox-mobile.png',fullPage:true});
- if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error('Mobile overflow');
- const nav=page.getByRole('button',{name:'Abrir ou recolher navegação'});
- if(await nav.count())await nav.click();else await page.getByRole('button',{name:'Toggle Sidebar'}).click();
- await page.getByRole('button',{name:'Configurações',exact:true}).click();
- await page.getByRole('heading',{name:'Envio de e-mail',exact:true}).waitFor();
- await page.locator('main select').last().selectOption('relay');
- await page.getByLabel('Servidor',{exact:true}).fill('smtp.example.org');
- await page.screenshot({path:'/tmp/d4-settings-mobile.png',fullPage:true});
- await page.goto('https://organizeon.com.br/d4/#/addresses');
- await page.getByRole('heading',{name:'Seus endereços'}).waitFor();
- const local='d4-ui-check-'+Date.now();
- await page.getByRole('textbox',{name:'Novo endereço'}).fill(local);
- await page.getByRole('button',{name:'Criar caixa postal',exact:true}).click();
- await page.getByText(local+'@organizeon.com.br',{exact:true}).waitFor();
- page.once('dialog',d=>d.accept());
- await page.getByRole('button',{name:'Excluir '+local+'@organizeon.com.br',exact:true}).click();
- await page.getByText(local+'@organizeon.com.br',{exact:true}).waitFor({state:'hidden'});
- await page.goto('https://organizeon.com.br/d4/#/compose');
- await page.getByRole('heading',{name:'Nova mensagem'}).waitFor();
- await page.getByLabel('Para',{exact:true}).fill('organizeon@organizeon.com.br');
- await page.getByLabel('Assunto',{exact:true}).fill('D4 · rascunho de diagnóstico do navegador');
- await page.getByLabel('Mensagem',{exact:true}).fill('Rascunho de teste. Não enviado.');
- await page.getByRole('button',{name:'Salvar rascunho',exact:true}).click();
- await page.getByRole('status').filter({hasText:'Rascunho salvo.'}).waitFor();
- await page.screenshot({path:'/tmp/d4-compose-mobile.png',fullPage:true});
- await page.setViewportSize({width:1365,height:900});
- await page.goto('https://organizeon.com.br/d4/#/inbox');
- await page.getByRole('textbox',{name:'Pesquisar e-mails'}).waitFor();
- await page.getByRole('button').filter({hasText:'OrganizeOn D4 — verificação real de recebimento'}).waitFor();
- await page.waitForTimeout(200);
- await page.screenshot({path:'/tmp/d4-inbox-desktop.png',fullPage:true});
- if(errors.length)throw Error(JSON.stringify(errors));
- console.log('BROWSER_PASS auth_redirect mobile_layout navigation settings create_delete_address save_draft desktop_no_page_errors');
- await browser.close();
-})().catch(e=>{console.error(e.message);process.exit(1)});
+const fs = require("fs");
+const { chromium } = require("/tmp/replay-browser/node_modules/playwright");
+(async () => {
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--no-zygote",
+      "--single-process",
+      "--no-proxy-server",
+      "--in-process-gpu",
+      "--disable-gpu-sandbox",
+    ],
+  });
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  const cookie = fs.readFileSync(process.env.D4_COOKIE_FILE, "utf8").trim();
+  await context.addCookies([
+    {
+      name: "organizeon_session",
+      value: cookie.slice(cookie.indexOf("=") + 1),
+      domain: "organizeon.com.br",
+      path: "/d4/",
+      secure: true,
+      httpOnly: true,
+      sameSite: "Strict",
+    },
+  ]);
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("https://organizeon.com.br/d4/login");
+  await page.waitForURL("https://organizeon.com.br/d4/");
+  await page.getByRole("combobox", { name: "Caixa postal" }).waitFor();
+  await page
+    .getByRole("button")
+    .filter({ hasText: "OrganizeOn D4 — verificação real de recebimento" })
+    .waitFor();
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: "/tmp/d4-inbox-mobile.png", fullPage: true });
+  if (
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth + 1,
+    )
+  )
+    throw Error("Mobile overflow");
+  const nav = page.getByRole("button", { name: "Abrir ou recolher navegação" });
+  if (await nav.count()) await nav.click();
+  else await page.getByRole("button", { name: "Toggle Sidebar" }).click();
+  await page
+    .getByRole("button", { name: "Configurações", exact: true })
+    .click();
+  await page
+    .getByRole("heading", { name: "Envio de e-mail", exact: true })
+    .waitFor();
+  await page.locator("main select").last().selectOption("relay");
+  await page.getByLabel("Servidor", { exact: true }).fill("smtp.example.org");
+  await page.screenshot({
+    path: "/tmp/d4-settings-mobile.png",
+    fullPage: true,
+  });
+  await page.goto("https://organizeon.com.br/d4/#/addresses");
+  await page.getByRole("heading", { name: "Seus endereços" }).waitFor();
+  const local = "d4-ui-check-" + Date.now();
+  await page.getByRole("textbox", { name: "Novo endereço" }).fill(local);
+  await page
+    .getByRole("button", { name: "Criar caixa postal", exact: true })
+    .click();
+  await page.getByText(local + "@organizeon.com.br", { exact: true }).waitFor();
+  page.once("dialog", (d) => d.accept());
+  await page
+    .getByRole("button", {
+      name: "Excluir " + local + "@organizeon.com.br",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByText(local + "@organizeon.com.br", { exact: true })
+    .waitFor({ state: "hidden" });
+  await page.goto("https://organizeon.com.br/d4/#/compose");
+  await page.getByRole("heading", { name: "Nova mensagem" }).waitFor();
+  await page
+    .getByLabel("Para", { exact: true })
+    .fill("organizeon@organizeon.com.br");
+  await page
+    .getByLabel("Assunto", { exact: true })
+    .fill("D4 · rascunho de diagnóstico do navegador");
+  await page
+    .getByLabel("Mensagem", { exact: true })
+    .fill("Rascunho de teste. Não enviado.");
+  await page
+    .getByRole("button", { name: "Salvar rascunho", exact: true })
+    .click();
+  await page
+    .getByRole("status")
+    .filter({ hasText: "Rascunho salvo." })
+    .waitFor();
+  await page.screenshot({ path: "/tmp/d4-compose-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 1365, height: 900 });
+  await page.goto("https://organizeon.com.br/d4/#/inbox");
+  await page.getByRole("textbox", { name: "Pesquisar e-mails" }).waitFor();
+  await page
+    .getByRole("button")
+    .filter({ hasText: "OrganizeOn D4 — verificação real de recebimento" })
+    .waitFor();
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: "/tmp/d4-inbox-desktop.png", fullPage: true });
+  if (errors.length) throw Error(JSON.stringify(errors));
+  console.log(
+    "BROWSER_PASS auth_redirect mobile_layout navigation settings create_delete_address save_draft desktop_no_page_errors",
+  );
+  await browser.close();
+})().catch((e) => {
+  console.error(e.message);
+  process.exit(1);
+});

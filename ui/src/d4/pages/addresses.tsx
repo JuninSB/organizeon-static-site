@@ -1,9 +1,126 @@
-import { useState } from 'react';
-import { Plus,Copy,Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { api,post,type Mailbox } from '../api';
-export default function Addresses({boxes,refresh}:{boxes:Mailbox[];refresh:()=>Promise<void>}){
- const [local,setLocal]=useState(''),[label,setLabel]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');
- return <section className="space-y-5"><div><h1 className="text-xl font-semibold">Seus endereços</h1><p className="mt-2 text-sm text-muted-foreground">Caixas independentes, vinculadas à sua conta OrganizeOn.</p></div><form className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2" onSubmit={async e=>{e.preventDefault();setBusy(true);setError('');try{await api('/mailboxes',post({local,label}));setLocal('');setLabel('');await refresh();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}}><label className="grid gap-2 text-sm">Endereço<div className="flex items-center gap-2"><Input aria-label="Novo endereço" value={local} required pattern="[a-zA-Z0-9][a-zA-Z0-9._-]{0,62}" onChange={e=>setLocal(e.target.value)}/><span className="text-xs text-muted-foreground">@organizeon.com.br</span></div></label><label className="grid gap-2 text-sm">Nome da caixa<Input value={label} onChange={e=>setLabel(e.target.value)} placeholder="Pessoal, compras, trabalho…"/></label><Button disabled={busy} type="submit" className="sm:col-span-2"><Plus/>Criar caixa postal</Button></form>{error&&<p role="alert" className="text-sm text-destructive">{error}</p>}{notice&&<p role="status" className="text-sm text-muted-foreground">{notice}</p>}<div className="divide-y rounded-lg border">{boxes.map(box=><div key={box.id} className="flex items-center gap-2 p-4"><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{box.label}</p><p className="truncate text-sm text-muted-foreground">{box.address}</p></div><Button variant="ghost" size="icon" aria-label={'Copiar '+box.address} onClick={()=>void navigator.clipboard.writeText(box.address).then(()=>setNotice('Endereço copiado.')).catch(()=>setNotice(box.address))}><Copy/></Button><Button variant="ghost" size="icon" aria-label={'Excluir '+box.address} onClick={async()=>{if(!confirm('Excluir a caixa vazia '+box.address+'?'))return;try{await api('/mailboxes/'+box.id,{method:'DELETE'});await refresh();}catch(e){setError((e as Error).message);}}}><Trash2/></Button></div>)}</div></section>;
+import { useState } from "react";
+import { Plus, Copy, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { api, post, type Mailbox } from "../api";
+export default function Addresses({
+  boxes,
+  refresh,
+}: {
+  boxes: Mailbox[];
+  refresh: () => Promise<void>;
+}) {
+  const [local, setLocal] = useState(""),
+    [label, setLabel] = useState(""),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false),
+    [notice, setNotice] = useState("");
+  return (
+    <section className="space-y-5">
+      <div>
+        <h1 className="text-xl font-semibold">Seus endereços</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Caixas independentes, vinculadas à sua conta OrganizeOn.
+        </p>
+      </div>
+      <form
+        className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError("");
+          try {
+            await api("/mailboxes", post({ local, label }));
+            setLocal("");
+            setLabel("");
+            await refresh();
+          } catch (e) {
+            setError((e as Error).message);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <label className="grid gap-2 text-sm">
+          Endereço
+          <div className="flex items-center gap-2">
+            <Input
+              aria-label="Novo endereço"
+              value={local}
+              required
+              pattern="[a-zA-Z0-9][a-zA-Z0-9._-]{0,62}"
+              onChange={(e) => setLocal(e.target.value)}
+            />
+            <span className="text-xs text-muted-foreground">
+              @organizeon.com.br
+            </span>
+          </div>
+        </label>
+        <label className="grid gap-2 text-sm">
+          Nome da caixa
+          <Input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="Pessoal, compras, trabalho…"
+          />
+        </label>
+        <Button disabled={busy} type="submit" className="sm:col-span-2">
+          <Plus />
+          Criar caixa postal
+        </Button>
+      </form>
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {notice}
+        </p>
+      )}
+      <div className="divide-y rounded-lg border">
+        {boxes.map((box) => (
+          <div key={box.id} className="flex items-center gap-2 p-4">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{box.label}</p>
+              <p className="truncate text-sm text-muted-foreground">
+                {box.address}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={"Copiar " + box.address}
+              onClick={() =>
+                void navigator.clipboard
+                  .writeText(box.address)
+                  .then(() => setNotice("Endereço copiado."))
+                  .catch(() => setNotice(box.address))
+              }
+            >
+              <Copy />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={"Excluir " + box.address}
+              onClick={async () => {
+                if (!confirm("Excluir a caixa vazia " + box.address + "?"))
+                  return;
+                try {
+                  await api("/mailboxes/" + box.id, { method: "DELETE" });
+                  await refresh();
+                } catch (e) {
+                  setError((e as Error).message);
+                }
+              }}
+            >
+              <Trash2 />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }

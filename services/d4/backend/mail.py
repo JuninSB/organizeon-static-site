@@ -27,6 +27,8 @@ class MailStore:
             CREATE TABLE IF NOT EXISTS attachments(id TEXT PRIMARY KEY, message TEXT NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL, data BLOB NOT NULL);
             CREATE INDEX IF NOT EXISTS attachment_message ON attachments(message);
             CREATE TABLE IF NOT EXISTS settings(owner TEXT PRIMARY KEY, data TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS address_reservations(address TEXT PRIMARY KEY, owner TEXT NOT NULL);
+            INSERT OR IGNORE INTO address_reservations SELECT address,owner FROM mailboxes;
             ''')
             if 'reply_to' not in {row['name'] for row in db.execute('PRAGMA table_info(messages)')}:
                 db.execute('ALTER TABLE messages ADD COLUMN reply_to TEXT')
@@ -49,7 +51,11 @@ class MailStore:
         if not re.fullmatch(r'[a-z0-9][a-z0-9._-]{0,62}',local) or '..' in local: raise ValueError('Endereço inválido. Use letras, números, ponto, hífen ou sublinhado.')
         row = dict(id=identifier(), owner=owner, address=local+'@'+DOMAIN, label=str(label or local)[:80], created=now())
         try:
-            with self.connect() as db: db.execute('INSERT INTO mailboxes VALUES(:id,:owner,:address,:label,:created)',row)
+            with self.connect() as db:
+                reserved=db.execute('SELECT owner FROM address_reservations WHERE address=?',(row['address'],)).fetchone()
+                if reserved and reserved['owner']!=owner:raise ValueError('Este endereço já está reservado.')
+                db.execute('INSERT OR IGNORE INTO address_reservations VALUES(?,?)',(row['address'],owner))
+                db.execute('INSERT INTO mailboxes VALUES(:id,:owner,:address,:label,:created)',row)
         except sqlite3.IntegrityError: raise ValueError('Este endereço já está em uso.')
         return row
     def ingest(self, recipient, raw, envelope):
@@ -125,7 +131,7 @@ class MailStore:
         with self.connect() as db: db.execute('UPDATE messages SET folder=? WHERE id=? AND folder NOT IN (\'sending\')',(folder,mid))
     def settings(self,owner,public=True):
         with self.connect() as db: row=db.execute('SELECT data FROM settings WHERE owner=?',(owner,)).fetchone()
-        data=json.loads(row['data']) if row else {'mode':'cloudflare','port':587,'security':'starttls','host':'','username':''}
+        data=json.loads(row['data']) if row else {'mode':'direct','port':587,'security':'starttls','host':'','username':''}
         if public: data={**data,'hasPassword':bool(data.get('password'))};data.pop('password',None)
         return data
     def save_settings(self,owner,data):

@@ -47,7 +47,7 @@ export class AccountApiError extends Error {
   }
 }
 function endpoint(path: string) {
-  if (/^\/d[23](\/|$)/.test(location.pathname)) {
+  if (/^\/d[234](\/|$)/.test(location.pathname)) {
     const base = location.pathname.slice(0, 3) + "/api";
     if (path.startsWith("/account/"))
       return base + path.slice("/account".length);

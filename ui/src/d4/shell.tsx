@@ -1,29 +1,278 @@
-import { lazy,Suspense,useCallback,useEffect,useState } from 'react';
-import { Inbox,Send,FilePenLine,Trash2,Settings,AtSign,Plus,RefreshCw,TriangleAlert,Sun,Moon } from 'lucide-react';
-import { Sidebar,SidebarProvider,SidebarHeader,SidebarContent,SidebarFooter,SidebarGroup,SidebarMenu,SidebarMenuItem,SidebarMenuButton,SidebarInset,SidebarTrigger,useSidebar } from '@/components/ui/sidebar';
-import { AccountMenu } from '@/components/layout/account-menu';
-import { RotatingIcon } from '@/components/layout/rotating-icon';
-import { MessagesProvider } from '@/features/messages/messages-provider';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
-import { Toaster } from '@/components/ui/sonner';
-import { configureAccountTransport } from '@/services/account-api';
-import { useServiceTheme } from '@/hooks/use-service-theme';
-import { api,post,type Mailbox } from './api';
-import { Boundary } from './boundary';
-const MailList=lazy(()=>import('./pages/list'));
-const MessagePage=lazy(()=>import('./pages/message'));
-const Compose=lazy(()=>import('./pages/compose'));
-const SettingsPage=lazy(()=>import('./pages/settings'));
-const Addresses=lazy(()=>import('./pages/addresses'));
-const links=[['inbox','Caixa de entrada',Inbox],['sent','Enviados',Send],['drafts','Rascunhos',FilePenLine],['failed','Falhas de envio',TriangleAlert],['trash','Lixeira',Trash2],['addresses','Endereços',AtSign],['settings','Configurações',Settings]] as const;
-function Navigation(){const {setOpenMobile}=useSidebar();return <SidebarMenu>{links.map(([key,label,Icon])=><SidebarMenuItem key={key}><SidebarMenuButton onClick={()=>{location.hash='/'+key;setOpenMobile(false);}} isActive={location.hash==='#/'+key} tooltip={label}><Icon/><span>{label}</span></SidebarMenuButton></SidebarMenuItem>)}</SidebarMenu>;}
-export default function Shell({session}:{session:{username:string;role:string}}){
- const [route,setRoute]=useState(location.hash.slice(2)||'inbox'),[boxes,setBoxes]=useState<Mailbox[]>([]),[box,setBox]=useState(''),[revision,setRevision]=useState(0),[loading,setLoading]=useState(true),[error,setError]=useState(''),[connected,setConnected]=useState(true),[updated,setUpdated]=useState('');
- const {rootRef,theme,toggleTheme}=useServiceTheme('d4-theme');
- const refresh=useCallback(async()=>{setLoading(true);try{const result=await api('/mailboxes');setBoxes(result.items);setBox(current=>current||result.items[0]?.id||'');setRevision(n=>n+1);setConnected(true);setUpdated(new Date().toLocaleTimeString('pt-BR'));setError('');}catch(e){setConnected(false);setError((e as Error).message);}finally{setLoading(false);}},[]);
- useEffect(()=>{const stop=configureAccountTransport((path,options)=>api(path.replace(/^\/account\//,'/'),options));void refresh();const interval=setInterval(()=>{if(!document.hidden)void refresh();},30000);const navigate=()=>setRoute(location.hash.slice(2)||'inbox');addEventListener('hashchange',navigate);return()=>{stop();clearInterval(interval);removeEventListener('hashchange',navigate);};},[refresh]);
- const title=links.find(x=>x[0]===route)?.[1]|| (route.startsWith('compose')?'Nova mensagem':'Mensagem');
- const page=route==='settings'?<SettingsPage/>:route==='addresses'?<Addresses boxes={boxes} refresh={refresh}/>:route.startsWith('message/')?<MessagePage id={route.split('/')[1]} refresh={refresh}/>:route.startsWith('compose')?<Compose mailbox={box} draftId={route.split('/')[1]} replyId={new URLSearchParams(route.split('?')[1]).get('reply')||undefined} refresh={refresh}/>:<MailList mailbox={box} folder={route} revision={revision}/>;
- return <div ref={rootRef} className="contents"><TooltipProvider><MessagesProvider username={session.username}><SidebarProvider><Sidebar collapsible="icon"><SidebarHeader className="p-4"><a href="#/inbox" className="flex items-center gap-3 text-sm font-semibold"><img alt="" src="https://organizeon.com.br/d3/assets/organizeon-icon.png" className="size-6 object-contain"/>OrganizeOn <span className="text-muted-foreground">D4</span></a><Button onClick={()=>{location.hash='/compose';}} disabled={!box}><Plus/>Escrever</Button></SidebarHeader><SidebarContent><SidebarGroup><Navigation/></SidebarGroup></SidebarContent><SidebarFooter><AccountMenu username={session.username} role={session.role} onLogout={()=>{void api('/logout',post({})).then(()=>location.replace('/d4/login'));}}/></SidebarFooter></Sidebar><SidebarInset className="min-w-0"><header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background px-4"><SidebarTrigger/><span className="flex-1 text-sm font-medium">{title}</span><Button variant="ghost" size="icon" aria-label="Alternar tema" onClick={toggleTheme}>{theme==='dark'?<Sun/>:<Moon/>}</Button><Button variant="ghost" size="icon" aria-label="Atualizar" onClick={()=>void refresh()} disabled={loading}><RotatingIcon icon={RefreshCw} active={loading}/></Button></header><main className="mx-auto w-full max-w-6xl space-y-5 p-4 sm:p-6"><div className="flex flex-wrap items-center justify-between gap-3"><select aria-label="Caixa postal" className="d4-select max-w-sm" value={box} onChange={e=>setBox(e.target.value)}><option value="" disabled>Selecione uma caixa postal</option>{boxes.map(b=><option key={b.id} value={b.id}>{b.label} · {b.address}</option>)}</select><span role="status" className="text-xs text-muted-foreground">{connected?'Conectado':'Sem conexão'}{updated?' · '+updated:''}</span></div>{error&&<p role="alert" className="text-sm text-destructive">{error}</p>}{!boxes.length&&!loading&&route!=='addresses'&&route!=='settings'?<div className="grid gap-3 rounded-lg border p-8"><AtSign/><h1 className="text-lg font-semibold">Seu próximo endereço começa aqui</h1><p className="text-sm text-muted-foreground">Crie uma caixa @organizeon.com.br para receber e gerenciar seus e-mails.</p><Button onClick={()=>location.hash='/addresses'}>Criar endereço</Button></div>:<Boundary key={route}><Suspense fallback={<div className="animate-pulse rounded-lg border p-8 text-muted-foreground">Carregando…</div>}><div className="d4-content" key={route}>{page}</div></Suspense></Boundary>}</main></SidebarInset></SidebarProvider><Toaster/></MessagesProvider></TooltipProvider></div>;
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import {
+  Inbox,
+  Send,
+  FilePenLine,
+  Trash2,
+  Settings,
+  AtSign,
+  Plus,
+  RefreshCw,
+  TriangleAlert,
+  Sun,
+  Moon,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarProvider,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { AccountMenu } from "@/components/layout/account-menu";
+import { RotatingIcon } from "@/components/layout/rotating-icon";
+import { MessagesProvider } from "@/features/messages/messages-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
+import { configureAccountTransport } from "@/services/account-api";
+import { useServiceTheme } from "@/hooks/use-service-theme";
+import { api, post, type Mailbox } from "./api";
+import { Boundary } from "./boundary";
+const MailList = lazy(() => import("./pages/list"));
+const MessagePage = lazy(() => import("./pages/message"));
+const Compose = lazy(() => import("./pages/compose"));
+const SettingsPage = lazy(() => import("./pages/settings"));
+const Addresses = lazy(() => import("./pages/addresses"));
+const links = [
+  ["inbox", "Caixa de entrada", Inbox],
+  ["sent", "Enviados", Send],
+  ["drafts", "Rascunhos", FilePenLine],
+  ["failed", "Falhas de envio", TriangleAlert],
+  ["trash", "Lixeira", Trash2],
+  ["addresses", "Endereços", AtSign],
+  ["settings", "Configurações", Settings],
+] as const;
+function Navigation() {
+  const { setOpenMobile } = useSidebar();
+  return (
+    <SidebarMenu>
+      {links.map(([key, label, Icon]) => (
+        <SidebarMenuItem key={key}>
+          <SidebarMenuButton
+            onClick={() => {
+              location.hash = "/" + key;
+              setOpenMobile(false);
+            }}
+            isActive={location.hash === "#/" + key}
+            tooltip={label}
+          >
+            <Icon />
+            <span>{label}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
+}
+export default function Shell({
+  session,
+}: {
+  session: { username: string; role: string };
+}) {
+  const [route, setRoute] = useState(location.hash.slice(2) || "inbox"),
+    [boxes, setBoxes] = useState<Mailbox[]>([]),
+    [box, setBox] = useState(""),
+    [revision, setRevision] = useState(0),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(""),
+    [connected, setConnected] = useState(true),
+    [updated, setUpdated] = useState("");
+  const { rootRef, theme, toggleTheme } = useServiceTheme("d4-theme");
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await api("/mailboxes");
+      setBoxes(result.items);
+      setBox((current) => current || result.items[0]?.id || "");
+      setRevision((n) => n + 1);
+      setConnected(true);
+      setUpdated(new Date().toLocaleTimeString("pt-BR"));
+      setError("");
+    } catch (e) {
+      setConnected(false);
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    const stop = configureAccountTransport((path, options) =>
+      api(path.replace(/^\/account\//, "/"), options),
+    );
+    void refresh();
+    const interval = setInterval(() => {
+      if (!document.hidden) void refresh();
+    }, 30000);
+    const navigate = () => setRoute(location.hash.slice(2) || "inbox");
+    addEventListener("hashchange", navigate);
+    return () => {
+      stop();
+      clearInterval(interval);
+      removeEventListener("hashchange", navigate);
+    };
+  }, [refresh]);
+  const title =
+    links.find((x) => x[0] === route)?.[1] ||
+    (route.startsWith("compose") ? "Nova mensagem" : "Mensagem");
+  const page =
+    route === "settings" ? (
+      <SettingsPage />
+    ) : route === "addresses" ? (
+      <Addresses boxes={boxes} refresh={refresh} />
+    ) : route.startsWith("message/") ? (
+      <MessagePage id={route.split("/")[1]} refresh={refresh} />
+    ) : route.startsWith("compose") ? (
+      <Compose
+        mailbox={box}
+        draftId={route.split("/")[1]}
+        replyId={
+          new URLSearchParams(route.split("?")[1]).get("reply") || undefined
+        }
+        refresh={refresh}
+      />
+    ) : (
+      <MailList mailbox={box} folder={route} revision={revision} />
+    );
+  return (
+    <div ref={rootRef} className="contents">
+      <TooltipProvider>
+        <MessagesProvider username={session.username}>
+          <SidebarProvider>
+            <Sidebar collapsible="icon">
+              <SidebarHeader className="p-4">
+                <a
+                  href="#/inbox"
+                  className="flex items-center gap-3 text-sm font-semibold"
+                >
+                  <img
+                    alt=""
+                    src="https://organizeon.com.br/d3/assets/organizeon-icon.png"
+                    className="size-6 object-contain"
+                  />
+                  OrganizeOn <span className="text-muted-foreground">D4</span>
+                </a>
+                <Button
+                  onClick={() => {
+                    location.hash = "/compose";
+                  }}
+                  disabled={!box}
+                >
+                  <Plus />
+                  Escrever
+                </Button>
+              </SidebarHeader>
+              <SidebarContent>
+                <SidebarGroup>
+                  <Navigation />
+                </SidebarGroup>
+              </SidebarContent>
+              <SidebarFooter>
+                <AccountMenu
+                  username={session.username}
+                  role={session.role}
+                  onLogout={() => {
+                    void api("/logout", post({})).then(() =>
+                      location.replace("/d4/login"),
+                    );
+                  }}
+                />
+              </SidebarFooter>
+            </Sidebar>
+            <SidebarInset className="min-w-0">
+              <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background px-4">
+                <SidebarTrigger />
+                <span className="flex-1 text-sm font-medium">{title}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Alternar tema"
+                  onClick={toggleTheme}
+                >
+                  {theme === "dark" ? <Sun /> : <Moon />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Atualizar"
+                  onClick={() => void refresh()}
+                  disabled={loading}
+                >
+                  <RotatingIcon icon={RefreshCw} active={loading} />
+                </Button>
+              </header>
+              <main className="mx-auto w-full max-w-6xl space-y-5 p-4 sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <select
+                    aria-label="Caixa postal"
+                    className="d4-select max-w-sm"
+                    value={box}
+                    onChange={(e) => setBox(e.target.value)}
+                  >
+                    <option value="" disabled>
+                      Selecione uma caixa postal
+                    </option>
+                    {boxes.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.label} · {b.address}
+                      </option>
+                    ))}
+                  </select>
+                  <span role="status" className="text-xs text-muted-foreground">
+                    {connected ? "Conectado" : "Sem conexão"}
+                    {updated ? " · " + updated : ""}
+                  </span>
+                </div>
+                {error && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {error}
+                  </p>
+                )}
+                {!boxes.length &&
+                !loading &&
+                route !== "addresses" &&
+                route !== "settings" ? (
+                  <div className="grid gap-3 rounded-lg border p-8">
+                    <AtSign />
+                    <h1 className="text-lg font-semibold">
+                      Seu próximo endereço começa aqui
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      Crie uma caixa @organizeon.com.br para receber e gerenciar
+                      seus e-mails.
+                    </p>
+                    <Button onClick={() => (location.hash = "/addresses")}>
+                      Criar endereço
+                    </Button>
+                  </div>
+                ) : (
+                  <Boundary key={route}>
+                    <Suspense
+                      fallback={
+                        <div className="animate-pulse rounded-lg border p-8 text-muted-foreground">
+                          Carregando…
+                        </div>
+                      }
+                    >
+                      <div className="d4-content" key={route}>
+                        {page}
+                      </div>
+                    </Suspense>
+                  </Boundary>
+                )}
+              </main>
+            </SidebarInset>
+          </SidebarProvider>
+          <Toaster />
+        </MessagesProvider>
+      </TooltipProvider>
+    </div>
+  );
 }

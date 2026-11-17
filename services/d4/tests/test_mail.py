@@ -45,5 +45,19 @@ class MailTests(unittest.TestCase):
     def test_header_injection_rejected(self):
         for value in [{'to':['a@example.org\r\nBcc:x@example.org']},{'subject':'hello\nBcc: x@example.org'}]:
             with self.assertRaises(ValueError):self.store.save_draft('alice',{'mailbox':self.box['id'],**value})
+    def test_deleted_address_cannot_be_taken_by_another_account(self):
+        with self.store.connect() as db:db.execute('DELETE FROM mailboxes WHERE id=?',(self.box['id'],))
+        with self.assertRaises(ValueError):self.store.create_mailbox('bob','fixture','')
+        recreated=self.store.create_mailbox('alice','fixture','')
+        self.assertEqual(recreated['address'],self.box['address'])
+    def test_reply_metadata_and_ownership(self):
+        raw=b'From: sender@example.org\r\nReply-To: reply@example.org\r\nMessage-ID: <original@example.org>\r\nSubject: Original\r\n\r\nOriginal body'
+        mid=self.store.ingest(self.box['address'],raw,'sender@example.org')
+        original=self.store.message('alice',mid)
+        self.assertEqual(original['replyAddress'],'reply@example.org')
+        draft=self.store.save_draft('alice',{'mailbox':self.box['id'],'replyId':mid,'to':['reply@example.org'],'body':'Resposta'})
+        self.assertEqual(draft['reply_to'],mid)
+        box=self.store.create_mailbox('bob','bob','')
+        with self.assertRaises(ValueError):self.store.save_draft('bob',{'mailbox':box['id'],'replyId':mid})
 
 if __name__=='__main__':unittest.main()
