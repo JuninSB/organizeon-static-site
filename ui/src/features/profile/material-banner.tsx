@@ -33,7 +33,7 @@ export function MaterialBanner({ seed, color, material }: { seed: string; color:
       <g filter={url('bubble-depth')}><g filter={url('merge')} fill={url('bubble-shade')}>{Array.from({length:10},(_,i)=><circle key={i} cx={random(i)*500-30} cy={random(i+11)*130} r={20+random(i+22)*25} className="oo-material-motion" style={motion(i%2 ? 'oo-blob-orbit' : 'oo-blob-cross',i,9)}/>)}</g></g>
 
     </g>}
-    {material === 'gradient' && <g data-renderer="diffused-color-mesh" filter={url('soft')}>{[0,1,2,3].map(i=><ellipse key={i} cx={i*145} cy={i%2?120:0} rx="135" ry="90" fill={lavaPalette(color,i/3).light} opacity={.45+i*.1} className="oo-material-motion" style={motion('oo-mesh-drift',i,14)}/>)}</g>}
+    {material === 'gradient' && <g data-renderer="diffused-color-mesh" filter={url('soft')}>{[0,1,2,3].map(i=><ellipse key={i} cx={i*145} cy={i%2?120:0} rx="135" ry="90" fill={lavaPalette(color,.2+i*.2).body} opacity={.45+i*.1} className="oo-material-motion" style={motion('oo-mesh-drift',i,14)}/>)}</g>}
     {material === 'stars' && <g data-renderer="parallax-starfield">
       {Array.from({length:48},(_,i)=><g key={i} className="oo-material-motion" style={motion('oo-star-travel',i,i%3===0?18:35)}><circle cx={random(i)*540-50} cy={random(i+70)*120} r={i%7===0?1.5:.45+random(i+30)*.65} fill={i%3===0?tone.light:'#e5efff'} className="oo-material-motion" style={motion('oo-star-twinkle',i,2)}/></g>)}
       <path d="M0 0h-32" stroke="white" strokeWidth="1.2" className="oo-material-motion oo-shooting-star" style={motion('oo-star-shoot',2,9)}/>
