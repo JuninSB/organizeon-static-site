@@ -31,7 +31,7 @@ export function emailDocument(html: string) {
   viewport.content = "width=device-width,initial-scale=1";
   doc.head.append(viewport);
   const style = doc.createElement("style");
-  style.textContent = "body{font:14px system-ui;overflow-wrap:anywhere;margin:12px}img{max-width:100%;height:auto}table{max-width:100%}";
+  style.textContent = "body{font:14px system-ui;overflow-wrap:anywhere;margin:0}img{max-width:100%;height:auto}table{max-width:100%}";
   doc.head.append(style);
   return "<!doctype html>" + doc.documentElement.outerHTML;
 }

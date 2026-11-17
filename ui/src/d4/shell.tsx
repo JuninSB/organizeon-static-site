@@ -198,7 +198,7 @@ export default function Shell({
                   <RotatingIcon icon={RefreshCw} active={loading} />
                 </Button>
               </header>
-              <main className="mx-auto w-full max-w-6xl space-y-5 p-4 sm:p-6">
+              <main className="d4-main mx-auto w-full max-w-6xl space-y-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <select
                     aria-label="Caixa postal"

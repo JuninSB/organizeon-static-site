@@ -73,6 +73,10 @@
 .d4-content {
   animation: d4-enter 150ms ease-out;
 }
+.d4-main {--d4-content-gutter:1rem;padding:var(--d4-content-gutter);}
+.d4-message-body {margin-inline:calc(2px - var(--d4-content-gutter));}
+.d4-message-frame {display:block;height:85svh;min-height:480px;border:0;}
+@media(min-width:640px){.d4-main{--d4-content-gutter:1.5rem;}}
 @keyframes d4-enter {
   from {
     opacity: 0;

@@ -33,6 +33,8 @@ const realLogo = 'http://cdn.mcauto-images-production.sendgrid.net/956b73cc4c6df
   await page.goto('https://organizeon.com.br/d4/#/message/html-fixture');
   const frame=page.frameLocator('iframe[title="Conteúdo do e-mail"]');
   await frame.getByRole('heading',{name:'E-mail HTML'}).waitFor();
+  const geometry=await page.locator('.d4-message-body').evaluate(element=>({left:element.getBoundingClientRect().left,right:innerWidth-element.getBoundingClientRect().right,height:element.querySelector('iframe').getBoundingClientRect().height,viewport:innerHeight}));
+  if(Math.abs(geometry.left-2)>1||Math.abs(geometry.right-2)>1||geometry.height<geometry.viewport*.84)throw Error('Mail width/height regression '+JSON.stringify(geometry));
   const profile=page.getByRole('button',{name:'Ver perfil de Roblox'});
   await page.waitForFunction(()=>{
     const image=document.querySelector('button[aria-label="Ver perfil de Roblox"] img');

@@ -173,7 +173,7 @@ export default function MessagePage({
           ))}
         </div>
       )}
-      <div className="space-y-3 rounded-lg border p-5">
+      <div className="d4-message-body space-y-3 rounded-lg border p-[2px]">
         {message.html && (
           <Button
             variant="outline"
@@ -188,11 +188,11 @@ export default function MessagePage({
             title="Conteúdo do e-mail"
             sandbox="allow-popups allow-popups-to-escape-sandbox"
             referrerPolicy="no-referrer"
-            className="h-[55vh] w-full rounded bg-white"
+            className="d4-message-frame w-full rounded bg-white"
             srcDoc={document}
           />
         ) : (
-          <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7">
+          <pre className="whitespace-pre-wrap break-words p-2 font-sans text-sm leading-7">
             {emailText(message.html || message.body) ||
               (message.html
                 ? "Este e-mail contém somente HTML. Use o botão acima para visualizá-lo."
