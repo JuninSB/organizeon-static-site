@@ -1,6 +1,7 @@
 // Synthetic messages exercise the real UI; no mail is sent or modified.
 const { chromium } = require('/tmp/replay-browser/node_modules/playwright');
 const fs = require('fs'), path = require('path');
+const realLogo = 'http://cdn.mcauto-images-production.sendgrid.net/956b73cc4c6df487/9b5d11af-4e16-4059-9d0a-ff0052a2ce6f/600x111.png';
 (async () => {
  const browser = await chromium.launch({headless:true,args:['--no-sandbox','--no-zygote','--single-process','--no-proxy-server','--in-process-gpu','--disable-gpu-sandbox']});
  try {
@@ -17,6 +18,7 @@ const fs = require('fs'), path = require('path');
     if(endpoint==='mailboxes')data={items:[{id:'box',address:'fixture@organizeon.com.br',label:'Teste'}]};
     if(endpoint.startsWith('messages/'))data={id:'html-fixture',mailbox:'box',folder:'inbox',subject:'Teste do leitor HTML',sender:'Roblox <no-reply@roblox.com>',recipients:['fixture@organizeon.com.br'],created:'2026-11-17T13:00:00Z',attachments:[],body:'Texto alternativo',html:'<h1>E-mail HTML</h1><img alt="Logo fixture" src="https://images.example.test/logo.png"><p><a style="display:inline-block;padding:20px;background:#27272a;color:white" href="https://example.org/verify">Abrir destino de teste</a></p><script>parent.document.body.innerHTML="COMPROMISED"</script>'};
     if(endpoint==='messages')data={items:[{id:'html-fixture',sender:'Roblox <no-reply@roblox.com>',subject:'Teste do leitor HTML',snippet:'Prévia de mensagem',created:'2026-11-17T13:00:00Z',unread:1}],hasMore:false};
+    if(data.html && process.env.D4_REAL_IMAGE==='1')data.html=data.html.replace('https://images.example.test/logo.png',realLogo);
     return route.fulfill({json:data});
    }
    if(process.env.D4_HTML_LOCAL==='1'){
@@ -32,7 +34,10 @@ const fs = require('fs'), path = require('path');
   const frame=page.frameLocator('iframe[title="Conteúdo do e-mail"]');
   await frame.getByRole('heading',{name:'E-mail HTML'}).waitFor();
   const profile=page.getByRole('button',{name:'Ver perfil de Roblox'});
-  await profile.locator('img').evaluate(image=>image.decode());
+  await page.waitForFunction(()=>{
+    const image=document.querySelector('button[aria-label="Ver perfil de Roblox"] img');
+    return image && image.complete && image.naturalWidth>0;
+  });
   await profile.click();
   await page.getByRole('dialog').waitFor();
   await page.getByRole('dialog').getByText('no-reply@roblox.com',{exact:true}).waitFor();
@@ -46,7 +51,7 @@ const fs = require('fs'), path = require('path');
   if(popup.url()!=='https://example.org/verify')throw Error('Link did not open destination');
   await popup.close();
   await page.getByRole('button',{name:'Ver texto',exact:true}).click();
-  await page.getByText('Texto alternativo',{exact:true}).waitFor();
+  await page.getByText(/Abrir destino de teste \(https:\/\/example.org\/verify\)/).waitFor();
   await page.getByRole('button',{name:'Ver conteúdo HTML'}).click();
   await frame.getByRole('heading').waitFor();
   if(await page.locator('body').textContent().then(text=>text.includes('COMPROMISED')))throw Error('Mail script escaped');

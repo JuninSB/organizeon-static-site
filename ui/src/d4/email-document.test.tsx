@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { emailDocument } from "./email-document";
+import { emailDocument, emailText } from "./email-document";
 import MessagePage from "./pages/message";
 import { api } from "./api";
 vi.mock("./api", () => ({ api: vi.fn(), date: (value: string) => value }));
@@ -18,13 +18,23 @@ describe("email reader", () => {
     expect(doc.querySelector("script,iframe,form,[onerror]")).toBeNull();
     expect(doc.querySelector("a")?.hasAttribute("href")).toBe(false);
   });
+  it("upgrades HTTP image sources without requiring image-server CORS", () => {
+    const doc = new DOMParser().parseFromString(emailDocument('<img src="http://cdn.example.org/logo.png" crossorigin="anonymous">'), 'text/html');
+    expect(doc.querySelector('img')?.src).toBe('https://cdn.example.org/logo.png');
+    expect(doc.querySelector('img')?.hasAttribute('crossorigin')).toBe(false);
+  });
+  it("produces readable text from formatting and escaped sender markup", () => {
+    expect(emailText('<p>Olá,</p><p>Conta <strong>Teste</strong></p>')).toBe('Olá,\nConta Teste');
+    expect(emailText('&lt;p&gt;Olá&lt;/p&gt;')).toBe('Olá');
+    expect(emailText('<a href="https://example.org/verify">Verificar</a>')).toContain('Verificar (https://example.org/verify)');
+  });
   it("automatically selects HTML and resets the selection between messages", async () => {
     vi.mocked(api).mockResolvedValueOnce(message).mockResolvedValueOnce({ ...message, id: "two", html: "", body: "Somente texto" });
     const view = render(<MessagePage id="one" refresh={async () => {}} />);
     const frame = await screen.findByTitle("Conteúdo do e-mail");
     expect(frame.getAttribute("sandbox")).toBe("allow-popups allow-popups-to-escape-sandbox");
     fireEvent.click(screen.getByRole("button", { name: "Ver texto" }));
-    expect(screen.getByText("Texto alternativo")).toBeInTheDocument();
+    expect(screen.getByText("Verificar (https://example.org/verify)")).toBeInTheDocument();
     view.rerender(<MessagePage id="two" refresh={async () => {}} />);
     await waitFor(() => expect(screen.getByText("Somente texto")).toBeInTheDocument());
     expect(screen.queryByTitle("Conteúdo do e-mail")).toBeNull();

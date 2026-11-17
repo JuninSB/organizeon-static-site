@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { api, date, type Message } from "../api";
 import { SenderProfile } from "../sender-profile";
 import { senderIdentity } from "../sender";
+import { emailText } from "../email-document";
 export default function MailList({
   mailbox,
   folder,
@@ -101,7 +102,7 @@ export default function MailList({
                 {item.subject || "(Sem assunto)"}
               </p>
               <p className="truncate text-xs text-muted-foreground">
-                {item.snippet}
+                {emailText(item.snippet || "")}
               </p>
             </div>
             <time className="text-xs text-muted-foreground">

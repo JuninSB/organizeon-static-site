@@ -6,9 +6,10 @@ import { senderIdentity } from "./sender";
 
 export function SenderAvatar({ sender, large = false }: { sender: string; large?: boolean }) {
   const identity = senderIdentity(sender);
-  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const source = attempt === 0 ? identity.logo : attempt === 1 ? identity.fallbackLogo : undefined;
   return <span className={`d4-sender-avatar d4-avatar-tone-${identity.tone}${large ? " d4-sender-avatar-large" : ""}`} aria-hidden="true">
-    {identity.logo && !failed ? <img src={identity.logo} alt="" onError={() => setFailed(true)} /> : identity.initials}
+    {source ? <img src={source} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setAttempt(value => value + 1)} /> : identity.initials}
   </span>;
 }
 

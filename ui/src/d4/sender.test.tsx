@@ -7,12 +7,17 @@ describe("sender identity", () => {
   it("parses names and exact domains without confusing lookalikes", () => {
     expect(senderIdentity('"Roblox" <no-reply@roblox.com>').name).toBe("Roblox");
     expect(senderIdentity('Roblox <no-reply@roblox.com>').logo).toBeTruthy();
-    expect(senderIdentity('Roblox <no-reply@roblox.com.attacker.example>').logo).toBeUndefined();
+    expect(senderIdentity('Roblox <no-reply@roblox.com.attacker.example>').logo).toBe('https://roblox.com.attacker.example/favicon.ico');
+    expect(senderIdentity('Pessoa <pessoa@empresa.org>').logo).toBe('https://empresa.org/favicon.ico');
+    expect(senderIdentity('Pessoa <pessoa@localhost>').logo).toBeUndefined();
+    expect(senderIdentity('Pessoa <pessoa@192.168.1.1>').logo).toBeUndefined();
     expect(senderIdentity('Alice Silva <alice@example.org>').initials).toBe("AS");
     expect(senderIdentity('person@example.org').address).toBe("person@example.org");
   });
   it("falls back to initials when the image cannot load", () => {
     const {container} = render(<SenderAvatar sender="Roblox <no-reply@roblox.com>" />);
+    fireEvent.error(container.querySelector('img')!);
+    expect(container.querySelector('img')?.src).toContain('google.com/s2/favicons?domain=roblox.com');
     fireEvent.error(container.querySelector('img')!);
     expect(container.querySelector('img')).toBeNull();
     expect(screen.getByText('R')).toBeInTheDocument();

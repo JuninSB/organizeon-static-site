@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { emailDocument } from "../email-document";
+import { emailDocument, emailText } from "../email-document";
 import { SenderProfile } from "../sender-profile";
 import { senderIdentity } from "../sender";
 import { ArrowLeft, Reply, Forward, Trash2, Download } from "lucide-react";
@@ -193,7 +193,7 @@ export default function MessagePage({
           />
         ) : (
           <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7">
-            {message.body ||
+            {emailText(message.html || message.body) ||
               (message.html
                 ? "Este e-mail contém somente HTML. Use o botão acima para visualizá-lo."
                 : "(Sem texto)")}
