@@ -24,7 +24,7 @@ const fs = require('fs'), path = require('path');
     const file=url.pathname==='/d4/'?path.join(root,'d4.html'):path.join(root,url.pathname.slice(4));
     if(fs.existsSync(file)&&fs.statSync(file).isFile())return route.fulfill({path:file,contentType:file.endsWith('.html')?'text/html':file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':undefined});
    }
-   if(url.pathname==='/d4/')return route.fetch({url:'https://organizeon.com.br/d4/login'}).then(response=>route.fulfill({response}));
+   if(url.pathname==='/d4/')return route.fetch({url:'https://organizeon.com.br/d4/login',maxRetries:2}).then(response=>route.fulfill({response}));
    return route.continue();
   });
   await page.route('https://images.example.test/logo.png',route=>route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jB6kAAAAASUVORK5CYII=','base64')}));
