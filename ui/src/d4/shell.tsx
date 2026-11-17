@@ -8,8 +8,6 @@ import {
   Plus,
   RefreshCw,
   TriangleAlert,
-  Sun,
-  Moon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +34,7 @@ import { useServiceTheme } from "@/hooks/use-service-theme";
 import { api, post, type Mailbox } from "./api";
 import { Boundary } from "./boundary";
 import { BrandMark } from "@/components/layout/brand-mark";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 const MailList = lazy(() => import("./pages/list"));
 const MessagePage = lazy(() => import("./pages/message"));
 const Compose = lazy(() => import("./pages/compose"));
@@ -188,14 +187,7 @@ export default function Shell({
               <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background px-4">
                 <SidebarTrigger />
                 <span className="flex-1 text-sm font-medium">{title}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Alternar tema"
-                  onClick={toggleTheme}
-                >
-                  {theme === "dark" ? <Sun /> : <Moon />}
-                </Button>
+                <ThemeToggle theme={theme} onToggle={toggleTheme}/>
                 <Button
                   variant="ghost"
                   size="icon"

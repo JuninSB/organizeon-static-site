@@ -7,7 +7,7 @@ const local=process.env.THEME_TEST_LOCAL==='1';
  try{
   for(const service of ['d2','d3','d4','client']){
    browser=await chromium.launch({headless:true,args:['--no-sandbox','--no-zygote','--single-process','--no-proxy-server','--in-process-gpu','--disable-gpu-sandbox']});
-   const context=await browser.newContext({viewport:{width:390,height:844}});
+   const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'no-preference'});
    const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
    if(local)await page.route('https://juninsb.github.io/organizeon-static-site/ui-dist/**',route=>{
     const file=path.join(repo,'ui-dist',new URL(route.request().url()).pathname.split('/').at(-1));
@@ -28,7 +28,18 @@ const local=process.env.THEME_TEST_LOCAL==='1';
    }else await page.goto('https://organizeon.com.br/'+service+'/login');
    const toggle=page.getByRole('button',{name:'Ativar tema claro',exact:true});await toggle.waitFor();
    const username=page.getByRole('textbox',{name:'Usuário',exact:true});await username.fill('fixture-theme');
-   await toggle.click();await page.getByRole('button',{name:'Ativar tema escuro',exact:true}).waitFor();
+   const motion=await toggle.evaluate(async button=>{
+    const images=[...button.parentElement.querySelectorAll('img')];
+    await Promise.all(images.map(image=>image.decode()));
+    images.forEach(image=>getComputedStyle(image).opacity);
+    const sources=images.map(image=>image.src);
+    button.click();
+    await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,80)));
+    const current=[...button.parentElement.querySelectorAll('img')];
+    return {count:images.length,retained:current.every((image,index)=>image===images[index]&&image.src===sources[index]),opacity:current.map(image=>Number(getComputedStyle(image).opacity))};
+   });
+   if(motion.count!==2||!motion.retained||!motion.opacity.every(value=>value>0&&value<1))throw Error(service+' crossfade/retained images failed '+JSON.stringify(motion));
+   await page.getByRole('button',{name:'Ativar tema escuro',exact:true}).waitFor();
    if(await username.inputValue()!=='fixture-theme')throw Error(service+' loses form state on theme change');
    const black=page.locator('img[src*="organizeon_preto_separado_1024.png"]:visible');await black.first().waitFor();
    await page.waitForTimeout(200);await page.screenshot({path:'/tmp/'+service+'-login-theme-light.png',fullPage:true});
@@ -36,7 +47,7 @@ const local=process.env.THEME_TEST_LOCAL==='1';
    await page.getByRole('button',{name:'Ativar tema escuro',exact:true}).click();await page.getByRole('button',{name:'Ativar tema claro',exact:true}).waitFor();
    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error(service+' viewport overflow');
    if(errors.length)throw Error(service+' '+JSON.stringify(errors));
-   console.log('PASS',service,'toggle persistence form-state light-brand');await browser.close();
+   console.log('PASS',service,'crossfade retained-images toggle persistence form-state light-brand');await browser.close();
   }
  }finally{if(browser)await browser.close();}
 })().catch(e=>{console.error(e.message);process.exit(1)});
