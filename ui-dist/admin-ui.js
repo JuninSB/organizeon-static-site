@@ -24803,9 +24803,9 @@ function EL({ username: e, role: t, profile: n, onEdit: r, frameless: i = !1 }) 
 				seed: n.bannerSeed || e,
 				color: n.bannerColor || n.nameColor,
 				material: n.bannerStyle === "lava" ? void 0 : n.bannerStyle === "magma" ? "lava" : n.bannerStyle
-			}), r && /* @__PURE__ */ (0, DL.jsxs)("div", {
-				className: "absolute left-3 top-3 flex gap-1 rounded-lg bg-background/80",
-				children: [a("background", "Editar fundo do perfil"), n.goldBadge && a("appearance", "Editar aparência")]
+			}), r && /* @__PURE__ */ (0, DL.jsx)("div", {
+				className: "absolute left-3 top-3 rounded-lg bg-background/80",
+				children: a("appearance", "Editar aparência")
 			})]
 		}), /* @__PURE__ */ (0, DL.jsxs)("div", {
 			className: "px-5 pb-5 sm:px-6 sm:pb-6",
@@ -27563,85 +27563,94 @@ function sU({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 	let [a, o] = (0, cU.useState)({
 		...t,
 		bannerStyle: t.bannerStyle === "slime" || t.bannerStyle === "magma" ? "solid" : t.bannerStyle
-	}), [s, c] = (0, cU.useState)(null), [l, u] = (0, cU.useState)(!1), [d, f] = (0, cU.useState)(""), p = (0, cU.useRef)(null), m = e === "background";
+	}), [s, c] = (0, cU.useState)(null), [l, u] = (0, cU.useState)(!1), [d, f] = (0, cU.useState)(""), p = (0, cU.useRef)(null), m = e === "appearance" && a.bannerStyle === "image";
 	return /* @__PURE__ */ (0, lU.jsxs)("form", {
 		className: "grid gap-4",
 		onSubmit: async (t) => {
 			if (t.preventDefault(), !(l || s)) {
-				u(!0), f("");
-				try {
-					await n(e === "identity" ? {
-						displayName: a.displayName,
-						nameColor: a.nameColor
-					} : e === "bio" ? { bio: a.bio } : e === "background" ? {
-						bannerImage: a.bannerImage || null,
-						bannerFit: a.bannerFit || "cover"
-					} : e === "appearance" ? {
-						showGoldBadge: a.showGoldBadge !== !1,
-						bannerStyle: a.bannerStyle || "solid",
-						bannerColor: a.bannerColor || null
-					} : {
-						avatar: a.avatar,
-						avatarShape: a.avatarShape
-					});
-				} catch (e) {
-					f(e instanceof Error ? e.message : "Não foi possível salvar.");
-				} finally {
-					u(!1);
+				if (m && !a.bannerImage) f("Escolha uma imagem para o fundo.");
+				else {
+					u(!0), f("");
+					try {
+						await n(e === "identity" ? {
+							displayName: a.displayName,
+							nameColor: a.nameColor
+						} : e === "bio" ? { bio: a.bio } : e === "appearance" ? {
+							showGoldBadge: !!a.goldBadge && a.showGoldBadge !== !1,
+							bannerStyle: a.bannerStyle || "solid",
+							bannerColor: a.bannerColor || null,
+							bannerImage: m && a.bannerImage || null,
+							bannerFit: a.bannerFit || "cover"
+						} : {
+							avatar: a.avatar,
+							avatarShape: a.avatarShape
+						});
+					} catch (e) {
+						f(e instanceof Error ? e.message : "Não foi possível salvar.");
+					} finally {
+						u(!1);
+					}
 				}
 			}
 		},
 		children: [
-			e === "appearance" && t.goldBadge && /* @__PURE__ */ (0, lU.jsxs)(lU.Fragment, { children: [
+			e === "appearance" && /* @__PURE__ */ (0, lU.jsxs)(lU.Fragment, { children: [
 				/* @__PURE__ */ (0, lU.jsx)("div", {
 					className: "oo-profile-banner h-28 rounded-lg border border-border bg-card",
 					role: "img",
 					"aria-label": "Prévia do fundo",
 					style: { background: `color-mix(in srgb, ${a.bannerColor || a.nameColor} 18%, rgb(var(--card)))` },
-					children: a.bannerStyle !== "solid" && !!a.bannerStyle && /* @__PURE__ */ (0, lU.jsx)(hL, {
+					children: m ? a.bannerImage && /* @__PURE__ */ (0, lU.jsx)("img", {
+						src: a.bannerImage,
+						alt: "Prévia do fundo",
+						className: "size-full",
+						style: { objectFit: a.bannerFit || "cover" }
+					}) : a.goldBadge && a.bannerStyle !== "solid" && !!a.bannerStyle && /* @__PURE__ */ (0, lU.jsx)(hL, {
 						seed: a.bannerSeed || "preview",
 						color: a.bannerColor || a.nameColor,
 						material: a.bannerStyle === "lava" ? void 0 : a.bannerStyle === "magma" ? "lava" : a.bannerStyle
 					})
 				}),
-				/* @__PURE__ */ (0, lU.jsxs)("label", {
-					className: "flex items-center gap-3 text-sm",
-					children: [/* @__PURE__ */ (0, lU.jsx)(LR, {
-						checked: !a.bannerColor,
+				t.goldBadge && !m && /* @__PURE__ */ (0, lU.jsxs)(lU.Fragment, { children: [
+					/* @__PURE__ */ (0, lU.jsxs)("label", {
+						className: "flex items-center gap-3 text-sm",
+						children: [/* @__PURE__ */ (0, lU.jsx)(LR, {
+							checked: !a.bannerColor,
+							disabled: l,
+							onCheckedChange: (e) => o({
+								...a,
+								bannerColor: e ? null : a.nameColor
+							})
+						}), "Usar a cor do nick no fundo"]
+					}),
+					a.bannerColor && /* @__PURE__ */ (0, lU.jsxs)("label", {
+						className: "flex items-center justify-between gap-3 text-sm",
+						children: ["Cor do fundo", /* @__PURE__ */ (0, lU.jsx)(XR, {
+							"aria-label": "Cor do fundo",
+							type: "color",
+							className: "h-10 w-16 p-1",
+							value: a.bannerColor,
+							disabled: l,
+							onChange: (e) => o({
+								...a,
+								bannerColor: e.target.value
+							})
+						})]
+					}),
+					/* @__PURE__ */ (0, lU.jsx)($H, {
+						profile: a,
 						disabled: l,
-						onCheckedChange: (e) => o({
-							...a,
-							bannerColor: e ? null : a.nameColor
-						})
-					}), "Usar a cor do nick no fundo"]
-				}),
-				a.bannerColor && /* @__PURE__ */ (0, lU.jsxs)("label", {
-					className: "flex items-center justify-between gap-3 text-sm",
-					children: ["Cor do fundo", /* @__PURE__ */ (0, lU.jsx)(XR, {
-						"aria-label": "Cor do fundo",
-						type: "color",
-						className: "h-10 w-16 p-1",
-						value: a.bannerColor,
-						disabled: l,
-						onChange: (e) => o({
-							...a,
-							bannerColor: e.target.value
-						})
-					})]
-				}),
-				/* @__PURE__ */ (0, lU.jsx)($H, {
-					profile: a,
-					disabled: l,
-					onUpdated: (e) => {
-						o((t) => ({
-							...t,
-							bannerSeed: e.bannerSeed,
-							bannerRerollAvailableAt: e.bannerRerollAvailableAt,
-							bannerRerollUnlimited: e.bannerRerollUnlimited
-						})), i?.(e);
-					}
-				}),
-				/* @__PURE__ */ (0, lU.jsxs)("label", {
+						onUpdated: (e) => {
+							o((t) => ({
+								...t,
+								bannerSeed: e.bannerSeed,
+								bannerRerollAvailableAt: e.bannerRerollAvailableAt,
+								bannerRerollUnlimited: e.bannerRerollUnlimited
+							})), i?.(e);
+						}
+					})
+				] }),
+				t.goldBadge && /* @__PURE__ */ (0, lU.jsxs)("label", {
 					className: "flex items-center gap-3 text-sm",
 					children: [/* @__PURE__ */ (0, lU.jsx)(LR, {
 						checked: a.showGoldBadge !== !1,
@@ -27656,10 +27665,11 @@ function sU({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 					className: "grid gap-2 text-sm",
 					children: ["Fundo do perfil", /* @__PURE__ */ (0, lU.jsxs)(WH, {
 						value: a.bannerStyle || "solid",
-						disabled: l,
+						disabled: l || !!s,
 						onValueChange: (e) => {
 							e && [
 								"solid",
+								"image",
 								"lava",
 								"bubbles",
 								"gradient",
@@ -27670,38 +27680,48 @@ function sU({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 								bannerStyle: e
 							});
 						},
-						children: [/* @__PURE__ */ (0, lU.jsx)(RH, { children: /* @__PURE__ */ (0, lU.jsx)(LH, { children: {
-							solid: "Cor sólida",
-							lava: "Fluidos — 12 composições",
-							bubbles: "Bolhas",
-							gradient: "Gradiente",
-							stars: "Estrelas",
-							rainbow: "Arcos de cor"
-						}[(a.bannerStyle === "slime" || a.bannerStyle === "magma" ? "solid" : a.bannerStyle) || "solid"] }) }), /* @__PURE__ */ (0, lU.jsxs)(zH, { children: [
+						children: [/* @__PURE__ */ (0, lU.jsx)(RH, {
+							"aria-label": "Estilo do fundo",
+							children: /* @__PURE__ */ (0, lU.jsx)(LH, { children: {
+								solid: "Cor sólida",
+								image: "Imagem",
+								lava: "Fluidos — 12 composições",
+								bubbles: "Bolhas",
+								gradient: "Gradiente",
+								stars: "Estrelas",
+								rainbow: "Arcos de cor"
+							}[(a.bannerStyle === "slime" || a.bannerStyle === "magma" ? "solid" : a.bannerStyle) || "solid"] })
+						}), /* @__PURE__ */ (0, lU.jsxs)(zH, { children: [
 							/* @__PURE__ */ (0, lU.jsx)(BH, {
 								value: "solid",
 								children: "Cor sólida"
 							}),
 							/* @__PURE__ */ (0, lU.jsx)(BH, {
-								value: "lava",
-								children: "Fluidos — 12 composições"
+								value: "image",
+								children: "Imagem"
 							}),
-							/* @__PURE__ */ (0, lU.jsx)(BH, {
-								value: "bubbles",
-								children: "Bolhas"
-							}),
-							/* @__PURE__ */ (0, lU.jsx)(BH, {
-								value: "gradient",
-								children: "Gradiente"
-							}),
-							/* @__PURE__ */ (0, lU.jsx)(BH, {
-								value: "stars",
-								children: "Estrelas"
-							}),
-							/* @__PURE__ */ (0, lU.jsx)(BH, {
-								value: "rainbow",
-								children: "Arcos de cor"
-							})
+							t.goldBadge && /* @__PURE__ */ (0, lU.jsxs)(lU.Fragment, { children: [
+								/* @__PURE__ */ (0, lU.jsx)(BH, {
+									value: "lava",
+									children: "Fluidos — 12 composições"
+								}),
+								/* @__PURE__ */ (0, lU.jsx)(BH, {
+									value: "bubbles",
+									children: "Bolhas"
+								}),
+								/* @__PURE__ */ (0, lU.jsx)(BH, {
+									value: "gradient",
+									children: "Gradiente"
+								}),
+								/* @__PURE__ */ (0, lU.jsx)(BH, {
+									value: "stars",
+									children: "Estrelas"
+								}),
+								/* @__PURE__ */ (0, lU.jsx)(BH, {
+									value: "rainbow",
+									children: "Arcos de cor"
+								})
+							] })
 						] })]
 					})]
 				})
@@ -27765,15 +27785,7 @@ function sU({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 			(e === "photo" || m) && /* @__PURE__ */ (0, lU.jsxs)(lU.Fragment, { children: [
 				/* @__PURE__ */ (0, lU.jsxs)("div", {
 					className: "flex items-center gap-4",
-					children: [m ? /* @__PURE__ */ (0, lU.jsx)("div", {
-						className: "h-20 w-36 shrink-0 overflow-hidden rounded-lg border bg-muted",
-						children: a.bannerImage && /* @__PURE__ */ (0, lU.jsx)("img", {
-							src: a.bannerImage,
-							alt: "Prévia do fundo",
-							className: "size-full",
-							style: { objectFit: a.bannerFit || "cover" }
-						})
-					}) : /* @__PURE__ */ (0, lU.jsx)(pP, {
+					children: [!m && /* @__PURE__ */ (0, lU.jsx)(pP, {
 						profile: a,
 						className: "size-16"
 					}), /* @__PURE__ */ (0, lU.jsxs)("div", {
@@ -27807,7 +27819,8 @@ function sU({ field: e, profile: t, onSave: n, onCancel: r, onRerolled: i }) {
 								disabled: l,
 								onClick: () => o(m ? {
 									...a,
-									bannerImage: null
+									bannerImage: null,
+									bannerStyle: "solid"
 								} : {
 									...a,
 									avatar: null
@@ -28034,8 +28047,7 @@ var gU, _U, vU, yU = o((() => {
 		identity: "Editar nome",
 		bio: "Editar descrição",
 		photo: "Editar foto",
-		appearance: "Editar aparência",
-		background: "Editar fundo do perfil"
+		appearance: "Editar aparência"
 	};
 }));
 // src/features/messages/messages-notifications.tsx
