@@ -30,7 +30,7 @@ function d(e) {
 	};
 }
 function f(e) {
-	if (/^\/d[23](\/|$)/.test(location.pathname)) {
+	if (/^\/d[234](\/|$)/.test(location.pathname)) {
 		let t = location.pathname.slice(0, 3) + "/api";
 		if (e.startsWith("/account/")) return t + e.slice(8);
 		if (e === "/dm" || e.startsWith("/dm/")) return t + e;
@@ -22691,7 +22691,7 @@ var RN = class extends Q.Component {
 }));
 // src/services/profile-service.ts
 function GN() {
-	if (/^\/d[23](\/|$)/.test(location.pathname)) {
+	if (/^\/d[234](\/|$)/.test(location.pathname)) {
 		location.replace(location.pathname.slice(0, 3) + "/login");
 		return;
 	}
@@ -34148,165 +34148,219 @@ function YX({ className: e, ...t }) {
 		...t
 	});
 }
+Lr(), Ps();
+function XX({ theme: e, onToggle: t }) {
+	let n = e === "dark" ? "Ativar tema claro" : "Ativar tema escuro";
+	return /* @__PURE__ */ (0, Z.jsx)(X, {
+		type: "button",
+		variant: "ghost",
+		size: "icon",
+		onClick: t,
+		"aria-label": n,
+		title: n,
+		children: e === "dark" ? /* @__PURE__ */ (0, Z.jsx)(mr, {}) : /* @__PURE__ */ (0, Z.jsx)(an, {})
+	});
+}
+// src/components/layout/brand-mark.tsx
+function ZX({ theme: e, className: t = "size-10" }) {
+	return /* @__PURE__ */ (0, Z.jsx)("img", {
+		alt: "",
+		className: `${t} shrink-0 object-contain`,
+		src: e === "dark" ? "https://organizeon.com.br/d3/assets/organizeon-icon.png" : "https://organizeon.com.br/d3/assets/organizeon_preto_separado_1024.png"
+	});
+}
+// src/hooks/use-service-theme.ts
+function QX(e) {
+	let t = (0, Q.useRef)(null), [n, r] = (0, Q.useState)(() => {
+		try {
+			return localStorage.getItem(e) === "light" ? "light" : "dark";
+		} catch {
+			return "dark";
+		}
+	});
+	return (0, Q.useLayoutEffect)(() => {
+		let r = t.current?.closest(".organizeon-ui");
+		if (r) {
+			r.classList.toggle("light", n === "light"), r.classList.toggle("dark", n === "dark");
+			try {
+				localStorage.setItem(e, n);
+			} catch {}
+		}
+	}, [e, n]), {
+		rootRef: t,
+		theme: n,
+		toggleTheme: () => r((e) => e === "dark" ? "light" : "dark")
+	};
+}
 Lr(), yR(), Ps(), LN(), Kz(), zU();
-function XX({ initialMessage: e = "", onSubmit: t, onGuest: n }) {
-	let [r, i] = (0, Q.useState)("login"), [a, o] = (0, Q.useState)(""), [s, c] = (0, Q.useState)(""), [l, u] = (0, Q.useState)(""), [d, f] = (0, Q.useState)(e), [p, m] = (0, Q.useState)(!1);
-	return (0, Q.useEffect)(() => f(e), [e]), /* @__PURE__ */ (0, Z.jsx)("main", {
-		className: "fixed inset-0 z-[2147483647] grid min-h-svh place-items-center overflow-y-auto bg-background px-4 py-10",
-		children: /* @__PURE__ */ (0, Z.jsxs)(bX, {
-			className: "w-full max-w-[380px] animate-ui-enter border-border bg-card shadow-none",
-			children: [
-				/* @__PURE__ */ (0, Z.jsxs)(xX, {
-					className: "space-y-5",
-					children: [/* @__PURE__ */ (0, Z.jsxs)("div", {
-						className: "flex items-center gap-3",
-						children: [/* @__PURE__ */ (0, Z.jsx)("img", {
-							className: "size-10 object-contain",
-							src: "https://organizeon.com.br/d3/assets/organizeon-icon.png",
-							alt: ""
-						}), /* @__PURE__ */ (0, Z.jsxs)("div", { children: [/* @__PURE__ */ (0, Z.jsx)("p", {
-							className: "text-sm font-semibold",
-							children: "OrganizeOn"
-						}), /* @__PURE__ */ (0, Z.jsx)("p", {
-							className: "text-xs text-muted-foreground",
-							children: "Cliente"
-						})] })]
-					}), /* @__PURE__ */ (0, Z.jsxs)("div", {
-						className: "space-y-1.5",
-						children: [/* @__PURE__ */ (0, Z.jsx)(SX, {
-							className: "text-xl",
-							children: r === "register" ? "Criar conta" : r === "code" ? "Entrar com código" : "Entrar no OrganizeOn"
-						}), /* @__PURE__ */ (0, Z.jsx)(CX, { children: "Autentique-se para acessar seus jogos e configurações." })]
-					})]
-				}),
-				/* @__PURE__ */ (0, Z.jsxs)(wX, { children: [/* @__PURE__ */ (0, Z.jsxs)(GX, {
-					value: r,
-					onValueChange: (e) => {
-						i(e), f("");
-					},
-					children: [/* @__PURE__ */ (0, Z.jsxs)(qX, {
-						className: "grid h-9 w-full grid-cols-3 bg-muted/70",
-						children: [
-							/* @__PURE__ */ (0, Z.jsx)(JX, {
-								value: "login",
-								children: "Entrar"
-							}),
-							/* @__PURE__ */ (0, Z.jsx)(JX, {
-								value: "register",
-								children: "Criar conta"
-							}),
-							/* @__PURE__ */ (0, Z.jsx)(JX, {
-								value: "code",
-								children: "Código"
-							})
-						]
-					}), /* @__PURE__ */ (0, Z.jsx)(YX, {
-						value: r,
-						className: "mt-4",
-						children: /* @__PURE__ */ (0, Z.jsxs)("form", {
-							className: "grid gap-3",
-							onSubmit: async (e) => {
-								e.preventDefault(), m(!0), f("");
-								try {
-									await t({
-										mode: r,
-										username: a,
-										password: s,
-										loginCode: l
-									});
-								} catch (e) {
-									f(e instanceof Error ? e.message : "Não foi possível conectar ao servidor.");
-								} finally {
-									m(!1);
-								}
-							},
-							autoComplete: "on",
+function $X({ initialMessage: e = "", onSubmit: t, onGuest: n }) {
+	let { rootRef: r, theme: i, toggleTheme: a } = QX("client-login-theme"), [o, s] = (0, Q.useState)("login"), [c, l] = (0, Q.useState)(""), [u, d] = (0, Q.useState)(""), [f, p] = (0, Q.useState)(""), [m, h] = (0, Q.useState)(e), [g, _] = (0, Q.useState)(!1);
+	return (0, Q.useEffect)(() => h(e), [e]), /* @__PURE__ */ (0, Z.jsx)("div", {
+		ref: r,
+		className: "contents",
+		children: /* @__PURE__ */ (0, Z.jsx)("main", {
+			className: "fixed inset-0 z-[2147483647] grid min-h-svh place-items-center overflow-y-auto bg-background px-4 py-10",
+			children: /* @__PURE__ */ (0, Z.jsxs)(bX, {
+				className: "w-full max-w-[380px] animate-ui-enter border-border bg-card shadow-none",
+				children: [
+					/* @__PURE__ */ (0, Z.jsxs)(xX, {
+						className: "space-y-5",
+						children: [/* @__PURE__ */ (0, Z.jsxs)("div", {
+							className: "flex items-center gap-3",
 							children: [
-								r === "code" ? /* @__PURE__ */ (0, Z.jsxs)("label", {
-									className: "grid gap-1.5 text-sm font-medium",
-									htmlFor: "organizeon-code",
-									children: ["Código de login", /* @__PURE__ */ (0, Z.jsx)(Wz, {
-										id: "organizeon-code",
-										className: "text-center font-mono tracking-[.3em]",
-										name: "loginCode",
-										autoComplete: "one-time-code",
-										maxLength: 6,
-										pattern: "[A-Za-z0-9]{6}",
-										required: !0,
-										value: l,
-										onChange: (e) => u(e.target.value.toUpperCase())
+								/* @__PURE__ */ (0, Z.jsx)(ZX, { theme: i }),
+								/* @__PURE__ */ (0, Z.jsxs)("div", {
+									className: "flex-1",
+									children: [/* @__PURE__ */ (0, Z.jsx)("p", {
+										className: "text-sm font-semibold",
+										children: "OrganizeOn"
+									}), /* @__PURE__ */ (0, Z.jsx)("p", {
+										className: "text-xs text-muted-foreground",
+										children: "Cliente"
 									})]
-								}) : /* @__PURE__ */ (0, Z.jsxs)(Z.Fragment, { children: [/* @__PURE__ */ (0, Z.jsxs)("label", {
-									className: "grid gap-1.5 text-sm font-medium",
-									htmlFor: "organizeon-username",
-									children: ["Usuário", /* @__PURE__ */ (0, Z.jsx)(Wz, {
-										id: "organizeon-username",
-										name: "username",
-										autoComplete: "username",
-										minLength: 3,
-										maxLength: 32,
-										required: !0,
-										value: a,
-										onChange: (e) => o(e.target.value)
-									})]
-								}), /* @__PURE__ */ (0, Z.jsxs)("label", {
-									className: "grid gap-1.5 text-sm font-medium",
-									htmlFor: "organizeon-password",
-									children: ["Senha", /* @__PURE__ */ (0, Z.jsx)(Wz, {
-										id: "organizeon-password",
-										name: "password",
-										type: "password",
-										autoComplete: r === "register" ? "new-password" : "current-password",
-										minLength: r === "register" ? 8 : void 0,
-										required: !0,
-										value: s,
-										onChange: (e) => c(e.target.value)
-									})]
-								})] }),
-								r === "register" && /* @__PURE__ */ (0, Z.jsx)("p", {
-									className: "text-xs leading-relaxed text-muted-foreground",
-									children: "Contas novas começam sem permissões administrativas."
 								}),
-								d && /* @__PURE__ */ (0, Z.jsx)("p", {
-									className: "rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive",
-									role: "alert",
-									children: d
-								}),
-								/* @__PURE__ */ (0, Z.jsx)(X, {
-									type: "submit",
-									className: "mt-1 h-10 w-full",
-									disabled: p || (r === "code" ? !l : !a || !s),
-									"aria-busy": p,
-									children: p ? "Autenticando…" : r === "register" ? "Criar conta" : "Entrar"
+								/* @__PURE__ */ (0, Z.jsx)(XX, {
+									theme: i,
+									onToggle: a
 								})
 							]
-						})
-					})]
-				}), /* @__PURE__ */ (0, Z.jsxs)("div", {
-					className: "mt-4 border-t pt-4",
-					children: [/* @__PURE__ */ (0, Z.jsx)(X, {
-						variant: "outline",
-						className: "w-full",
-						onClick: () => void n(),
-						disabled: p,
-						children: "Continuar como convidado"
-					}), /* @__PURE__ */ (0, Z.jsx)("p", {
-						className: "mt-2 text-center text-xs text-muted-foreground",
-						children: "Acesso convidado com recursos limitados"
-					})]
-				})] }),
-				/* @__PURE__ */ (0, Z.jsxs)(TX, {
-					className: "gap-2 border-t border-border pt-4 text-xs text-muted-foreground",
-					children: [/* @__PURE__ */ (0, Z.jsx)($n, { className: "size-4 shrink-0" }), "Acesse com sua conta OrganizeOn."]
-				})
-			]
+						}), /* @__PURE__ */ (0, Z.jsxs)("div", {
+							className: "space-y-1.5",
+							children: [/* @__PURE__ */ (0, Z.jsx)(SX, {
+								className: "text-xl",
+								children: o === "register" ? "Criar conta" : o === "code" ? "Entrar com código" : "Entrar no OrganizeOn"
+							}), /* @__PURE__ */ (0, Z.jsx)(CX, { children: "Autentique-se para acessar seus jogos e configurações." })]
+						})]
+					}),
+					/* @__PURE__ */ (0, Z.jsxs)(wX, { children: [/* @__PURE__ */ (0, Z.jsxs)(GX, {
+						value: o,
+						onValueChange: (e) => {
+							s(e), h("");
+						},
+						children: [/* @__PURE__ */ (0, Z.jsxs)(qX, {
+							className: "grid h-9 w-full grid-cols-3 bg-muted/70",
+							children: [
+								/* @__PURE__ */ (0, Z.jsx)(JX, {
+									value: "login",
+									children: "Entrar"
+								}),
+								/* @__PURE__ */ (0, Z.jsx)(JX, {
+									value: "register",
+									children: "Criar conta"
+								}),
+								/* @__PURE__ */ (0, Z.jsx)(JX, {
+									value: "code",
+									children: "Código"
+								})
+							]
+						}), /* @__PURE__ */ (0, Z.jsx)(YX, {
+							value: o,
+							className: "mt-4",
+							children: /* @__PURE__ */ (0, Z.jsxs)("form", {
+								className: "grid gap-3",
+								onSubmit: async (e) => {
+									e.preventDefault(), _(!0), h("");
+									try {
+										await t({
+											mode: o,
+											username: c,
+											password: u,
+											loginCode: f
+										});
+									} catch (e) {
+										h(e instanceof Error ? e.message : "Não foi possível conectar ao servidor.");
+									} finally {
+										_(!1);
+									}
+								},
+								autoComplete: "on",
+								children: [
+									o === "code" ? /* @__PURE__ */ (0, Z.jsxs)("label", {
+										className: "grid gap-1.5 text-sm font-medium",
+										htmlFor: "organizeon-code",
+										children: ["Código de login", /* @__PURE__ */ (0, Z.jsx)(Wz, {
+											id: "organizeon-code",
+											className: "text-center font-mono tracking-[.3em]",
+											name: "loginCode",
+											autoComplete: "one-time-code",
+											maxLength: 6,
+											pattern: "[A-Za-z0-9]{6}",
+											required: !0,
+											value: f,
+											onChange: (e) => p(e.target.value.toUpperCase())
+										})]
+									}) : /* @__PURE__ */ (0, Z.jsxs)(Z.Fragment, { children: [/* @__PURE__ */ (0, Z.jsxs)("label", {
+										className: "grid gap-1.5 text-sm font-medium",
+										htmlFor: "organizeon-username",
+										children: ["Usuário", /* @__PURE__ */ (0, Z.jsx)(Wz, {
+											id: "organizeon-username",
+											name: "username",
+											autoComplete: "username",
+											minLength: 3,
+											maxLength: 32,
+											required: !0,
+											value: c,
+											onChange: (e) => l(e.target.value)
+										})]
+									}), /* @__PURE__ */ (0, Z.jsxs)("label", {
+										className: "grid gap-1.5 text-sm font-medium",
+										htmlFor: "organizeon-password",
+										children: ["Senha", /* @__PURE__ */ (0, Z.jsx)(Wz, {
+											id: "organizeon-password",
+											name: "password",
+											type: "password",
+											autoComplete: o === "register" ? "new-password" : "current-password",
+											minLength: o === "register" ? 8 : void 0,
+											required: !0,
+											value: u,
+											onChange: (e) => d(e.target.value)
+										})]
+									})] }),
+									o === "register" && /* @__PURE__ */ (0, Z.jsx)("p", {
+										className: "text-xs leading-relaxed text-muted-foreground",
+										children: "Contas novas começam sem permissões administrativas."
+									}),
+									m && /* @__PURE__ */ (0, Z.jsx)("p", {
+										className: "rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive",
+										role: "alert",
+										children: m
+									}),
+									/* @__PURE__ */ (0, Z.jsx)(X, {
+										type: "submit",
+										className: "mt-1 h-10 w-full",
+										disabled: g || (o === "code" ? !f : !c || !u),
+										"aria-busy": g,
+										children: g ? "Autenticando…" : o === "register" ? "Criar conta" : "Entrar"
+									})
+								]
+							})
+						})]
+					}), /* @__PURE__ */ (0, Z.jsxs)("div", {
+						className: "mt-4 border-t pt-4",
+						children: [/* @__PURE__ */ (0, Z.jsx)(X, {
+							variant: "outline",
+							className: "w-full",
+							onClick: () => void n(),
+							disabled: g,
+							children: "Continuar como convidado"
+						}), /* @__PURE__ */ (0, Z.jsx)("p", {
+							className: "mt-2 text-center text-xs text-muted-foreground",
+							children: "Acesso convidado com recursos limitados"
+						})]
+					})] }),
+					/* @__PURE__ */ (0, Z.jsxs)(TX, {
+						className: "gap-2 border-t border-border pt-4 text-xs text-muted-foreground",
+						children: [/* @__PURE__ */ (0, Z.jsx)($n, { className: "size-4 shrink-0" }), "Acesse com sua conta OrganizeOn."]
+					})
+				]
+			})
 		})
 	});
 }
-function ZX(e) {
+function eZ(e) {
 	return e < 1024 ? `${e} B` : e < 1024 ** 2 ? `${(e / 1024).toFixed(1)} KB` : `${(e / 1024 ** 2).toFixed(1)} MB`;
 }
-function QX(e) {
+function tZ(e) {
 	let [t, n] = (0, Q.useState)(null), [r, i] = (0, Q.useState)([]), [a, o] = (0, Q.useState)(""), [s, c] = (0, Q.useState)(null), [l, u] = (0, Q.useState)(""), [d, f] = (0, Q.useState)(null), [p, m] = (0, Q.useState)("backup"), h = async () => {
 		u("");
 		try {
@@ -34398,9 +34452,9 @@ function QX(e) {
 									}), /* @__PURE__ */ (0, Z.jsxs)("strong", {
 										className: "font-mono text-xs sm:text-sm",
 										children: [
-											t ? ZX(t.size || 0) : "—",
+											t ? eZ(t.size || 0) : "—",
 											" / ",
-											ZX(_)
+											eZ(_)
 										]
 									})]
 								}), /* @__PURE__ */ (0, Z.jsxs)("div", {
@@ -34509,7 +34563,7 @@ function QX(e) {
 		})
 	});
 }
-function $X(e) {
+function nZ(e) {
 	let [t, n] = (0, Q.useState)(e.currentId);
 	return /* @__PURE__ */ (0, Z.jsx)(ON, {
 		open: !0,
@@ -34583,15 +34637,15 @@ function $X(e) {
 		})
 	});
 }
-function eZ(e) {
-	let { type: t, ...n } = e, r = (0, Q.useMemo)(() => t === "login" ? /* @__PURE__ */ (0, Z.jsx)(XX, { ...n }) : t === "data" ? /* @__PURE__ */ (0, Z.jsx)(QX, { ...n }) : t === "proxy" ? /* @__PURE__ */ (0, Z.jsx)($X, { ...n }) : /* @__PURE__ */ (0, Z.jsx)(yX, { ...n }), [t, n]);
+function rZ(e) {
+	let { type: t, ...n } = e, r = (0, Q.useMemo)(() => t === "login" ? /* @__PURE__ */ (0, Z.jsx)($X, { ...n }) : t === "data" ? /* @__PURE__ */ (0, Z.jsx)(tZ, { ...n }) : t === "proxy" ? /* @__PURE__ */ (0, Z.jsx)(nZ, { ...n }) : /* @__PURE__ */ (0, Z.jsx)(yX, { ...n }), [t, n]);
 	return /* @__PURE__ */ (0, Z.jsx)("div", {
 		className: t === "account" ? "organizeon-ui organizeon-overlay-root dark text-foreground" : "organizeon-ui dark min-h-svh bg-background text-foreground",
 		children: r
 	});
 }
 Lr(), yR(), Ps();
-function tZ({ game: e }) {
+function iZ({ game: e }) {
 	let t = e.type === "flash" ? "Flash · Ruffle" : e.type === "external-download" ? "HTML offline" : e.type === "remote" ? "Multiplayer" : "HTML5";
 	return /* @__PURE__ */ (0, Z.jsxs)(bX, {
 		className: "h-full overflow-hidden rounded-lg border-border bg-card p-0 shadow-none transition-colors hover:border-zinc-600",
@@ -34700,7 +34754,7 @@ function tZ({ game: e }) {
 	});
 }
 Lr(), Ps(), Kz();
-function nZ({ count: e, categories: t, onBack: n, onQueryChange: r, onFilterChange: i }) {
+function aZ({ count: e, categories: t, onBack: n, onQueryChange: r, onFilterChange: i }) {
 	let [a, o] = (0, Q.useState)("all"), s = [
 		{
 			id: "all",
@@ -34792,7 +34846,7 @@ function nZ({ count: e, categories: t, onBack: n, onQueryChange: r, onFilterChan
 	});
 }
 Lr(), Ps(), LN();
-function rZ({ title: e, description: t, confirmLabel: n = "Continuar", onCancel: r, onConfirm: i }) {
+function oZ({ title: e, description: t, confirmLabel: n = "Continuar", onCancel: r, onConfirm: i }) {
 	return /* @__PURE__ */ (0, Z.jsx)(ON, {
 		open: !0,
 		onOpenChange: (e) => !e && r(),
@@ -34816,7 +34870,7 @@ function rZ({ title: e, description: t, confirmLabel: n = "Continuar", onCancel:
 		})
 	});
 }
-function iZ({ game: e, onClose: t }) {
+function sZ({ game: e, onClose: t }) {
 	return /* @__PURE__ */ (0, Z.jsx)(ON, {
 		open: !0,
 		onOpenChange: (e) => !e && t(),
@@ -34847,7 +34901,7 @@ function iZ({ game: e, onClose: t }) {
 		})
 	});
 }
-function aZ({ name: e, definitions: t, selectedKeys: n, defaultKeys: r, isTetris: i, initialLeftHanded: a, onClose: o, onSave: s, onFullscreen: c }) {
+function cZ({ name: e, definitions: t, selectedKeys: n, defaultKeys: r, isTetris: i, initialLeftHanded: a, onClose: o, onSave: s, onFullscreen: c }) {
 	let [l, u] = (0, Q.useState)(() => new Set(n)), [d, f] = (0, Q.useState)(a);
 	function p(e, t) {
 		u((n) => {
@@ -34921,7 +34975,7 @@ function aZ({ name: e, definitions: t, selectedKeys: n, defaultKeys: r, isTetris
 	});
 }
 Lr(), Ps(), zU();
-function oZ({ title: e, description: t, label: n, value: r, options: i, applyLabel: a = "Aplicar", onApply: o }) {
+function lZ({ title: e, description: t, label: n, value: r, options: i, applyLabel: a = "Aplicar", onApply: o }) {
 	let [s, c] = (0, Q.useState)(r), l = s !== r, u = i.find((e) => e.value === s)?.description;
 	return /* @__PURE__ */ (0, Z.jsxs)(bX, {
 		className: "w-full animate-ui-enter",
@@ -34960,120 +35014,111 @@ function oZ({ title: e, description: t, label: n, value: r, options: i, applyLab
 	});
 }
 Lr(), Ps(), Kz();
-function sZ({ onSubmit: e }) {
-	let [t, n] = (0, Q.useState)(""), [r, i] = (0, Q.useState)(""), [a, o] = (0, Q.useState)(""), [s, c] = (0, Q.useState)(!1);
-	async function l(n) {
-		n.preventDefault(), o(""), c(!0);
+function uZ({ onSubmit: e, endpoint: t = 2, label: n = "Painel de arquivos" }) {
+	let { rootRef: r, theme: i, toggleTheme: a } = QX(`d${t}-theme`), [o, s] = (0, Q.useState)(""), [c, l] = (0, Q.useState)(""), [u, d] = (0, Q.useState)(""), [f, p] = (0, Q.useState)(!1);
+	async function m(t) {
+		t.preventDefault(), d(""), p(!0);
 		try {
-			await e(t, r), i("");
+			await e(o, c), l("");
 		} catch (e) {
-			o(e instanceof Error ? e.message : "Não foi possível entrar.");
+			d(e instanceof Error ? e.message : "Não foi possível entrar.");
 		} finally {
-			c(!1);
+			p(!1);
 		}
 	}
-	return /* @__PURE__ */ (0, Z.jsx)("main", {
-		className: "grid min-h-svh place-items-center px-4 py-10",
-		children: /* @__PURE__ */ (0, Z.jsxs)(bX, {
-			className: "w-full max-w-[380px] border-border bg-card shadow-none animate-ui-enter",
-			children: [
-				/* @__PURE__ */ (0, Z.jsxs)(xX, {
-					className: "space-y-5",
-					children: [/* @__PURE__ */ (0, Z.jsxs)("div", {
-						className: "flex items-center gap-3",
-						children: [/* @__PURE__ */ (0, Z.jsx)("img", {
-							className: "size-10 object-contain",
-							src: "https://organizeon.com.br/d3/assets/organizeon-icon.png",
-							alt: ""
-						}), /* @__PURE__ */ (0, Z.jsxs)("div", { children: [/* @__PURE__ */ (0, Z.jsxs)("p", {
-							className: "text-sm font-semibold",
-							children: ["OrganizeOn ", /* @__PURE__ */ (0, Z.jsx)("span", {
-								className: "font-normal text-muted-foreground",
-								children: "D2"
-							})]
-						}), /* @__PURE__ */ (0, Z.jsx)("p", {
-							className: "text-xs text-muted-foreground",
-							children: "Painel de arquivos"
-						})] })]
-					}), /* @__PURE__ */ (0, Z.jsxs)("div", {
-						className: "space-y-1.5",
-						children: [/* @__PURE__ */ (0, Z.jsx)(SX, {
-							className: "text-xl",
-							children: "Entrar no painel"
-						}), /* @__PURE__ */ (0, Z.jsx)(CX, { children: "Autentique-se para acessar o conteúdo do Endpoint 2." })]
-					})]
-				}),
-				/* @__PURE__ */ (0, Z.jsx)(wX, { children: /* @__PURE__ */ (0, Z.jsxs)("form", {
-					className: "grid gap-4",
-					onSubmit: (e) => void l(e),
-					children: [
-						/* @__PURE__ */ (0, Z.jsxs)("label", {
-							className: "grid gap-1.5 text-sm font-medium",
-							children: ["Usuário", /* @__PURE__ */ (0, Z.jsx)(Wz, {
-								autoComplete: "username",
-								value: t,
-								onChange: (e) => n(e.target.value),
-								required: !0,
-								disabled: s
-							})]
-						}),
-						/* @__PURE__ */ (0, Z.jsxs)("label", {
-							className: "grid gap-1.5 text-sm font-medium",
-							children: ["Senha", /* @__PURE__ */ (0, Z.jsx)(Wz, {
-								type: "password",
-								autoComplete: "current-password",
-								value: r,
-								onChange: (e) => i(e.target.value),
-								required: !0,
-								disabled: s
-							})]
-						}),
-						a && /* @__PURE__ */ (0, Z.jsx)("p", {
-							role: "alert",
-							className: "text-sm text-destructive",
-							children: a
-						}),
-						/* @__PURE__ */ (0, Z.jsxs)(X, {
-							type: "submit",
-							className: "h-10 w-full",
-							disabled: s || !t || !r,
-							children: [s && /* @__PURE__ */ (0, Z.jsx)(Bt, { className: "animate-spin" }), s ? "Entrando…" : "Entrar"]
-						})
-					]
-				}) }),
-				/* @__PURE__ */ (0, Z.jsxs)(TX, {
-					className: "gap-2 border-t border-border pt-4 text-xs text-muted-foreground",
-					children: [/* @__PURE__ */ (0, Z.jsx)($n, { className: "size-4" }), "Acesse com sua conta OrganizeOn."]
-				})
-			]
+	return /* @__PURE__ */ (0, Z.jsx)("div", {
+		ref: r,
+		className: "contents",
+		children: /* @__PURE__ */ (0, Z.jsx)("main", {
+			className: "grid min-h-svh place-items-center px-4 py-10",
+			children: /* @__PURE__ */ (0, Z.jsxs)(bX, {
+				className: "w-full max-w-[380px] border-border bg-card shadow-none animate-ui-enter",
+				children: [
+					/* @__PURE__ */ (0, Z.jsxs)(xX, {
+						className: "space-y-5",
+						children: [/* @__PURE__ */ (0, Z.jsxs)("div", {
+							className: "flex items-center gap-3",
+							children: [
+								/* @__PURE__ */ (0, Z.jsx)(ZX, { theme: i }),
+								/* @__PURE__ */ (0, Z.jsxs)("div", {
+									className: "flex-1",
+									children: [/* @__PURE__ */ (0, Z.jsxs)("p", {
+										className: "text-sm font-semibold",
+										children: ["OrganizeOn ", /* @__PURE__ */ (0, Z.jsxs)("span", {
+											className: "font-normal text-muted-foreground",
+											children: ["D", t]
+										})]
+									}), /* @__PURE__ */ (0, Z.jsx)("p", {
+										className: "text-xs text-muted-foreground",
+										children: n
+									})]
+								}),
+								/* @__PURE__ */ (0, Z.jsx)(XX, {
+									theme: i,
+									onToggle: a
+								})
+							]
+						}), /* @__PURE__ */ (0, Z.jsxs)("div", {
+							className: "space-y-1.5",
+							children: [/* @__PURE__ */ (0, Z.jsx)(SX, {
+								className: "text-xl",
+								children: "Entrar no painel"
+							}), /* @__PURE__ */ (0, Z.jsxs)(CX, { children: [
+								"Autentique-se para acessar o conteúdo do Endpoint ",
+								t,
+								"."
+							] })]
+						})]
+					}),
+					/* @__PURE__ */ (0, Z.jsx)(wX, { children: /* @__PURE__ */ (0, Z.jsxs)("form", {
+						className: "grid gap-4",
+						onSubmit: (e) => void m(e),
+						children: [
+							/* @__PURE__ */ (0, Z.jsxs)("label", {
+								className: "grid gap-1.5 text-sm font-medium",
+								children: ["Usuário", /* @__PURE__ */ (0, Z.jsx)(Wz, {
+									autoComplete: "username",
+									value: o,
+									onChange: (e) => s(e.target.value),
+									required: !0,
+									disabled: f
+								})]
+							}),
+							/* @__PURE__ */ (0, Z.jsxs)("label", {
+								className: "grid gap-1.5 text-sm font-medium",
+								children: ["Senha", /* @__PURE__ */ (0, Z.jsx)(Wz, {
+									type: "password",
+									autoComplete: "current-password",
+									value: c,
+									onChange: (e) => l(e.target.value),
+									required: !0,
+									disabled: f
+								})]
+							}),
+							u && /* @__PURE__ */ (0, Z.jsx)("p", {
+								role: "alert",
+								className: "text-sm text-destructive",
+								children: u
+							}),
+							/* @__PURE__ */ (0, Z.jsxs)(X, {
+								type: "submit",
+								className: "h-10 w-full",
+								disabled: f || !o || !c,
+								children: [f && /* @__PURE__ */ (0, Z.jsx)(Bt, { className: "animate-spin" }), f ? "Entrando…" : "Entrar"]
+							})
+						]
+					}) }),
+					/* @__PURE__ */ (0, Z.jsxs)(TX, {
+						className: "gap-2 border-t border-border pt-4 text-xs text-muted-foreground",
+						children: [/* @__PURE__ */ (0, Z.jsx)($n, { className: "size-4" }), "Acesse com sua conta OrganizeOn."]
+					})
+				]
+			})
 		})
 	});
 }
-// src/hooks/use-service-theme.ts
-function cZ(e) {
-	let t = (0, Q.useRef)(null), [n, r] = (0, Q.useState)(() => {
-		try {
-			return localStorage.getItem(e) === "light" ? "light" : "dark";
-		} catch {
-			return "dark";
-		}
-	});
-	return (0, Q.useLayoutEffect)(() => {
-		let r = t.current?.closest(".organizeon-ui");
-		if (r) {
-			r.classList.toggle("light", n === "light"), r.classList.toggle("dark", n === "dark");
-			try {
-				localStorage.setItem(e, n);
-			} catch {}
-		}
-	}, [e, n]), {
-		rootRef: t,
-		theme: n,
-		toggleTheme: () => r((e) => e === "dark" ? "light" : "dark")
-	};
-}
 Lr(), Ps(), UU();
-function lZ() {
+function dZ() {
 	let { setOpenMobile: e } = qY();
 	return /* @__PURE__ */ (0, Z.jsx)(iX, { children: /* @__PURE__ */ (0, Z.jsx)(aX, { children: /* @__PURE__ */ (0, Z.jsxs)(sX, {
 		isActive: !0,
@@ -35082,8 +35127,8 @@ function lZ() {
 		children: [/* @__PURE__ */ (0, Z.jsx)(st, {}), /* @__PURE__ */ (0, Z.jsx)("span", { children: "Meus arquivos" })]
 	}) }) });
 }
-function uZ({ children: e, username: t, role: n, logout: r, refresh: i, refreshing: a }) {
-	let { rootRef: o, theme: s, toggleTheme: c } = cZ("d2-theme");
+function fZ({ children: e, username: t, role: n, logout: r, refresh: i, refreshing: a }) {
+	let { rootRef: o, theme: s, toggleTheme: c } = QX("d2-theme");
 	return /* @__PURE__ */ (0, Z.jsx)("div", {
 		ref: o,
 		className: "contents",
@@ -35113,7 +35158,7 @@ function uZ({ children: e, username: t, role: n, logout: r, refresh: i, refreshi
 							})
 						}),
 						/* @__PURE__ */ (0, Z.jsx)(eX, {}),
-						/* @__PURE__ */ (0, Z.jsx)(tX, { children: /* @__PURE__ */ (0, Z.jsxs)(nX, { children: [/* @__PURE__ */ (0, Z.jsx)(rX, { children: "Workspace" }), /* @__PURE__ */ (0, Z.jsx)(lZ, {})] }) }),
+						/* @__PURE__ */ (0, Z.jsx)(tX, { children: /* @__PURE__ */ (0, Z.jsxs)(nX, { children: [/* @__PURE__ */ (0, Z.jsx)(rX, { children: "Workspace" }), /* @__PURE__ */ (0, Z.jsx)(dZ, {})] }) }),
 						/* @__PURE__ */ (0, Z.jsx)($Y, {
 							className: "px-2 pb-3",
 							children: /* @__PURE__ */ (0, Z.jsx)(_X, {
@@ -35162,7 +35207,7 @@ function uZ({ children: e, username: t, role: n, logout: r, refresh: i, refreshi
 	});
 }
 Lr(), Ps(), Kz(), LN();
-function dZ({ username: e, role: t, request: n, upload: r, logout: i }) {
+function pZ({ username: e, role: t, request: n, upload: r, logout: i }) {
 	let a = (0, Q.useRef)(null), [o, s] = (0, Q.useState)([]), [c, l] = (0, Q.useState)(null), [u, d] = (0, Q.useState)(null), [f, p] = (0, Q.useState)(""), [m, h] = (0, Q.useState)(!1), [g, _] = (0, Q.useState)(null), [v, y] = (0, Q.useState)(null);
 	async function b() {
 		h(!0);
@@ -35230,7 +35275,7 @@ function dZ({ username: e, role: t, request: n, upload: r, logout: i }) {
 			p("Não foi possível copiar o link.");
 		}
 	}
-	return /* @__PURE__ */ (0, Z.jsxs)(uZ, {
+	return /* @__PURE__ */ (0, Z.jsxs)(fZ, {
 		username: e,
 		role: t,
 		logout: i,
@@ -35405,29 +35450,29 @@ function dZ({ username: e, role: t, request: n, upload: r, logout: i }) {
 	});
 }
 _(), DN();
-var fZ = /* @__PURE__ */ new WeakMap(), pZ = /* @__PURE__ */ new WeakMap(), mZ = /* @__PURE__ */ new WeakMap();
-function hZ(e, t) {
+var mZ = /* @__PURE__ */ new WeakMap(), hZ = /* @__PURE__ */ new WeakMap(), gZ = /* @__PURE__ */ new WeakMap();
+function _Z(e, t) {
 	let n = t?.getRootNode(), r = n instanceof ShadowRoot ? n : document, i = r.querySelector("link[data-organizeon-ui=\"client\"]");
 	if (i) return i;
 	let a = document.createElement("link");
 	return a.rel = "stylesheet", a.href = e, a.dataset.organizeonUi = "client", r instanceof ShadowRoot ? r.append(a) : document.head.append(a), a;
 }
-function gZ(e, t, n) {
-	pZ.get(e)?.unmount(), hZ(n, e);
+function vZ(e, t, n) {
+	hZ.get(e)?.unmount(), _Z(n, e);
 	let r = (0, Vs.createRoot)(e);
 	(0, Hs.flushSync)(() => r.render(/* @__PURE__ */ (0, Z.jsx)("div", {
 		className: "organizeon-ui dark min-h-full",
-		children: /* @__PURE__ */ (0, Z.jsx)(tZ, { game: t })
-	}))), pZ.set(e, r);
+		children: /* @__PURE__ */ (0, Z.jsx)(iZ, { game: t })
+	}))), hZ.set(e, r);
 }
-function _Z(e) {
-	pZ.get(e)?.unmount(), pZ.delete(e);
+function yZ(e) {
+	hZ.get(e)?.unmount(), hZ.delete(e);
 }
-function vZ(e, t, n) {
-	hZ(n, e);
+function bZ(e, t, n) {
+	_Z(n, e);
 	let r = (0, Vs.createRoot)(e), i = (e) => (0, Hs.flushSync)(() => r.render(/* @__PURE__ */ (0, Z.jsx)("div", {
 		className: "organizeon-ui organizeon-inline-ui dark",
-		children: /* @__PURE__ */ (0, Z.jsx)(nZ, { ...e })
+		children: /* @__PURE__ */ (0, Z.jsx)(aZ, { ...e })
 	})));
 	return i(t), {
 		update: (e, n) => i({
@@ -35438,20 +35483,20 @@ function vZ(e, t, n) {
 		unmount: () => r.unmount()
 	};
 }
-function yZ(e, t, n) {
-	mZ.get(e)?.unmount(), hZ(n, e);
+function xZ(e, t, n) {
+	gZ.get(e)?.unmount(), _Z(n, e);
 	let r = (0, Vs.createRoot)(e);
 	(0, Hs.flushSync)(() => r.render(/* @__PURE__ */ (0, Z.jsx)("div", {
 		className: "organizeon-ui organizeon-inline-ui dark",
-		children: /* @__PURE__ */ (0, Z.jsx)(oZ, { ...t })
-	}))), mZ.set(e, r);
+		children: /* @__PURE__ */ (0, Z.jsx)(lZ, { ...t })
+	}))), gZ.set(e, r);
 }
-function bZ(e) {
-	mZ.get(e)?.unmount(), mZ.delete(e);
+function SZ(e) {
+	gZ.get(e)?.unmount(), gZ.delete(e);
 }
-function xZ(e, t, n) {
+function CZ(e, t, n) {
 	e.classList.add("organizeon-ui", "organizeon-overlay-root", "dark");
-	let r = hZ(n, e), i = (0, Vs.createRoot)(e), a = v(r, () => (0, Hs.flushSync)(() => i.render(/* @__PURE__ */ (0, Z.jsx)("div", {
+	let r = _Z(n, e), i = (0, Vs.createRoot)(e), a = v(r, () => (0, Hs.flushSync)(() => i.render(/* @__PURE__ */ (0, Z.jsx)("div", {
 		className: "organizeon-ui dark",
 		children: /* @__PURE__ */ (0, Z.jsx)(SN, {
 			container: e,
@@ -35462,25 +35507,25 @@ function xZ(e, t, n) {
 		a(), i.unmount();
 	};
 }
-function SZ(e, t, n, r) {
-	return xZ(e, /* @__PURE__ */ (0, Z.jsx)(iZ, {
+function wZ(e, t, n, r) {
+	return CZ(e, /* @__PURE__ */ (0, Z.jsx)(sZ, {
 		game: t,
 		onClose: n
 	}), r);
 }
-function CZ(e, t, n) {
-	return xZ(e, /* @__PURE__ */ (0, Z.jsx)(aZ, { ...t }), n);
+function TZ(e, t, n) {
+	return CZ(e, /* @__PURE__ */ (0, Z.jsx)(cZ, { ...t }), n);
 }
-function wZ(e, t, n = "Confirmar ação", r = "Continuar") {
+function EZ(e, t, n = "Confirmar ação", r = "Continuar") {
 	return new Promise((i) => {
 		let a = document.createElement("div");
-		a.className = "organizeon-ui dark", document.body.append(a), hZ(t, a);
+		a.className = "organizeon-ui dark", document.body.append(a), _Z(t, a);
 		let o = (0, Vs.createRoot)(a), s = !1, c = (e) => {
 			s || (s = !0, o.unmount(), a.remove(), i(e));
 		};
 		(0, Hs.flushSync)(() => o.render(/* @__PURE__ */ (0, Z.jsx)(SN, {
 			container: a,
-			children: /* @__PURE__ */ (0, Z.jsx)(rZ, {
+			children: /* @__PURE__ */ (0, Z.jsx)(oZ, {
 				title: n,
 				description: e,
 				confirmLabel: r,
@@ -35490,8 +35535,8 @@ function wZ(e, t, n = "Confirmar ação", r = "Continuar") {
 		})));
 	});
 }
-function TZ(e, t, n) {
-	fZ.get(e)?.root.unmount();
+function DZ(e, t, n) {
+	mZ.get(e)?.root.unmount();
 	let r = e.shadowRoot ?? e.attachShadow({ mode: "open" });
 	r.replaceChildren();
 	let i = document.createElement("link");
@@ -35501,40 +35546,40 @@ function TZ(e, t, n) {
 	let o = (0, Vs.createRoot)(a);
 	return o.render(/* @__PURE__ */ (0, Z.jsx)(SN, {
 		container: a,
-		children: /* @__PURE__ */ (0, Z.jsx)(IY, { children: /* @__PURE__ */ (0, Z.jsx)(eZ, { ...t }) })
-	})), fZ.set(e, {
+		children: /* @__PURE__ */ (0, Z.jsx)(IY, { children: /* @__PURE__ */ (0, Z.jsx)(rZ, { ...t }) })
+	})), mZ.set(e, {
 		root: o,
 		shadow: r,
 		container: a
 	}), () => {
-		let t = fZ.get(e);
-		t && (t.root.unmount(), t.shadow.replaceChildren(), fZ.delete(e));
+		let t = mZ.get(e);
+		t && (t.root.unmount(), t.shadow.replaceChildren(), mZ.delete(e));
 	};
 }
-function EZ(e, t, n) {
+function OZ(e, t, n) {
 	let r = e.attachShadow({ mode: "open" }), i = document.createElement("link");
 	i.rel = "stylesheet", i.href = n;
 	let a = document.createElement("div");
 	a.className = "organizeon-ui organizeon-overlay-root dark", r.append(i, a);
 	let o = (0, Vs.createRoot)(a), s = v(i, () => (0, Hs.flushSync)(() => o.render(/* @__PURE__ */ (0, Z.jsx)(SN, {
 		container: a,
-		children: /* @__PURE__ */ (0, Z.jsx)(IY, { children: /* @__PURE__ */ (0, Z.jsx)(eZ, { ...t }) })
+		children: /* @__PURE__ */ (0, Z.jsx)(IY, { children: /* @__PURE__ */ (0, Z.jsx)(rZ, { ...t }) })
 	}))));
 	return () => {
 		s(), o.unmount(), r.replaceChildren();
 	};
 }
-function DZ(e, t, n) {
+function kZ(e, t, n) {
 	let r = e.attachShadow({ mode: "open" }), i = document.createElement("link");
 	i.rel = "stylesheet", i.href = n;
 	let a = document.createElement("div");
 	a.className = "organizeon-ui dark", r.append(i, a);
 	let o = (0, Vs.createRoot)(a);
-	return (0, Hs.flushSync)(() => o.render(/* @__PURE__ */ (0, Z.jsx)(sZ, { onSubmit: t }))), () => {
+	return (0, Hs.flushSync)(() => o.render(/* @__PURE__ */ (0, Z.jsx)(uZ, { onSubmit: t }))), () => {
 		o.unmount(), r.replaceChildren();
 	};
 }
-function OZ(e, t, n) {
+function AZ(e, t, n) {
 	let r = e.attachShadow({ mode: "open" }), i = document.createElement("link");
 	i.rel = "stylesheet", i.href = n;
 	let a = document.createElement("div");
@@ -35550,13 +35595,13 @@ function OZ(e, t, n) {
 	}), s = (0, Vs.createRoot)(a);
 	return (0, Hs.flushSync)(() => s.render(/* @__PURE__ */ (0, Z.jsx)(SN, {
 		container: a,
-		children: /* @__PURE__ */ (0, Z.jsx)(dZ, { ...t })
+		children: /* @__PURE__ */ (0, Z.jsx)(pZ, { ...t })
 	}))), () => {
 		s.unmount(), o(), r.replaceChildren();
 	};
 }
-function kZ(e, t) {
-	fZ.get(e)?.root.unmount();
+function jZ(e, t) {
+	mZ.get(e)?.root.unmount();
 	let n = e.shadowRoot ?? e.attachShadow({ mode: "open" });
 	n.replaceChildren();
 	let r = document.createElement("link");
@@ -35572,21 +35617,21 @@ function kZ(e, t) {
 			closeButton: !0,
 			richColors: !1
 		})
-	})), fZ.set(e, {
+	})), mZ.set(e, {
 		root: a,
 		shadow: n,
 		container: i
 	}), () => {
-		a.unmount(), n.replaceChildren(), fZ.delete(e);
+		a.unmount(), n.replaceChildren(), mZ.delete(e);
 	};
 }
-function AZ(e, t = "info", n) {
+function MZ(e, t = "info", n) {
 	ac[t](e, n ? { id: n } : void 0);
 }
-function jZ(e) {
+function NZ(e) {
 	ac.dismiss(e);
 }
-function MZ(e, t, n) {
+function PZ(e, t, n) {
 	let r = e.attachShadow({ mode: "open" }), i = document.createElement("link");
 	i.rel = "stylesheet", i.href = n;
 	let a = document.createElement("div");
@@ -35596,7 +35641,7 @@ function MZ(e, t, n) {
 	let s = (0, Vs.createRoot)(o), c = !1, l = t, u = (e) => {
 		l = e, c && (0, Hs.flushSync)(() => s.render(/* @__PURE__ */ (0, Z.jsx)(SN, {
 			container: o,
-			children: /* @__PURE__ */ (0, Z.jsx)(IY, { children: /* @__PURE__ */ (0, Z.jsx)(eZ, { ...l }) })
+			children: /* @__PURE__ */ (0, Z.jsx)(IY, { children: /* @__PURE__ */ (0, Z.jsx)(rZ, { ...l }) })
 		})));
 	}, d = v(i, () => {
 		c = !0, a.remove(), u(l);
@@ -35610,7 +35655,7 @@ function MZ(e, t, n) {
 		}
 	};
 }
-function NZ(e, t, n, r) {
+function FZ(e, t, n, r) {
 	ac.custom((r) => /* @__PURE__ */ (0, Z.jsx)(Fs, {
 		title: e,
 		detail: t,
@@ -35621,4 +35666,4 @@ function NZ(e, t, n, r) {
 		duration: r > 0 ? r : Infinity
 	});
 }
-export { wZ as confirmClientAction, jZ as dismissClientToast, vZ as mountCatalogToolbar, xZ as mountClientDialog, TZ as mountClientSurface, kZ as mountClientToaster, OZ as mountD2Dashboard, DZ as mountD2Login, gZ as mountGameCard, CZ as mountGameControlSettingsDialog, SZ as mountGameCreditsDialog, EZ as mountNavigation, yZ as mountPreferenceCard, MZ as mountReactiveSurface, AZ as showClientToast, NZ as showConnectionToast, _Z as unmountGameCard, bZ as unmountPreferenceCard };
+export { EZ as confirmClientAction, NZ as dismissClientToast, bZ as mountCatalogToolbar, CZ as mountClientDialog, DZ as mountClientSurface, jZ as mountClientToaster, AZ as mountD2Dashboard, kZ as mountD2Login, vZ as mountGameCard, TZ as mountGameControlSettingsDialog, wZ as mountGameCreditsDialog, OZ as mountNavigation, xZ as mountPreferenceCard, PZ as mountReactiveSurface, MZ as showClientToast, FZ as showConnectionToast, yZ as unmountGameCard, SZ as unmountPreferenceCard };

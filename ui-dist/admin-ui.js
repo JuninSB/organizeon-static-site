@@ -21893,7 +21893,7 @@ var Y = w(), FM = class extends J.Component {
 }));
 // src/services/account-api.ts
 function HM(e) {
-	if (/^\/d[23](\/|$)/.test(location.pathname)) {
+	if (/^\/d[234](\/|$)/.test(location.pathname)) {
 		let t = location.pathname.slice(0, 3) + "/api";
 		if (e.startsWith("/account/")) return t + e.slice(8);
 		if (e === "/dm" || e.startsWith("/dm/")) return t + e;
@@ -21985,7 +21985,7 @@ var WM, GM, KM, qM = o((() => {
 }));
 // src/services/profile-service.ts
 function JM() {
-	if (/^\/d[23](\/|$)/.test(location.pathname)) {
+	if (/^\/d[234](\/|$)/.test(location.pathname)) {
 		location.replace(location.pathname.slice(0, 3) + "/login");
 		return;
 	}
