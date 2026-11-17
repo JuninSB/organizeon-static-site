@@ -13,11 +13,13 @@ export default function Compose({
   mailbox,
   draftId,
   replyId,
+  forwardId,
   refresh,
 }: {
   mailbox: string;
   draftId?: string;
   replyId?: string;
+  forwardId?: string;
   refresh: () => Promise<void>;
 }) {
   const [id, setId] = useState(draftId),
@@ -27,17 +29,17 @@ export default function Compose({
     [body, setBody] = useState(""),
     [files, setFiles] = useState<Attachment[]>([]),
     [busy, setBusy] = useState(false),
-    [loading, setLoading] = useState(Boolean(draftId || replyId)),
+    [loading, setLoading] = useState(Boolean(draftId || replyId || forwardId)),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [dirty, setDirty] = useState(false);
   useEffect(() => {
-    if (!draftId && !replyId) setBox(mailbox);
-  }, [mailbox, draftId, replyId]);
+    if (!draftId && !replyId && !forwardId) setBox(mailbox);
+  }, [mailbox, draftId, replyId, forwardId]);
   useEffect(() => {
-    if (!draftId && !replyId) return;
+    if (!draftId && !replyId && !forwardId) return;
     let active = true;
-    api<Message>("/messages/" + (draftId || replyId))
+    api<Message>("/messages/" + (draftId || replyId || forwardId))
       .then((m) => {
         if (!active) return;
         if (draftId) {
@@ -46,6 +48,25 @@ export default function Compose({
           setTo(m.recipients.join(", "));
           setSubject(m.subject);
           setBody(m.body);
+          setFiles(m.attachments);
+        } else if (forwardId) {
+          setBox(m.mailbox);
+          setTo("");
+          setSubject(
+            /^fwd:/i.test(m.subject) ? m.subject : "Fwd: " + m.subject,
+          );
+          setBody(
+            "\n\n---------- Mensagem encaminhada ----------\nDe: " +
+              m.sender +
+              "\nData: " +
+              new Date(m.created).toLocaleString("pt-BR") +
+              "\nPara: " +
+              m.recipients.join(", ") +
+              "\nAssunto: " +
+              m.subject +
+              "\n\n" +
+              m.body,
+          );
           setFiles(m.attachments);
         } else {
           setBox(m.mailbox);
@@ -75,7 +96,7 @@ export default function Compose({
     return () => {
       active = false;
     };
-  }, [draftId, replyId]);
+  }, [draftId, replyId, forwardId]);
   useEffect(() => {
     const guard = (e: BeforeUnloadEvent) => {
       if (dirty) {
@@ -92,21 +113,17 @@ export default function Compose({
     setNotice("");
     try {
       const attachments = await Promise.all(
-        files.map(async (file) =>
-          file.data
-            ? file
-            : {
-                name: file.name,
-                mime: file.mime,
-                data: bytesToBase64(
-                  new Uint8Array(
-                    await (
-                      await fetch("/d4/api/attachments/" + file.id)
-                    ).arrayBuffer(),
-                  ),
-                ),
-              },
-        ),
+        files.map(async (file) => {
+          if (file.data !== undefined) return file;
+          const response = await fetch("/d4/api/attachments/" + file.id);
+          if (!response.ok)
+            throw new Error("Não foi possível carregar o anexo " + file.name);
+          return {
+            name: file.name,
+            mime: file.mime,
+            data: bytesToBase64(new Uint8Array(await response.arrayBuffer())),
+          };
+        }),
       );
       const saved = await api<Message>(
         "/drafts",
@@ -146,7 +163,11 @@ export default function Compose({
   return (
     <section className="space-y-4 rounded-lg border p-4 sm:p-6">
       <h1 className="text-lg font-semibold">
-        {replyId ? "Responder" : "Nova mensagem"}
+        {forwardId
+          ? "Encaminhar mensagem"
+          : replyId
+            ? "Responder"
+            : "Nova mensagem"}
       </h1>
       <p className="text-xs text-muted-foreground">
         A caixa selecionada será usada como remetente.
@@ -177,6 +198,7 @@ export default function Compose({
       <label className="grid gap-2 text-sm">
         Mensagem
         <textarea
+          aria-label="Mensagem"
           className="d4-textarea"
           value={body}
           disabled={busy}

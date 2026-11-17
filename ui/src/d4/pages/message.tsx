@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Reply, Trash2, Download } from "lucide-react";
+import { ArrowLeft, Reply, Forward, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api, date, type Message } from "../api";
 export default function MessagePage({
@@ -58,6 +58,13 @@ export default function MessagePage({
         <Button onClick={() => (location.hash = "/compose?reply=" + id)}>
           <Reply />
           Responder
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => (location.hash = "/compose?forward=" + id)}
+        >
+          <Forward />
+          Encaminhar
         </Button>
         <Button
           variant="ghost"
@@ -127,12 +134,26 @@ export default function MessagePage({
               ? "Aceito pelo servidor SMTP."
               : delivery.status === "partial"
                 ? "Entrega parcial. Confira os destinatários."
-                : "Falha ou envio sem confirmação."}
+                : delivery.status === "rejected"
+                  ? "Envio rejeitado pelo servidor SMTP."
+                  : delivery.status === "uncertain"
+                    ? "Envio sem confirmação. Confira com o destinatário antes de reenviar."
+                    : "Não foi possível enviar a mensagem."}
           </p>
           {delivery.error && <p className="break-words">{delivery.error}</p>}
+          {delivery.transport && (
+            <p className="text-xs">Transporte: {delivery.transport}</p>
+          )}
+          {delivery.receipts?.map(
+            (receipt: { code: number; response: string }, index: number) => (
+              <p key={index} className="break-all text-xs">
+                SMTP {receipt.code}: {receipt.response}
+              </p>
+            ),
+          )}
           {delivery.recipients?.map((r: any) => (
             <p key={r.recipient}>
-              {r.recipient}: {r.status} ({r.code})
+              {r.recipient}: {r.status === "accepted" ? "Aceito" : r.status === "rejected" ? "Rejeitado" : r.status} ({r.code})
             </p>
           ))}
         </div>

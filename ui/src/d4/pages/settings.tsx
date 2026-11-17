@@ -54,16 +54,30 @@ export default function SettingsPage() {
       <label className="grid gap-2 text-sm">
         Transporte
         <select
+          aria-label="Transporte"
           className="d4-select"
           value={data.mode}
           onChange={(e) => setData({ ...data, mode: e.target.value })}
         >
+          <option value="brevo">Brevo · envio OrganizeOn</option>
           <option value="cloudflare">Cloudflare SMTP</option>
           <option value="direct">SMTP direto · porta 25</option>
           <option value="relay">SMTP externo</option>
         </select>
       </label>
-      {data.mode === "cloudflare" ? (
+      {data.mode === "brevo" ? (
+        <div className="space-y-2 rounded-md border p-3 text-sm">
+          <p>Envio OrganizeOn pela Brevo.</p>
+          <p className="text-muted-foreground">
+            smtp-relay.brevo.com · 587 · STARTTLS
+          </p>
+          <p className="text-muted-foreground">
+            {data.hasPassword
+              ? "Credencial configurada no servidor."
+              : "Credencial do servidor indisponível."}
+          </p>
+        </div>
+      ) : data.mode === "cloudflare" ? (
         <p className="text-sm text-muted-foreground">
           Envio autenticado pelo SMTP da Cloudflare, com validação da resposta
           do servidor.
@@ -100,6 +114,7 @@ export default function SettingsPage() {
             <label className="grid gap-2 text-sm">
               Criptografia
               <select
+                aria-label="Criptografia"
                 className="d4-select"
                 value={data.security}
                 onChange={(e) => setData({ ...data, security: e.target.value })}

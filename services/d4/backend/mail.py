@@ -9,11 +9,26 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from email import policy
 from email.parser import BytesParser
+from html.parser import HTMLParser
 
 DOMAIN = 'organizeon.com.br'
+BREVO = {'mode':'brevo','host':'smtp-relay.brevo.com','port':587,'security':'starttls','username':'c3cae7001@smtp-brevo.com'}
 MAX_RAW = 20 * 1024 * 1024
 def now(): return datetime.now(timezone.utc).isoformat()
 def identifier(): return uuid.uuid4().hex
+
+def html_text(html):
+    class TextParser(HTMLParser):
+        def __init__(self):super().__init__(convert_charrefs=True);self.hidden=0;self.parts=[]
+        def handle_starttag(self,tag,attrs):
+            if tag in ('script','style','head'):self.hidden+=1
+            if not self.hidden and tag in ('p','div','br','li','tr'):self.parts.append('\n')
+        def handle_endtag(self,tag):
+            if tag in ('script','style','head'):self.hidden=max(0,self.hidden-1)
+            if not self.hidden and tag in ('p','div','li','tr'):self.parts.append('\n')
+        def handle_data(self,data):
+            if not self.hidden:self.parts.append(data)
+    parser=TextParser();parser.feed(html);return ''.join(parser.parts).strip()
 
 class MailStore:
     def __init__(self, path):
@@ -91,6 +106,7 @@ class MailStore:
             row=db.execute('SELECT m.* FROM messages m JOIN mailboxes b ON m.mailbox=b.id WHERE m.id=? AND b.owner=?',(mid,owner)).fetchone()
             if not row: raise ValueError('Mensagem não encontrada.')
             result=dict(row); result.pop('raw',None);result.pop('dedup',None)
+            if not result['body'] and result['html']:result['body']=html_text(result['html'])
             if row['raw']:
                 headers=BytesParser(policy=policy.default).parsebytes(row['raw'],headersonly=True)
                 result['replyAddress']=str(headers.get('reply-to',headers.get('from',row['sender'])))[:2000]
@@ -131,15 +147,23 @@ class MailStore:
         with self.connect() as db: db.execute('UPDATE messages SET folder=? WHERE id=? AND folder NOT IN (\'sending\')',(folder,mid))
     def settings(self,owner,public=True):
         with self.connect() as db: row=db.execute('SELECT data FROM settings WHERE owner=?',(owner,)).fetchone()
-        data=json.loads(row['data']) if row else {'mode':'direct','port':587,'security':'starttls','host':'','username':''}
-        if public: data={**data,'hasPassword':bool(data.get('password'))};data.pop('password',None)
+        data=json.loads(row['data']) if row else dict(BREVO)
+        if data.get('mode')=='brevo':
+            data={**data,**BREVO}
+            data.pop('password',None)
+        if public:
+            from pathlib import Path
+            configured=(Path(self.path).parent.parent/'config/brevo-smtp.key').is_file() if data.get('mode')=='brevo' else bool(data.get('password'))
+            data={**data,'hasPassword':configured,'managed':data.get('mode')=='brevo'}
+            data.pop('password',None)
         return data
     def save_settings(self,owner,data):
         old=self.settings(owner,False)
-        mode=data.get('mode','direct');security=data.get('security','starttls')
-        if mode not in ('direct','relay','cloudflare') or security not in ('starttls','tls'): raise ValueError('Configuração SMTP inválida.')
+        mode=data.get('mode',old['mode']);security=data.get('security','starttls')
+        if mode not in ('brevo','direct','relay','cloudflare') or security not in ('starttls','tls'): raise ValueError('Configuração SMTP inválida.')
         host=str(data.get('host','')).strip();port=int(data.get('port',587))
         if not 1<=port<=65535 or any(x in host for x in '\r\n/'): raise ValueError('Servidor SMTP inválido.')
         values={'mode':mode,'host':host,'port':port,'security':security,'username':str(data.get('username',''))[:255], 'password':data.get('password') or old.get('password','')}
+        if mode=='brevo':values=dict(BREVO)
         with self.connect() as db: db.execute('INSERT INTO settings VALUES(?,?) ON CONFLICT(owner) DO UPDATE SET data=excluded.data',(owner,json.dumps(values)))
         return self.settings(owner)

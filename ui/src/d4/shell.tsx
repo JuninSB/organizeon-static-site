@@ -136,6 +136,9 @@ export default function Shell({
         replyId={
           new URLSearchParams(route.split("?")[1]).get("reply") || undefined
         }
+        forwardId={
+          new URLSearchParams(route.split("?")[1]).get("forward") || undefined
+        }
         refresh={refresh}
       />
     ) : (
