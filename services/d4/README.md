@@ -20,13 +20,19 @@ Cada mensagem recebe parsing MIME pelo módulo email da biblioteca padrão. Há 
 
 ## Envio real
 
-Três transportes independentes:
+Brevo é o transporte padrão de todas as contas, inclusive contas futuras. O remetente é sempre derivado de uma caixa pertencente ao usuário autenticado; o navegador não pode forjar o endereço remetente. A chave é lida somente do arquivo privado `~/.local/share/organizeon/d4/config/brevo-smtp.key` e não é gravada nas configurações de cada usuário, no Git ou nos assets.
+
+Quatro transportes independentes:
+
+0. Brevo: `smtp-relay.brevo.com:587`, STARTTLS obrigatório com validação de certificado e autenticação gerenciada pelo servidor. Configuração padrão, sem chave no frontend.
 
 1. SMTP direto: resolve MX e conecta pela porta 25. Tenta outro MX apenas em falha de conexão anterior ao envio. Usa STARTTLS quando oferecido. A aceitação depende da rede e do servidor destinatário.
 2. SMTP externo: host, porta, STARTTLS/TLS, usuário e senha por conta. Senha não é retornada pela API. O provedor precisa permitir os remetentes @organizeon.com.br usados.
 3. Cloudflare SMTP: `smtp.mx.cloudflare.net:465`, TLS, credencial em arquivo privado do serviço. Exige domínio habilitado em Email Sending; o D4 funciona para recebimento mesmo sem isso.
 
 Não há reenvio automático após DATA nem após resultado incerto. Mensagens ficam em `sending` durante envio; somente aceitação SMTP confirmada coloca em Enviados. Erros/rejeições/entrega parcial vão para Falhas de envio com resultado real por destinatário. Um reinício durante envio marca resultado como incerto e não tenta novamente. Rascunhos têm salvamento explícito; anexos de saída até 10 MB, máximo vinte arquivos e vinte destinatários; recebimento até 20 MB. O limite existe para memória do Android e limite de valor KV, não para quantidade de caixas.
+
+Resultados distinguem `accepted`, `rejected`, `failed`, `partial` e `uncertain`, com fase da falha, código SMTP e comprovante de aceitação após DATA. Uma desconexão em QUIT não desfaz uma aceitação DATA já confirmada. O estado `accepted` significa aceito pelo servidor SMTP, não confirmação universal de leitura ou entrega final. Respostas reais e encaminhamentos com anexos foram testados. Encaminhar preenche o original e seus anexos, pede novo destinatário e salva um rascunho independente.
 
 Respostas preservam In-Reply-To/References quando há Message-ID original e respeitam Reply-To. Pastas: entrada, enviados, rascunhos, falhas e lixeira. Exclusão definitiva somente pela lixeira, incluindo anexos.
 
@@ -65,3 +71,5 @@ Backend anterior: `~/.local/share/organizeon/rollback/d4-20261117-014129/server.
 Testes unitários `python -m unittest discover -s tests -v`: endereços únicos, autorização entre contas, MIME e anexos, deduplicação, rascunhos persistentes, rejeição de injeção de cabeçalho, erro SMTP nunca apresentado como enviado. Testes de navegador em `tests/browser.cjs` exercitam o domínio real com sessão de diagnóstico curta guardada somente em arquivo privado, navegação mobile/desktop, caixa postal, configurações, criar/excluir endereço e salvar rascunho. Testes não alteram senha, cargo ou sessão de outras contas.
 
 Uma mensagem externa real enviada para `organizeon@organizeon.com.br` chegou à caixa, comprovando MX→Worker→túnel→SQLite. A tentativa SMTP da Cloudflare autenticou, mas o servidor respondeu `550 5.7.1 Email sending is not enabled for domain organizeon.com.br`; foi registrada como falha. Testes de porta 25 no Android para MX de Google e Microsoft não conectaram. Para saída, habilitar o domínio no Email Sending ou informar SMTP externo autorizado. Nenhuma dessas falhas é simulada como sucesso.
+
+Atualização Brevo de 17/11/2026: saída habilitada e verificada com mensagem real, resposta e encaminhamento. STARTTLS retornou 220, autenticação 235, submissões 250. Uma mensagem com anexo retornou pela Cloudflare e teve conteúdo validado por SHA-256. Testes de navegador repetiram o fluxo usando outra caixa do domínio, verificaram In-Reply-To e integridade do anexo encaminhado. O bloqueio anterior do Email Sending da Cloudflare não impede a saída pela Brevo.
