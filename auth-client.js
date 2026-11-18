@@ -1,18 +1,18 @@
-import { fetchExternalGame } from "./core/games/external-download.js?v=runtime-c551e5374034b097";
-import {toPortable,fromPortable} from "./core/storage/portable.js?v=runtime-c551e5374034b097";
-import { clientNotificationsEnabled, installNotificationSettings } from "./core/ui/client-notifications.js?v=runtime-c551e5374034b097";
-import { installBrandFavicon } from "./core/ui/brand.js?v=runtime-c551e5374034b097";
-import { startWispMonitor } from "./core/network/wisp-monitor.js?v=runtime-c551e5374034b097";
-import { openBackupDatabase } from "./core/storage/indexed-db.js?v=runtime-c551e5374034b097";
+import { fetchExternalGame } from "./core/games/external-download.js?v=runtime-bd09dde12c1faf88";
+import {toPortable,fromPortable} from "./core/storage/portable.js?v=runtime-bd09dde12c1faf88";
+import { clientNotificationsEnabled, installNotificationSettings } from "./core/ui/client-notifications.js?v=runtime-bd09dde12c1faf88";
+import { installBrandFavicon } from "./core/ui/brand.js?v=runtime-bd09dde12c1faf88";
+import { startWispMonitor } from "./core/network/wisp-monitor.js?v=runtime-bd09dde12c1faf88";
+import { openBackupDatabase } from "./core/storage/indexed-db.js?v=runtime-bd09dde12c1faf88";
 const CLIENT_UI_REVISION = "ui-46dd214fc5bd8690";
-const RUNTIME_ASSETS_REVISION = "runtime-c551e5374034b097";
+const RUNTIME_ASSETS_REVISION = "runtime-bd09dde12c1faf88";
 // Shared lazy UI loader: all surfaces use the same compiled React bundle.
 let clientUIPromise;
 function loadClientUI() {
   if (!clientUIPromise) clientUIPromise = (async () => {
     const base = new URL(window.__groveBase || "./", document.baseURI);
-    const script = new URL("ui-dist/client-ui.js?v=runtime-c551e5374034b097", base);
-    const css = new URL("ui-dist/client-ui.css?v=runtime-c551e5374034b097", base);
+    const script = new URL("ui-dist/client-ui.js?v=runtime-bd09dde12c1faf88", base);
+    const css = new URL("ui-dist/client-ui.css?v=runtime-bd09dde12c1faf88", base);
     const version = window.__ORGANIZEON_CLIENT_VERSION__ || CLIENT_UI_REVISION;
     if (version) { script.searchParams.set("v", version); css.searchParams.set("v", version); }
     return { ui: await import(script.href), css: css.href };
@@ -1805,7 +1805,7 @@ async function showGameCatalog() {
         if(game.unavailableReason){updateCard(card,{actionDisabled:true,actionLabel:"Fonte indisponível"});return;}
         if (game.type === "external-download") {
           const action = card.querySelector(".action");
-          updateCard(card,{actionDisabled:false,actionLabel:"Baixar HTML"});
+          updateCard(card,{actionDisabled:false,actionLabel:"Baixar ZIP"});
           return;
         }
         if (game.type === "remote") {
@@ -1926,9 +1926,9 @@ async function showGameCatalog() {
     const download = game.externalDownload;
     if (!download?.url || !download.filename) return;
     const approved = window.confirm(
-      `${game.name} será baixado do GitHub ou do servidor OrganizeOn e salvo como ` +
-      `${download.filename}. O OrganizeOn verificará a integridade antes de ` +
-      "entregar o HTML. Continuar?",
+      `${game.name} será baixado ${download.label === "OrganizeOn" ? "do servidor OrganizeOn" : "do GitHub ou do servidor OrganizeOn"}. ` +
+      "O OrganizeOn verificará a integridade antes de " +
+      "entregar o ZIP. Continuar?",
     );
     if (!approved) return;
 
@@ -1939,8 +1939,7 @@ async function showGameCatalog() {
     action.disabled = true;
     (action.querySelector("[data-action-label]") || action).textContent = "Conectando ao GitHub…";
     try {
-      const { html, filename } = await fetchExternalGame(download, {
-        extract: extractSingleHtmlFromZip,
+      const { bytes, filename, contentType } = await fetchExternalGame(download, {
         onProgress: ({ source, received, total }) => {
           const percent = Math.min(100, Math.round(received / total * 100));
           bar.style.width = `${percent}%`;
@@ -1950,7 +1949,7 @@ async function showGameCatalog() {
       });
 
       const blobUrl = URL.createObjectURL(
-        new Blob([html], { type: "text/html;charset=utf-8" }),
+        new Blob([bytes], { type: contentType }),
       );
       const link = document.createElement("a");
       link.href = blobUrl;
@@ -1962,7 +1961,7 @@ async function showGameCatalog() {
       reportGameEvent(game, "download");
       window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
       bar.style.width = "100%";
-      (action.querySelector("[data-action-label]") || action).textContent = "HTML baixado";
+      (action.querySelector("[data-action-label]") || action).textContent = "ZIP baixado";
     } catch (error) {
       updateCard(card,{actionLabel:"Tentar novamente",actionDisabled:false});
       window.alert(
@@ -1976,68 +1975,11 @@ async function showGameCatalog() {
         card.classList.remove("downloading");
         updateCard(card,{actionDisabled:false,downloading:false});
         bar.style.width = "0";
-        if ((action.querySelector("[data-action-label]") || action).textContent === "HTML baixado") {
+        if ((action.querySelector("[data-action-label]") || action).textContent === "ZIP baixado") {
           updateCard(card,{actionLabel:"Baixar novamente",actionDisabled:false});
         }
       }, 900);
     }
-  }
-
-  async function extractSingleHtmlFromZip(archive, expectedFilename) {
-    const view = new DataView(
-      archive.buffer,
-      archive.byteOffset,
-      archive.byteLength,
-    );
-    let endOffset = -1;
-    const minimumOffset = Math.max(0, archive.byteLength - 65_557);
-    for (let offset = archive.byteLength - 22; offset >= minimumOffset; offset -= 1) {
-      if (view.getUint32(offset, true) === 0x06054b50) {
-        endOffset = offset;
-        break;
-      }
-    }
-    if (endOffset < 0) throw new Error("arquivo ZIP inválido");
-    if (view.getUint16(endOffset + 10, true) !== 1) {
-      throw new Error("o pacote deveria conter exatamente um HTML");
-    }
-    const centralOffset = view.getUint32(endOffset + 16, true);
-    if (view.getUint32(centralOffset, true) !== 0x02014b50) {
-      throw new Error("diretório do ZIP inválido");
-    }
-    const method = view.getUint16(centralOffset + 10, true);
-    const compressedSize = view.getUint32(centralOffset + 20, true);
-    const outputSize = view.getUint32(centralOffset + 24, true);
-    const nameLength = view.getUint16(centralOffset + 28, true);
-    const localOffset = view.getUint32(centralOffset + 42, true);
-    const filename = new TextDecoder().decode(
-      archive.subarray(centralOffset + 46, centralOffset + 46 + nameLength),
-    );
-    if (filename !== expectedFilename || !filename.toLowerCase().endsWith(".html")) {
-      throw new Error("nome do HTML dentro do ZIP é inesperado");
-    }
-    if (view.getUint32(localOffset, true) !== 0x04034b50) {
-      throw new Error("entrada local do ZIP inválida");
-    }
-    const localNameLength = view.getUint16(localOffset + 26, true);
-    const localExtraLength = view.getUint16(localOffset + 28, true);
-    const dataOffset = localOffset + 30 + localNameLength + localExtraLength;
-    const compressed = archive.slice(dataOffset, dataOffset + compressedSize);
-    let output;
-    if (method === 0) {
-      output = compressed;
-    } else if (method === 8 && typeof DecompressionStream === "function") {
-      const stream = new Blob([compressed]).stream().pipeThrough(
-        new DecompressionStream("deflate-raw"),
-      );
-      output = new Uint8Array(await new Response(stream).arrayBuffer());
-    } else {
-      throw new Error("este navegador não consegue extrair o ZIP automaticamente");
-    }
-    if (output.byteLength !== outputSize) {
-      throw new Error("HTML extraído com tamanho inválido");
-    }
-    return output;
   }
 
   async function installGame(game, card) {
@@ -2280,7 +2222,7 @@ async function showGameCatalog() {
 
   async function ensureGameServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
-    const workerURL=assetUrl("games/game-sw.js?v=runtime-c551e5374034b097");workerURL.searchParams.set("v","games-runtime-2");
+    const workerURL=assetUrl("games/game-sw.js?v=runtime-bd09dde12c1faf88");workerURL.searchParams.set("v","games-runtime-2");
     const registration=await navigator.serviceWorker.register(workerURL.href,{scope:assetUrl("games/").pathname,updateViaCache:"none"});
     const worker=registration.installing||registration.waiting||registration.active;
     if(!worker||worker.state==="activated")return;
@@ -3343,8 +3285,8 @@ function showLogin(message = "") {
   });
 
   const uiBase = new URL(window.__groveBase || "./", document.baseURI);
-  const script = new URL("ui-dist/client-ui.js?v=runtime-c551e5374034b097", uiBase);
-  const stylesheet = new URL("ui-dist/client-ui.css?v=runtime-c551e5374034b097", uiBase);
+  const script = new URL("ui-dist/client-ui.js?v=runtime-bd09dde12c1faf88", uiBase);
+  const stylesheet = new URL("ui-dist/client-ui.css?v=runtime-bd09dde12c1faf88", uiBase);
   const version = window.__ORGANIZEON_CLIENT_VERSION__ || CLIENT_UI_REVISION;
   if (version) { script.searchParams.set("v", version); stylesheet.searchParams.set("v", version); }
   void import(script.href).then((module) => {

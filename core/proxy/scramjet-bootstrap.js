@@ -7,7 +7,7 @@ function loadRuntime(base) {
       if (window.$scramjetLoadController)
         return resolve(window.$scramjetLoadController());
       const script = document.createElement("script");
-      script.src = `${base}xzmo/grhp.all.js?v=runtime-c551e5374034b097`;
+      script.src = `${base}xzmo/grhp.all.js?v=runtime-bd09dde12c1faf88`;
       script.onload = () => resolve(window.$scramjetLoadController());
       script.onerror = () => {
         runtimePromise = undefined;
@@ -50,8 +50,8 @@ export async function initializeScramjet(base) {
         flags: {sourcemaps:false},
         files: {
           wasm: `${base}xzmo/grhp.wasm.wasm`,
-          all: `${base}xzmo/grhp.all.js?v=runtime-c551e5374034b097`,
-          sync: `${base}xzmo/grhp.sync.js?v=runtime-c551e5374034b097`,
+          all: `${base}xzmo/grhp.all.js?v=runtime-bd09dde12c1faf88`,
+          sync: `${base}xzmo/grhp.sync.js?v=runtime-bd09dde12c1faf88`,
         },
       });
       await controller.init();
