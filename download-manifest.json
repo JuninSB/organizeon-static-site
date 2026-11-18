@@ -1,7 +1,7 @@
 {
-  "version": "v2-2386042af1e92f90",
-  "generatedAt": "2026-11-18T01:10:50.251Z",
-  "totalBytes": 13631418,
+  "version": "v2-a874e3783dcacae2",
+  "generatedAt": "2026-11-18T04:27:23.179Z",
+  "totalBytes": 14174390,
   "files": [
     {
       "path": "404.html",
@@ -10,8 +10,8 @@
     },
     {
       "path": "admin.html",
-      "size": 731,
-      "sha256": "0f55fb9a5a02783f404ebe649576b0400d01d7124eaf12d2864d862c1671f721"
+      "size": 783,
+      "sha256": "18d57f178a24839eeeccc1c1ee693a8f0169218f5f144db54ff221e4531c9943"
     },
     {
       "path": "admin.js",
@@ -146,7 +146,7 @@
     {
       "path": "assets/jdht-c-B8DlGlSe.js",
       "size": 15763,
-      "sha256": "7a0a5cda7a9f18eabcec121b889b10d00df940d264928e6cf9ca7fbfab407786"
+      "sha256": "aa980bc0a905afba90969ea76824e6096549bfacc2439685d31f0398d95f3d77"
     },
     {
       "path": "assets/jdht-c-B9pBM47N.js",
@@ -185,8 +185,8 @@
     },
     {
       "path": "assets/jdht-c-ChjuTX8m.js",
-      "size": 9312,
-      "sha256": "41cd02ecdc44e7d0b9e8ca8ed8185b783b0b002511a61414db31f7ce53f354a6"
+      "size": 9597,
+      "sha256": "7a3505755e351351612e856c9c656f99079fff496ad95669c192ad2553411295"
     },
     {
       "path": "assets/jdht-c-CjfsCP1K.js",
@@ -335,8 +335,8 @@
     },
     {
       "path": "auth-client.js",
-      "size": 141192,
-      "sha256": "d38bb5d732b3d8129a0f669d122a6dc1244875531f0e87fa8497a6af631de6c9"
+      "size": 140146,
+      "sha256": "90d30cd08e1c30c7922cfd995c805f4ac9698510ef58991e3f56ae7925b0e370"
     },
     {
       "path": "config.js",
@@ -355,8 +355,8 @@
     },
     {
       "path": "games/catalog.json",
-      "size": 96105,
-      "sha256": "ce3315f93cbd9eae2cb89e5d903a3ff3a5dd7ab9d3eebe7fc42ddb7b5ae145b4"
+      "size": 96437,
+      "sha256": "ca431e72f449f8268c8150bf21cdaaba279bffed437421569fead6a107e53830"
     },
     {
       "path": "games/covers/age-of-war.svg",
@@ -660,8 +660,8 @@
     },
     {
       "path": "games/game-sw.js",
-      "size": 839,
-      "sha256": "3c7f285e1faebb5ce52ba10849e5bf865025e5e0fd09ff2c0dee1d2bc2f74202"
+      "size": 1405,
+      "sha256": "5b134e0740808e30a815e49e5ddd978deb9ac63479e3c8a4079856aa05877b93"
     },
     {
       "path": "games/source.json",
@@ -685,8 +685,8 @@
     },
     {
       "path": "manifest.webmanifest",
-      "size": 557,
-      "sha256": "cc941ac20b5d29f0bf41387bb9835cc6fc5fc8eecba8bbff2a4a4ee1d6f50706"
+      "size": 349,
+      "sha256": "46ec6fc7cd0be4554e568c9c34de20af7e3fd21b83f939ed75bab600531919c1"
     },
     {
       "path": "omhy/index.mjs",
@@ -705,8 +705,8 @@
     },
     {
       "path": "rlr/obmw.bundle.js",
-      "size": 369481,
-      "sha256": "6664a1a2117aa2476e556d8eea84dd4f8393e3f831014f8127d2835735c9b1f2"
+      "size": 369757,
+      "sha256": "ea8fbeb39171ac13a45e6e708026bcdc375083fe0901a997497e6224df93f8f4"
     },
     {
       "path": "rlr/obmw.client.js",
@@ -775,8 +775,8 @@
     },
     {
       "path": "ui-dist/client-ui.js",
-      "size": 1205966,
-      "sha256": "28addf6715e8134e05b0569ff842c05f07eb9eb47b1db95eef31a1ed0b096335"
+      "size": 1206315,
+      "sha256": "fc19bec6d7b768f9285bd221ec3820ae68ecfad6a9966e6c558c8d1570034f64"
     },
     {
       "path": "ui-dist/client-ui.css",
@@ -795,8 +795,8 @@
     },
     {
       "path": "core/proxy/scramjet-bootstrap.js",
-      "size": 3006,
-      "sha256": "83905b2330f5b259a7010e6876cc1d4a5eb94b18950097d557d6884ab8769f61"
+      "size": 3041,
+      "sha256": "b831411a5963acec0ff5fbd6d6d7c454b3e52cb63345c725d2b85dc9627523b7"
     },
     {
       "path": "core/proxy/scramjet-worker.js",
@@ -817,6 +817,36 @@
       "path": "core/network/wisp-monitor.js",
       "size": 746,
       "sha256": "4ea753435c87c7b5b637fd304335d5fee41040fc31130227c9e7a883adad814b"
+    },
+    {
+      "path": "brand/organizeon-icon.png",
+      "size": 516434,
+      "sha256": "073b4a16968f782c60fe9644477e0286696c0c981285f924408ac75956b3a365"
+    },
+    {
+      "path": "brand/organizeon-icon-black.png",
+      "size": 15151,
+      "sha256": "98a5de58345ca478dc493f63747a8cb23e2970a9cf874932667ad3402d77b37d"
+    },
+    {
+      "path": "core/ui/brand.js",
+      "size": 756,
+      "sha256": "bf9d2d5eea40c68b9a3afa010062f8770f34d4f0869719324567e27bc5196e97"
+    },
+    {
+      "path": "core/proxy/frame-session.js",
+      "size": 5244,
+      "sha256": "a4dd227d1519e52c4255789d1b947d9f375861be932765736b298fbc3c46e4aa"
+    },
+    {
+      "path": "core/ui/client-notifications.js",
+      "size": 2036,
+      "sha256": "859b96f8acabf552541711d2ba5e39eff32df9969ce7863874b200b892f9f0a1"
+    },
+    {
+      "path": "core/storage/portable.js",
+      "size": 2710,
+      "sha256": "0a8da63381429d1610b81ea82c0acdc03dff910c5288741770fa44e6574cbcb3"
     }
   ]
 }

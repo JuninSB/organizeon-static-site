@@ -35524,6 +35524,10 @@ function LZ({ game: e }) {
 					className: "min-h-10 text-xs leading-relaxed text-muted-foreground",
 					children: e.description
 				}),
+				e.unavailableReason && /* @__PURE__ */ (0, Y.jsx)("p", {
+					className: "text-xs text-muted-foreground",
+					children: e.unavailableReason
+				}),
 				/* @__PURE__ */ (0, Y.jsx)("p", {
 					className: "min-h-4 text-[10px] leading-relaxed text-muted-foreground",
 					children: e.attribution
@@ -35538,11 +35542,11 @@ function LZ({ game: e }) {
 						/* @__PURE__ */ (0, Y.jsxs)(J, {
 							className: "action min-w-0 flex-1",
 							type: "button",
-							disabled: !0,
+							disabled: e.actionDisabled ?? !0,
 							onClick: e.onAction,
 							children: [e.type === "external-download" ? /* @__PURE__ */ (0, Y.jsx)(Je, {}) : e.type === "remote" ? /* @__PURE__ */ (0, Y.jsx)(Bn, {}) : /* @__PURE__ */ (0, Y.jsx)(Ln, {}), /* @__PURE__ */ (0, Y.jsx)("span", {
 								"data-action-label": !0,
-								children: "Verificando…"
+								children: e.actionLabel || "Verificando…"
 							})]
 						}),
 						e.relayUrl && /* @__PURE__ */ (0, Y.jsx)(J, {
@@ -35567,7 +35571,7 @@ function LZ({ game: e }) {
 							type: "button",
 							title: "Apagar jogo do cache",
 							"aria-label": `Apagar ${e.name} do cache`,
-							hidden: !0,
+							hidden: !e.installed,
 							onClick: e.onRemove,
 							children: /* @__PURE__ */ (0, Y.jsx)(Lr, {})
 						})
@@ -35575,7 +35579,7 @@ function LZ({ game: e }) {
 				}),
 				/* @__PURE__ */ (0, Y.jsx)("div", {
 					className: "progress h-1.5 overflow-hidden rounded-full bg-muted",
-					hidden: !0,
+					hidden: !e.downloading,
 					children: /* @__PURE__ */ (0, Y.jsx)("span", { className: "block h-full w-0 rounded-full bg-primary transition-[width] duration-100" })
 				})
 			]
@@ -36284,11 +36288,16 @@ function XZ(e, t) {
 }
 function ZZ(e, t, n) {
 	JZ.get(e)?.unmount(), XZ(n, e);
-	let r = (0, uc.createRoot)(e);
-	(0, dc.flushSync)(() => r.render(/* @__PURE__ */ (0, Y.jsx)("div", {
+	let r = (0, uc.createRoot)(e), i = t, a = () => (0, dc.flushSync)(() => r.render(/* @__PURE__ */ (0, Y.jsx)("div", {
 		className: "organizeon-ui dark min-h-full",
-		children: /* @__PURE__ */ (0, Y.jsx)(LZ, { game: t })
-	}))), JZ.set(e, r);
+		children: /* @__PURE__ */ (0, Y.jsx)(LZ, { game: i })
+	})));
+	return a(), JZ.set(e, r), { update: (e) => {
+		i = {
+			...i,
+			...e
+		}, a();
+	} };
 }
 function QZ(e) {
 	JZ.get(e)?.unmount(), JZ.delete(e);
@@ -36440,6 +36449,9 @@ function uQ(e, t) {
 			position: "bottom-right",
 			theme: "dark",
 			closeButton: !0,
+			expand: !0,
+			gap: 12,
+			visibleToasts: 5,
 			richColors: !1
 		})
 	})), qZ.set(e, {
