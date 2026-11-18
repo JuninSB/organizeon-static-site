@@ -523,7 +523,8 @@ async function poll() {
   if (timer) clearTimeout(timer);
   polling = true;
   const version = generation,
-    stamp = revision;
+    stamp = revision,
+    firstInbox = !state.inbox;
   try {
     const selectedAtStart =
       state.open && !document.hidden ? state.selectedId : null;
@@ -598,6 +599,13 @@ async function poll() {
     }
     cursor = inbox.cursor;
     set({ inbox, connected: true, updatedAt: Date.now(), error: "" });
+    if(firstInbox&&inbox.settings.notifications){
+      try{
+        const summary=await dmService.unreadSummary();
+        if(version!==generation||stamp!==revision)return;
+        if(summary.count>0)set({notices:[...state.notices,{id:-2,conversationId:"",person:inbox.me,kind:"unread_summary",text:`Você tem ${summary.count} ${summary.count===1?"mensagem não lida":"mensagens não lidas"}.`}]});
+      }catch{/* A summary failure must not prevent the inbox from opening. */}
+    }
     const selected = state.selectedId;
     if (
       state.open &&

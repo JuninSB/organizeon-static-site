@@ -456,10 +456,9 @@ const O = re(),
   W =
     window.__FERN_WISP_URL__ ||
     (oe ? "wss://fern.best/wisp/" : `${M}${j}.${P}${x(O)}`);
-let B;
-const ae = new Promise((o) => {
-  B = o;
-});
+let B, failSetup;
+const ae = new Promise((o,reject) => { B=o;failSetup=reject; });
+ae.catch(()=>{});
 let T = !1;
 async function se() {
   (await ae, await U());
@@ -490,7 +489,7 @@ function ne(o, e) {
         le();
       } catch {}
       T || ((T = !0), B());
-    }),
+    },error=>{failSetup(error);}),
     t
   );
 }

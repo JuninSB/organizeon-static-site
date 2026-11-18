@@ -17,6 +17,7 @@ const conversationCache = new Map<
   { version?: string; conversation: DmConversation }
 >();
 export const dmService = {
+  unreadSummary:()=>accountRequest<{count:number}>("/dm/notifications/unread-summary",{method:"POST"}),
   invalidateConversation(conversationId: string) {
     epoch++;
     conversationCache.delete(conversationId);

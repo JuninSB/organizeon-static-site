@@ -42,7 +42,7 @@ async function handleScramjetRequest(event) {
 self.addEventListener('fetch', (event) => {
 	const url = new URL(event.request.url)
 
-	if (url.pathname.startsWith(swBase + 'dtix/')) {
+	if (url.pathname.startsWith(swBase + 'dtix/') || (url.pathname === swBase + 'xzmo/grhp.wasm.wasm' && event.request.destination === 'script')) {
 		event.respondWith(handleScramjetRequest(event))
 		return
 	}

@@ -39,3 +39,5 @@ Na instalação D4 é obrigatório publicar `d4-dist/d4.html` como `~/organizeon
 Após a publicação, D2/D3/D4 login responderam 200; a API privada D4 respondeu 401 sem autenticação. Backend PID6526, D4 PID6525, D3 PID7602 e tmux Xiaomi ativo na checagem final. A coluna `reset_version` foi confirmada no banco **ativo** `~/.local/share/organizeon/direct-messages.sqlite3`; `PRAGMA quick_check` retornou `ok` para DM e e-mail. Os arquivos `~/organizeon/backend/data/direct-messages.sqlite3` e `~/organizeon/d4/data/mail.sqlite3` são legados neste ambiente e não devem ser usados para diagnosticar a aplicação ativa. Snapshots dos bancos ativos, após a migração aditiva, estão no backup com prefixo `active-`.
 
 Foi adicionado teste de sincronização por polling: reset recebido do outro participante limpa o histórico local. O teste não reseta conversas reais. Limite: não foi validado envio de notificações nativas em um telefone físico, nem navegação por todos os serviços externos através do proxy.
+
+Correções posteriores da pesquisa, bancos locais e mensagens de retorno: [SEARCH_RUNTIME.md](SEARCH_RUNTIME.md).

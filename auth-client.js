@@ -1,3 +1,5 @@
+import { startWispMonitor } from "./core/network/wisp-monitor.js";
+import { openBackupDatabase } from "./core/storage/indexed-db.js";
 // Shared lazy UI loader: all surfaces use the same compiled React bundle.
 let clientUIPromise;
 function loadClientUI() {
@@ -790,6 +792,7 @@ async function exportIndexedDatabases() {
           name: storeName,
           keyPath: store.keyPath,
           autoIncrement: store.autoIncrement,
+          indexes: Array.from(store.indexNames, name => { const index=store.index(name);return {name,keyPath:index.keyPath,unique:index.unique,multiEntry:index.multiEntry}; }),
           records: await Promise.all(values.map(async (value, index) => ({
             key: await toPortable(keys[index]),
             value: await toPortable(value),
@@ -809,23 +812,7 @@ async function exportIndexedDatabases() {
 async function importIndexedDatabases(databases) {
   for (const backup of databases) {
     if (!backup?.name || !Array.isArray(backup.stores)) continue;
-    const existing = await openIndexedDatabase(backup.name).catch(() => null);
-    const nextVersion = Math.max(Number(backup.version) || 1, existing?.version || 0) + 1;
-    existing?.close();
-    const db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open(backup.name, nextVersion);
-      request.onupgradeneeded = () => {
-        for (const definition of backup.stores) {
-          if (!request.result.objectStoreNames.contains(definition.name)) {
-            const options = { autoIncrement: definition.autoIncrement === true };
-            if (definition.keyPath != null) options.keyPath = definition.keyPath;
-            request.result.createObjectStore(definition.name, options);
-          }
-        }
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    const db = await openBackupDatabase(backup);
     for (const definition of backup.stores) {
       if (!db.objectStoreNames.contains(definition.name)) continue;
       const transaction = db.transaction(definition.name, "readwrite");
@@ -2978,21 +2965,18 @@ function hideDefaultHomepageShortcuts() {
 }
 
 async function showProxyServerDialog() {
-  const availableOptions = guestMode ? proxyServerOptions.filter(option => option.id !== 'organizeon') : proxyServerOptions;
-  const latency = Object.fromEntries(availableOptions.map(option => [option.id, { label: 'Medindo conexão…', state: 'pending' }]));
-  let page;
-  const props = { type: 'proxy', options: availableOptions, currentId: getSelectedProxyServer(guestMode).id, latency, guestMode,
-    onClose: () => page?.close(),
-    onApply: id => { localStorage.setItem(proxyServerStorageKey, id); restartClientAtMain(); } };
-  page = await mountClientPage('organizeon-proxy-dialog', props);
-  if (!page) return;
-  const token = guestMode ? null : localStorage.getItem(tokenStorageKey);
-  await Promise.all(availableOptions.map(async option => {
-    const result = await measureWispHandshake(guestMode ? option.url : buildProxyWispUrl(option, token));
-    if (!page.host.isConnected) return;
-    latency[option.id] = { label: result.online ? `${result.latencyMs} ms` : result.reason, state: result.online ? 'online' : 'offline' };
-    page.update({ ...props, latency: { ...latency } });
-  }));
+  const availableOptions=guestMode?proxyServerOptions.filter(option=>option.id!=='organizeon'):proxyServerOptions;
+  const latency=Object.fromEntries(availableOptions.map(option=>[option.id,{label:'Medindo conexão…',state:'pending'}]));
+  let page,stop=()=>{};
+  const props={type:'proxy',options:availableOptions,currentId:getSelectedProxyServer(guestMode).id,latency,guestMode,
+    onClose:()=>{stop();page?.close();},
+    onApply:id=>{stop();localStorage.setItem(proxyServerStorageKey,id);restartClientAtMain();}};
+  page=await mountClientPage('organizeon-proxy-dialog',props);if(!page)return;
+  const token=guestMode?null:localStorage.getItem(tokenStorageKey);
+  stop=startWispMonitor({options:availableOptions,isOpen:()=>page.host.isConnected,
+    measure:(option,signal)=>measureWispHandshake(guestMode?option.url:buildProxyWispUrl(option,token),signal),
+    onResult:(option,result)=>{latency[option.id]={label:result.online?`${result.latencyMs} ms`:result.reason,state:result.online?'online':'offline'};page.update({...props,latency:{...latency}});}});
+  const cleanup=page.host.__cleanup;page.host.__cleanup=()=>{stop();cleanup?.();};
 }
 
 async function measureProxyServerOptions(
@@ -3028,7 +3012,7 @@ async function measureProxyServerOptions(
   best.connection.textContent += " · melhor";
 }
 
-function measureWispHandshake(url) {
+function measureWispHandshake(url, signal) {
   return new Promise((resolve) => {
     const startedAt = performance.now();
     let settled = false;
@@ -3037,14 +3021,18 @@ function measureWispHandshake(url) {
       if (settled) return;
       settled = true;
       window.clearTimeout(timeout);
+      signal?.removeEventListener("abort",abort);
       try {
         socket?.close(1000, "Latency check complete");
       } catch {}
       resolve(result);
     };
+    const abort=()=>finish({online:false,latencyMs:null,reason:"Cancelado"});
     const timeout = window.setTimeout(() => {
       finish({ online: false, latencyMs: null, reason: "Tempo esgotado" });
     }, 6000);
+    if(signal?.aborted){abort();return;}
+    signal?.addEventListener("abort",abort,{once:true});
     try {
       socket = new WebSocket(url);
       socket.addEventListener(
