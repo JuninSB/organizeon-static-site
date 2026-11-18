@@ -2,16 +2,16 @@
 
 const swBase = self.location.pathname.replace(/tbojzp\.js$/, '')
 
-importScripts(swBase + 'rlr/obmw.bundle.js?v=runtime-9a311f7cc63dea41')
-importScripts(swBase + 'rlr/obmw.config.js?v=runtime-9a311f7cc63dea41')
-importScripts(__uv$config.sw || swBase + 'rlr/obmw.sw.js?v=runtime-9a311f7cc63dea41')
+importScripts(swBase + 'rlr/obmw.bundle.js?v=runtime-c551e5374034b097')
+importScripts(swBase + 'rlr/obmw.config.js?v=runtime-c551e5374034b097')
+importScripts(__uv$config.sw || swBase + 'rlr/obmw.sw.js?v=runtime-c551e5374034b097')
 
-importScripts(swBase + 'xzmo/grhp.all.js?v=runtime-9a311f7cc63dea41')
+importScripts(swBase + 'xzmo/grhp.all.js?v=runtime-c551e5374034b097')
 
 const uv = new UVServiceWorker()
 
 let scramjet = null
-importScripts(swBase + 'core/proxy/scramjet-worker.js?v=runtime-9a311f7cc63dea41')
+importScripts(swBase + 'core/proxy/scramjet-worker.js?v=runtime-c551e5374034b097')
 
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (event) => {

@@ -1,4 +1,4 @@
-import { initializeScramjet, waitForWorkerControl } from "../core/proxy/scramjet-bootstrap.js?v=runtime-9a311f7cc63dea41";
+import { initializeScramjet, waitForWorkerControl } from "../core/proxy/scramjet-bootstrap.js?v=runtime-c551e5374034b097";
 import {
   S as f,
   a as g,
@@ -8,7 +8,7 @@ import {
   L as F,
   E as H,
   d as G,
-} from "./jdht-c-CyPArwUk.js?v=runtime-9a311f7cc63dea41";
+} from "./jdht-c-CyPArwUk.js?v=runtime-c551e5374034b097";
 const q = globalThis.fetch,
   _ = globalThis.SharedWorker,
   E = globalThis.localStorage,

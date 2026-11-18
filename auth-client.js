@@ -1,17 +1,18 @@
-import {toPortable,fromPortable} from "./core/storage/portable.js?v=runtime-9a311f7cc63dea41";
-import { clientNotificationsEnabled, installNotificationSettings } from "./core/ui/client-notifications.js?v=runtime-9a311f7cc63dea41";
-import { installBrandFavicon } from "./core/ui/brand.js?v=runtime-9a311f7cc63dea41";
-import { startWispMonitor } from "./core/network/wisp-monitor.js?v=runtime-9a311f7cc63dea41";
-import { openBackupDatabase } from "./core/storage/indexed-db.js?v=runtime-9a311f7cc63dea41";
+import { fetchExternalGame } from "./core/games/external-download.js?v=runtime-c551e5374034b097";
+import {toPortable,fromPortable} from "./core/storage/portable.js?v=runtime-c551e5374034b097";
+import { clientNotificationsEnabled, installNotificationSettings } from "./core/ui/client-notifications.js?v=runtime-c551e5374034b097";
+import { installBrandFavicon } from "./core/ui/brand.js?v=runtime-c551e5374034b097";
+import { startWispMonitor } from "./core/network/wisp-monitor.js?v=runtime-c551e5374034b097";
+import { openBackupDatabase } from "./core/storage/indexed-db.js?v=runtime-c551e5374034b097";
 const CLIENT_UI_REVISION = "ui-46dd214fc5bd8690";
-const RUNTIME_ASSETS_REVISION = "runtime-9a311f7cc63dea41";
+const RUNTIME_ASSETS_REVISION = "runtime-c551e5374034b097";
 // Shared lazy UI loader: all surfaces use the same compiled React bundle.
 let clientUIPromise;
 function loadClientUI() {
   if (!clientUIPromise) clientUIPromise = (async () => {
     const base = new URL(window.__groveBase || "./", document.baseURI);
-    const script = new URL("ui-dist/client-ui.js?v=runtime-9a311f7cc63dea41", base);
-    const css = new URL("ui-dist/client-ui.css?v=runtime-9a311f7cc63dea41", base);
+    const script = new URL("ui-dist/client-ui.js?v=runtime-c551e5374034b097", base);
+    const css = new URL("ui-dist/client-ui.css?v=runtime-c551e5374034b097", base);
     const version = window.__ORGANIZEON_CLIENT_VERSION__ || CLIENT_UI_REVISION;
     if (version) { script.searchParams.set("v", version); css.searchParams.set("v", version); }
     return { ui: await import(script.href), css: css.href };
@@ -1925,7 +1926,7 @@ async function showGameCatalog() {
     const download = game.externalDownload;
     if (!download?.url || !download.filename) return;
     const approved = window.confirm(
-      `${game.name} será baixado diretamente do GitHub e salvo como ` +
+      `${game.name} será baixado do GitHub ou do servidor OrganizeOn e salvo como ` +
       `${download.filename}. O OrganizeOn verificará a integridade antes de ` +
       "entregar o HTML. Continuar?",
     );
@@ -1938,61 +1939,22 @@ async function showGameCatalog() {
     action.disabled = true;
     (action.querySelector("[data-action-label]") || action).textContent = "Conectando ao GitHub…";
     try {
-      const response = await fetch(download.url, { cache: "no-store" });
-      if (!response.ok) throw new Error(`GitHub respondeu HTTP ${response.status}`);
-      const reader = response.body?.getReader();
-      const chunks = [];
-      let received = 0;
-      if (reader) {
-        while (true) {
-          const result = await reader.read();
-          if (result.done) break;
-          chunks.push(result.value);
-          received += result.value.byteLength;
-          const percent = Math.min(
-            100,
-            Math.round((received / Math.max(1, download.size)) * 100),
-          );
+      const { html, filename } = await fetchExternalGame(download, {
+        extract: extractSingleHtmlFromZip,
+        onProgress: ({ source, received, total }) => {
+          const percent = Math.min(100, Math.round(received / total * 100));
           bar.style.width = `${percent}%`;
           (action.querySelector("[data-action-label]") || action).textContent =
-            `GitHub ${formatGameBytes(received)}/${formatGameBytes(download.size)} · ${percent}%`;
-        }
-      } else {
-        const fallback = new Uint8Array(await response.arrayBuffer());
-        chunks.push(fallback);
-        received = fallback.byteLength;
-      }
-      const archive = new Uint8Array(received);
-      let offset = 0;
-      chunks.forEach((chunk) => {
-        archive.set(chunk, offset);
-        offset += chunk.byteLength;
+            `${source} ${formatGameBytes(received)}/${formatGameBytes(total)} · ${percent}%`;
+        },
       });
-      const archiveHash = await sha256Hex(archive);
-      if (archiveHash && archiveHash !== download.sha256) {
-        throw new Error("o SHA-256 recebido não corresponde à revisão fixada");
-      }
-
-      (action.querySelector("[data-action-label]") || action).textContent = download.format === "zip-single-html"
-        ? "Extraindo HTML…"
-        : "Verificando HTML…";
-      const html = download.format === "zip-single-html"
-        ? await extractSingleHtmlFromZip(archive, download.filename)
-        : archive;
-      if (download.outputSize && html.byteLength !== download.outputSize) {
-        throw new Error("o tamanho do HTML extraído é inesperado");
-      }
-      const outputHash = await sha256Hex(html);
-      if (outputHash && outputHash !== download.outputSha256) {
-        throw new Error("o SHA-256 do HTML é inesperado");
-      }
 
       const blobUrl = URL.createObjectURL(
         new Blob([html], { type: "text/html;charset=utf-8" }),
       );
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = download.filename;
+      link.download = filename;
       link.style.display = "none";
       document.body.appendChild(link);
       link.click();
@@ -2318,7 +2280,7 @@ async function showGameCatalog() {
 
   async function ensureGameServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
-    const workerURL=assetUrl("games/game-sw.js?v=runtime-9a311f7cc63dea41");workerURL.searchParams.set("v","games-runtime-2");
+    const workerURL=assetUrl("games/game-sw.js?v=runtime-c551e5374034b097");workerURL.searchParams.set("v","games-runtime-2");
     const registration=await navigator.serviceWorker.register(workerURL.href,{scope:assetUrl("games/").pathname,updateViaCache:"none"});
     const worker=registration.installing||registration.waiting||registration.active;
     if(!worker||worker.state==="activated")return;
@@ -3381,8 +3343,8 @@ function showLogin(message = "") {
   });
 
   const uiBase = new URL(window.__groveBase || "./", document.baseURI);
-  const script = new URL("ui-dist/client-ui.js?v=runtime-9a311f7cc63dea41", uiBase);
-  const stylesheet = new URL("ui-dist/client-ui.css?v=runtime-9a311f7cc63dea41", uiBase);
+  const script = new URL("ui-dist/client-ui.js?v=runtime-c551e5374034b097", uiBase);
+  const stylesheet = new URL("ui-dist/client-ui.css?v=runtime-c551e5374034b097", uiBase);
   const version = window.__ORGANIZEON_CLIENT_VERSION__ || CLIENT_UI_REVISION;
   if (version) { script.searchParams.set("v", version); stylesheet.searchParams.set("v", version); }
   void import(script.href).then((module) => {

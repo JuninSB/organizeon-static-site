@@ -2543,12 +2543,22 @@
         "sha256": "85d77967522db1a6cb9a23911ce0d90c9674f4c7ee539e88ba06cc6fd1ed30bd",
         "filename": "Offline_Download_Version.html",
         "outputSize": 23536015,
-        "outputSha256": "b97fb5f541332c28c27766c6c0d6525ddefe215033d3d4fde20fb9686a9970d7"
+        "outputSha256": "b97fb5f541332c28c27766c6c0d6525ddefe215033d3d4fde20fb9686a9970d7",
+        "fallbacks": [
+          {
+            "url": "https://organizeon.com.br/d1/downloads/Eaglercraft_1.5.2_Offline.zip",
+            "format": "zip-single-html",
+            "size": 9283201,
+            "sha256": "85d77967522db1a6cb9a23911ce0d90c9674f4c7ee539e88ba06cc6fd1ed30bd",
+            "filename": "Offline_Download_Version.html",
+            "outputSize": 23536015,
+            "outputSha256": "b97fb5f541332c28c27766c6c0d6525ddefe215033d3d4fde20fb9686a9970d7"
+          }
+        ]
       },
       "size": 9283201,
       "sha256": "85d77967522db1a6cb9a23911ce0d90c9674f4c7ee539e88ba06cc6fd1ed30bd",
-      "files": [],
-      "unavailableReason": "A fonte deste arquivo está indisponível no GitHub."
+      "files": []
     },
     {
       "id": "eaglercraft-1-8-8",
@@ -2581,12 +2591,22 @@
         "sha256": "d5b595c44f1a9187b50bf93a82d7c5bd294dd0eab40d2f3168ab26f6e930013f",
         "filename": "EaglercraftX_1.8_u53_Offline_Signed.html",
         "outputSize": 18002822,
-        "outputSha256": "e59ab8c477d7aad12cc4d1f148a2728e2278d384e9c91d2ba6aa4eed432fc171"
+        "outputSha256": "e59ab8c477d7aad12cc4d1f148a2728e2278d384e9c91d2ba6aa4eed432fc171",
+        "fallbacks": [
+          {
+            "url": "https://organizeon.com.br/d1/downloads/eaglercraft1-8-62.zip",
+            "format": "zip-single-html",
+            "size": 13551180,
+            "sha256": "c769f8331f83c89febdf3e3cc2eabbab6a4bbb00da4eefd0e3a59746a4882779",
+            "filename": "eaglercraft1-8.html",
+            "outputSize": 34880258,
+            "outputSha256": "8d7b926f5488baba6bc0a02e02266c2f6c766a343c2a3425c1689a071a6b943c"
+          }
+        ]
       },
       "size": 13555163,
       "sha256": "d5b595c44f1a9187b50bf93a82d7c5bd294dd0eab40d2f3168ab26f6e930013f",
-      "files": [],
-      "unavailableReason": "A fonte deste arquivo está indisponível no GitHub."
+      "files": []
     },
     {
       "id": "eaglercraft-1-12-2",
@@ -2617,12 +2637,22 @@
         "sha256": "0b66debd8e456fbd425c8632c90763e1b65c694be94d999935289f991b89957e",
         "filename": "Eaglercraft_1.12_Offline_en_US.html",
         "outputSize": 31468751,
-        "outputSha256": "0b66debd8e456fbd425c8632c90763e1b65c694be94d999935289f991b89957e"
+        "outputSha256": "0b66debd8e456fbd425c8632c90763e1b65c694be94d999935289f991b89957e",
+        "fallbacks": [
+          {
+            "url": "https://organizeon.com.br/d1/downloads/eaglercraft1-12.zip",
+            "format": "zip-single-html",
+            "size": 19188743,
+            "sha256": "bdc12cd149eeae93bbde1f1ccfcce5b898c368e4bb5b986a922de64807dc5b6b",
+            "filename": "eaglercraft1-12.html",
+            "outputSize": 42935479,
+            "outputSha256": "3821e28f40cd726198d6b4988968f27a01e5b8ec7ce3a7cc8e0b5b4a7451287c"
+          }
+        ]
       },
       "size": 31468751,
       "sha256": "0b66debd8e456fbd425c8632c90763e1b65c694be94d999935289f991b89957e",
-      "files": [],
-      "unavailableReason": "A fonte deste arquivo está indisponível no GitHub."
+      "files": []
     }
   ]
 }
