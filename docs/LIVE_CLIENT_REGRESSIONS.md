@@ -32,3 +32,11 @@ Rollback privado desta publicação: `~/organizeon/backend/staging/live-regressi
 ## Consistência de cache
 
 O modo embutido do kernel não informava sempre a revisão da distribuição. Além disso, módulos legados conservavam nomes de build mesmo após mudanças. A geração do manifesto agora calcula uma revisão determinística do runtime e a aplica às referências locais de módulos; o bundle compartilhado de UI também possui revisão de conteúdo como fallback. O stylesheet principal é atualizado pela mesma revisão. Duas gerações consecutivas produzem a mesma versão. Pacotes de jogos e bibliotecas vendorizadas não são reescritos.
+
+## Publicação e verificações finais
+
+Runtime publicado no Android e no GitHub Pages, com backup local de rollback em `~/organizeon/backend/staging/live-regressions-20261118/backup/`. O D2 passou a referenciar o bundle compartilhado com revisão `live-e960d3d`. Nenhuma configuração de DNS/tunnel ou credencial foi alterada.
+
+Após o versionamento: 13 testes de distribuição aprovados; jogos simples e pacote completo baixados do GitHub, verificados e executados também no endereço público embutido do index; testes dos dois motores com cookies, formulário, JavaScript, fetch, redirects e canvas/toque aprovados. A repetição da navegação Bing → Roblox alcançou a URL de destino, mas a leitura final do corpo excedeu o timeout nessa execução; o mesmo fluxo havia sido concluído antes do ajuste de cache. A disponibilidade/latência do relay e dos sites externos continua variável.
+
+D1 live e páginas de login D2/D3/D4 responderam 200 no servidor com Host de produção; iframe do admin respondeu SAMEORIGIN. Backend, D3, D4 e sessão Xiaomi foram preservados. Testes de UI utilizaram navegador automatizado com viewport/toque mobile; não equivalem à validação física em todos os celulares. As APIs administrativas foram simuladas nos testes visuais do admin; ações administrativas reais não foram executadas.
