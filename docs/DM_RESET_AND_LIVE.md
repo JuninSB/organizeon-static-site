@@ -29,3 +29,13 @@ O login usa a autenticação existente em `api.organizeon.com.br`; nada é dupli
 - Capturas inspecionadas em largura mobile; não equivale a teste físico em todos os aparelhos ou a teste de cada site externo via proxy.
 
 Backup privado da publicação: `~/organizeon/backend/staging/dm-reset-live-20261117/backup/`. Inclui snapshots SQLite consistentes e código anterior. Rollback: restaurar os arquivos de código afetados e índices anteriores, recarregar apenas backend/D4. A coluna de versão é aditiva; não restaurar bancos antigos sobre novas mensagens. D3/D4 mantêm assets anteriores para sessões abertas. O diretório live pode ser retirado sem afetar downloads ou D2. Xiaomi não é reiniciado.
+
+### Resultado da publicação (17/11/2026)
+
+Código `3379684`, distribuição `7a5fd2e`, GitHub Pages execução `44203813853` concluída com sucesso. Os quatro bundles públicos client/admin tiveram SHA-256 comparado ao build local. D2 usa revisão `dm-reset-7a5fd2e`. O runtime live foi instalado no Android e o teste Playwright passou pelo endereço público, incluindo login, convidado e inicialização do service worker/Scramjet no escopo correto. O menu D4 passou usando bundles públicos, com API de mensagens interceptada por fixtures para evitar alterações reais.
+
+Na instalação D4 é obrigatório publicar `d4-dist/d4.html` como `~/organizeon/d4/frontend/dist/index.html`, que é o fallback servido pelo Python. Somente copiar `d4.html` não atualiza o site. D3 usa o próprio `dist/index.html`.
+
+Após a publicação, D2/D3/D4 login responderam 200; a API privada D4 respondeu 401 sem autenticação. Backend PID6526, D4 PID6525, D3 PID7602 e tmux Xiaomi ativo na checagem final. A coluna `reset_version` foi confirmada no banco **ativo** `~/.local/share/organizeon/direct-messages.sqlite3`; `PRAGMA quick_check` retornou `ok` para DM e e-mail. Os arquivos `~/organizeon/backend/data/direct-messages.sqlite3` e `~/organizeon/d4/data/mail.sqlite3` são legados neste ambiente e não devem ser usados para diagnosticar a aplicação ativa. Snapshots dos bancos ativos, após a migração aditiva, estão no backup com prefixo `active-`.
+
+Foi adicionado teste de sincronização por polling: reset recebido do outro participante limpa o histórico local. O teste não reseta conversas reais. Limite: não foi validado envio de notificações nativas em um telefone físico, nem navegação por todos os serviços externos através do proxy.
