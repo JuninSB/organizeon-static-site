@@ -28,3 +28,7 @@ Servidor live: `~/organizeon/backend/live-client`. Gerar com `node scripts/updat
 A revisão do service worker é `proxy-runtime-4`. Atualizar a página permite ativar o runtime novo; não é necessário apagar cookies, cache geral ou perfis. O código do backend fica na cópia de recuperação em `server-backup/organizeon-backend-source.tar.gz`, sem dados/segredos.
 
 Rollback privado desta publicação: `~/organizeon/backend/staging/live-regressions-20261118/backup/`. Restaurar somente o handler, runtime e template D2 anteriores; recarregar apenas o backend se restaurar código Node. Não substituir bancos nem reiniciar Xiaomi/D3/D4. Não houve alterações de túnel, DNS ou portas.
+
+## Consistência de cache
+
+O modo embutido do kernel não informava sempre a revisão da distribuição. Além disso, módulos legados conservavam nomes de build mesmo após mudanças. A geração do manifesto agora calcula uma revisão determinística do runtime e a aplica às referências locais de módulos; o bundle compartilhado de UI também possui revisão de conteúdo como fallback. O stylesheet principal é atualizado pela mesma revisão. Duas gerações consecutivas produzem a mesma versão. Pacotes de jogos e bibliotecas vendorizadas não são reescritos.

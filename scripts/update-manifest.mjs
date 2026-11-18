@@ -1,5 +1,9 @@
+import {versionRuntime} from "./version-runtime.mjs";
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
+
+const runtimeManifest=JSON.parse(await readFile(new URL('../download-manifest.json',import.meta.url),'utf8'));
+await versionRuntime(new URL('../',import.meta.url),runtimeManifest);
 
 // Version admin assets by their content; the HTML itself is then hashed normally.
 const adminHtmlUrl = new URL('../admin.html', import.meta.url);

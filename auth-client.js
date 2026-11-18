@@ -1,16 +1,18 @@
-import {toPortable,fromPortable} from "./core/storage/portable.js";
-import { clientNotificationsEnabled, installNotificationSettings } from "./core/ui/client-notifications.js";
-import { installBrandFavicon } from "./core/ui/brand.js";
-import { startWispMonitor } from "./core/network/wisp-monitor.js";
-import { openBackupDatabase } from "./core/storage/indexed-db.js";
+import {toPortable,fromPortable} from "./core/storage/portable.js?v=runtime-9a311f7cc63dea41";
+import { clientNotificationsEnabled, installNotificationSettings } from "./core/ui/client-notifications.js?v=runtime-9a311f7cc63dea41";
+import { installBrandFavicon } from "./core/ui/brand.js?v=runtime-9a311f7cc63dea41";
+import { startWispMonitor } from "./core/network/wisp-monitor.js?v=runtime-9a311f7cc63dea41";
+import { openBackupDatabase } from "./core/storage/indexed-db.js?v=runtime-9a311f7cc63dea41";
+const CLIENT_UI_REVISION = "ui-46dd214fc5bd8690";
+const RUNTIME_ASSETS_REVISION = "runtime-9a311f7cc63dea41";
 // Shared lazy UI loader: all surfaces use the same compiled React bundle.
 let clientUIPromise;
 function loadClientUI() {
   if (!clientUIPromise) clientUIPromise = (async () => {
     const base = new URL(window.__groveBase || "./", document.baseURI);
-    const script = new URL("ui-dist/client-ui.js", base);
-    const css = new URL("ui-dist/client-ui.css", base);
-    const version = window.__ORGANIZEON_CLIENT_VERSION__;
+    const script = new URL("ui-dist/client-ui.js?v=runtime-9a311f7cc63dea41", base);
+    const css = new URL("ui-dist/client-ui.css?v=runtime-9a311f7cc63dea41", base);
+    const version = window.__ORGANIZEON_CLIENT_VERSION__ || CLIENT_UI_REVISION;
     if (version) { script.searchParams.set("v", version); css.searchParams.set("v", version); }
     return { ui: await import(script.href), css: css.href };
   })().catch(error => { clientUIPromise = null; throw error; });
@@ -54,6 +56,8 @@ async function mountClientPage(id, props) {
 
 const config = window.__ORGANIZEON_CONFIG__;
 installBrandFavicon(new URL(window.__groveBase||"./",document.baseURI));
+const mainStylesheet=document.querySelector('link[rel="stylesheet"][href*="assets/jdht-s-SOkYHzV0.css"]');
+if(mainStylesheet){const href=new URL(mainStylesheet.href);href.searchParams.set("v",RUNTIME_ASSETS_REVISION);mainStylesheet.href=href.href;}
 const tokenStorageKey = "organizeon-access-token";
 const guestStorageKey = "organizeon-guest-mode";
 const proxyServerStorageKey = "organizeon-proxy-server";
@@ -960,7 +964,7 @@ function restartClientAtMain() {
 
 function openDashboardWindow() {
   const dashboardLocation = new URL("admin.html", document.baseURI);
-  dashboardLocation.searchParams.set("v", window.__ORGANIZEON_CLIENT_VERSION__ || "contracts-20261116-1");
+  dashboardLocation.searchParams.set("v", window.__ORGANIZEON_CLIENT_VERSION__ || CLIENT_UI_REVISION);
   const dashboardUrl = dashboardLocation.href;
   const dashboardOrigin = new URL(dashboardUrl).origin;
   dashboardPanelCleanup?.();
@@ -1682,7 +1686,7 @@ async function showGameCatalog() {
 
   try {
     await catalogStylesReady;
-    const catalogUrl=assetUrl("games/catalog.json");catalogUrl.searchParams.set("v",window.__ORGANIZEON_CLIENT_VERSION__||"current");
+    const catalogUrl=assetUrl("games/catalog.json");catalogUrl.searchParams.set("v",window.__ORGANIZEON_CLIENT_VERSION__||CLIENT_UI_REVISION);
     const response = await fetch(
       catalogUrl,
       { cache: "no-cache" },
@@ -2314,7 +2318,7 @@ async function showGameCatalog() {
 
   async function ensureGameServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
-    const workerURL=assetUrl("games/game-sw.js");workerURL.searchParams.set("v","games-runtime-2");
+    const workerURL=assetUrl("games/game-sw.js?v=runtime-9a311f7cc63dea41");workerURL.searchParams.set("v","games-runtime-2");
     const registration=await navigator.serviceWorker.register(workerURL.href,{scope:assetUrl("games/").pathname,updateViaCache:"none"});
     const worker=registration.installing||registration.waiting||registration.active;
     if(!worker||worker.state==="activated")return;
@@ -3377,9 +3381,9 @@ function showLogin(message = "") {
   });
 
   const uiBase = new URL(window.__groveBase || "./", document.baseURI);
-  const script = new URL("ui-dist/client-ui.js", uiBase);
-  const stylesheet = new URL("ui-dist/client-ui.css", uiBase);
-  const version = window.__ORGANIZEON_CLIENT_VERSION__;
+  const script = new URL("ui-dist/client-ui.js?v=runtime-9a311f7cc63dea41", uiBase);
+  const stylesheet = new URL("ui-dist/client-ui.css?v=runtime-9a311f7cc63dea41", uiBase);
+  const version = window.__ORGANIZEON_CLIENT_VERSION__ || CLIENT_UI_REVISION;
   if (version) { script.searchParams.set("v", version); stylesheet.searchParams.set("v", version); }
   void import(script.href).then((module) => {
     if (!wrapper.isConnected || fallbackShown) return;

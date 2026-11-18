@@ -1,4 +1,4 @@
-import { initializeScramjet } from "./scramjet-bootstrap.js";
+import { initializeScramjet } from "./scramjet-bootstrap.js?v=runtime-9a311f7cc63dea41";
 /** One native engine browsing context, retained across URL changes. */
 export async function createFrameSession(
   frame,
