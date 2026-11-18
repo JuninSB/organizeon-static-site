@@ -47,6 +47,7 @@ export async function initializeScramjet(base) {
       const { ScramjetController } = await loadRuntime(base);
       const controller = new ScramjetController({
         prefix: `${base}dtix/`,
+        flags: {sourcemaps:false},
         files: {
           wasm: `${base}xzmo/grhp.wasm.wasm`,
           all: `${base}xzmo/grhp.all.js`,

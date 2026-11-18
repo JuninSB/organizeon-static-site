@@ -7,6 +7,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   const scope = new URL(self.registration.scope);
   if (
+    event.request.method !== "GET" ||
     url.origin !== scope.origin ||
     (!url.pathname.includes("/games/library/") &&
       !url.pathname.includes("/games/runtime/ruffle/"))
@@ -16,9 +17,14 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
-      const cached = await cache.match(event.request);
+      const cached = await cache.match(event.request,{ignoreSearch:true});
       if (cached) return cached;
-      const response = await fetch(event.request);
+      const relative=url.pathname.slice(url.pathname.indexOf("/games/")+1);
+      const source=new URL(relative,"https://juninsb.github.io/organizeon-static-site/");source.search=url.search;
+      const downloaded=await fetch(source,{credentials:"omit"});
+      const headers=new Headers(downloaded.headers);
+      for(const name of ["x-frame-options","content-security-policy","content-security-policy-report-only"])headers.delete(name);
+      const response=new Response(downloaded.body,{status:downloaded.status,statusText:downloaded.statusText,headers});
       if (response.ok) {
         await cache.put(event.request, response.clone());
       }

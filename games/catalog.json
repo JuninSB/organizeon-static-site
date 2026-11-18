@@ -2509,7 +2509,8 @@
       },
       "size": 2337856,
       "sha256": "f4e7c9fe4da53b7bfd032564a2af5359162eb956aa05d74e9e0930791395f17c",
-      "files": []
+      "files": [],
+      "unavailableReason": "A fonte deste arquivo está indisponível no GitHub."
     },
     {
       "id": "eaglercraft-1-5-2",
@@ -2546,7 +2547,8 @@
       },
       "size": 9283201,
       "sha256": "85d77967522db1a6cb9a23911ce0d90c9674f4c7ee539e88ba06cc6fd1ed30bd",
-      "files": []
+      "files": [],
+      "unavailableReason": "A fonte deste arquivo está indisponível no GitHub."
     },
     {
       "id": "eaglercraft-1-8-8",
@@ -2583,7 +2585,8 @@
       },
       "size": 13555163,
       "sha256": "d5b595c44f1a9187b50bf93a82d7c5bd294dd0eab40d2f3168ab26f6e930013f",
-      "files": []
+      "files": [],
+      "unavailableReason": "A fonte deste arquivo está indisponível no GitHub."
     },
     {
       "id": "eaglercraft-1-12-2",
@@ -2618,7 +2621,8 @@
       },
       "size": 31468751,
       "sha256": "0b66debd8e456fbd425c8632c90763e1b65c694be94d999935289f991b89957e",
-      "files": []
+      "files": [],
+      "unavailableReason": "A fonte deste arquivo está indisponível no GitHub."
     }
   ]
 }

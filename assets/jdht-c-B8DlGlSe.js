@@ -534,7 +534,7 @@ async function de(o, e) {
   if ("serviceWorker" in navigator) {
     const t = o || O,
       a = o ? L(o) : W,
-      i = `${window.__groveBase}${I}?v=proxy-runtime-3`;
+      i = `${window.__groveBase}${I}?v=proxy-runtime-4`;
     const c = await navigator.serviceWorker.register(i);
     ((c.waiting || c.installing) && (await c.update()),
       await navigator.serviceWorker.ready,

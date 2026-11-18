@@ -1,3 +1,6 @@
+import {toPortable,fromPortable} from "./core/storage/portable.js";
+import { clientNotificationsEnabled, installNotificationSettings } from "./core/ui/client-notifications.js";
+import { installBrandFavicon } from "./core/ui/brand.js";
 import { startWispMonitor } from "./core/network/wisp-monitor.js";
 import { openBackupDatabase } from "./core/storage/indexed-db.js";
 // Shared lazy UI loader: all surfaces use the same compiled React bundle.
@@ -23,6 +26,7 @@ async function notificationService() {
   return notificationUI;
 }
 async function showToast(message, kind = "info", id) {
+  if(kind!=="error"&&!clientNotificationsEnabled())return;
   try { (await notificationService()).showClientToast(String(message), kind, id); }
   catch (error) { console.warn("Falha ao exibir notificação:", error); }
 }
@@ -49,6 +53,7 @@ async function mountClientPage(id, props) {
 }
 
 const config = window.__ORGANIZEON_CONFIG__;
+installBrandFavicon(new URL(window.__groveBase||"./",document.baseURI));
 const tokenStorageKey = "organizeon-access-token";
 const guestStorageKey = "organizeon-guest-mode";
 const proxyServerStorageKey = "organizeon-proxy-server";
@@ -136,6 +141,7 @@ setupMobileMode();
 hideDefaultHomepageShortcuts();
 setupWispBandwidthSetting();
 setupBrowserIdentitySetting();
+installNotificationSettings(loadClientUI);
 window.addEventListener("storage", (event) => {
   if (
     event.key === guestStorageKey &&
@@ -465,6 +471,7 @@ function publishConnectionState(state) {
 }
 
 function showConnectionStatus(title, detail = "", percent = null, autoHideMs = 8000) {
+  if(!clientNotificationsEnabled())return;
   void notificationService().then(ui => ui.showConnectionToast(title, detail, percent, autoHideMs));
 }
 function hideConnectionStatus() {
@@ -850,70 +857,6 @@ function idbTransaction(transaction) {
     transaction.onerror = () => reject(transaction.error);
     transaction.onabort = () => reject(transaction.error);
   });
-}
-
-async function toPortable(value, seen = new WeakSet()) {
-  if (value instanceof Blob) return {
-    __organizeonType: "Blob",
-    type: value.type,
-    data: arrayBufferToBase64(await value.arrayBuffer()),
-  };
-  if (typeof value === "bigint") return {
-    __organizeonType: "BigInt",
-    data: String(value),
-  };
-  if (value instanceof ArrayBuffer) return {
-    __organizeonType: "ArrayBuffer",
-    data: arrayBufferToBase64(value),
-  };
-  if (ArrayBuffer.isView(value)) return {
-    __organizeonType: value.constructor.name,
-    data: arrayBufferToBase64(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)),
-  };
-  if (Array.isArray(value)) {
-    if (seen.has(value)) return "[Circular]";
-    seen.add(value);
-    const result = await Promise.all(value.map((item) => toPortable(item, seen)));
-    seen.delete(value);
-    return result;
-  }
-  if (value && typeof value === "object") {
-    if (seen.has(value)) return "[Circular]";
-    seen.add(value);
-    const output = {};
-    for (const [key, item] of Object.entries(value)) output[key] = await toPortable(item, seen);
-    seen.delete(value);
-    return output;
-  }
-  return value;
-}
-
-function fromPortable(value) {
-  if (!value || typeof value !== "object") return value;
-  if (value.__organizeonType === "BigInt") return BigInt(value.data);
-  if (value.__organizeonType === "Blob") return new Blob([base64ToArrayBuffer(value.data)], { type: value.type });
-  if (value.__organizeonType === "ArrayBuffer") return base64ToArrayBuffer(value.data);
-  if (value.__organizeonType && globalThis[value.__organizeonType]?.BYTES_PER_ELEMENT) {
-    return new globalThis[value.__organizeonType](base64ToArrayBuffer(value.data));
-  }
-  if (Array.isArray(value)) return value.map(fromPortable);
-  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, fromPortable(item)]));
-}
-
-function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-  }
-  return btoa(binary);
-}
-
-function base64ToArrayBuffer(value) {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-  return bytes.buffer;
 }
 
 function restoreCookies(serialized) {
@@ -1668,6 +1611,8 @@ async function showGameCatalog() {
   let activeGame = null;
   let toolbarUI = null;
   let catalogGeneration = 0;
+  const cardControllers=new WeakMap();
+  const updateCard=(card,patch)=>cardControllers.get(card)?.update(patch);
   wrapper.querySelector(".topbar").style.display = "none"; filters.style.display = "none";
   const isMobileViewport = matchMedia("(max-width: 700px), (pointer: coarse)").matches;
   const assetUrl = (path) => {
@@ -1737,8 +1682,9 @@ async function showGameCatalog() {
 
   try {
     await catalogStylesReady;
+    const catalogUrl=assetUrl("games/catalog.json");catalogUrl.searchParams.set("v",window.__ORGANIZEON_CLIENT_VERSION__||"current");
     const response = await fetch(
-      assetUrl("games/catalog.json"),
+      catalogUrl,
       { cache: "no-cache" },
     );
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -1851,16 +1797,15 @@ async function showGameCatalog() {
       games.map(async (game) => {
         const card = createGameCard(game);
         grid.appendChild(card);
+        if(game.unavailableReason){updateCard(card,{actionDisabled:true,actionLabel:"Fonte indisponível"});return;}
         if (game.type === "external-download") {
           const action = card.querySelector(".action");
-          action.disabled = false;
-          (action.querySelector("[data-action-label]") || action).textContent = "Baixar HTML";
+          updateCard(card,{actionDisabled:false,actionLabel:"Baixar HTML"});
           return;
         }
         if (game.type === "remote") {
           const action = card.querySelector(".action");
-          action.disabled = false;
-          (action.querySelector("[data-action-label]") || action).textContent = "Jogar online";
+          updateCard(card,{actionDisabled:false,actionLabel:"Jogar online"});
           return;
         }
         const installed = await isGameInstalled(game);
@@ -1872,7 +1817,7 @@ async function showGameCatalog() {
   function createGameCard(game) {
     const card = document.createElement('article'); card.className = 'modern-game-card'; card.dataset.gameId = game.id;
     grid.append(card);
-    catalogUI.mountGameCard(card, { ...game, cover: assetUrl(`games/${game.cover}`).href,
+    const controller=catalogUI.mountGameCard(card, { ...game, cover: assetUrl(`games/${game.cover}`).href,
       platforms: game.platforms || ['pc'], attribution: game.attribution || 'OrganizeOn',
       sizeLabel: game.type === 'remote' ? 'Online' : formatGameBytes(game.size || 0),
       trending: (gameStats.trending || []).includes(game.id), hasCredits: Boolean(game.attribution || game.source || game.license),
@@ -1881,13 +1826,15 @@ async function showGameCatalog() {
       onRelay: async () => { await navigator.clipboard.writeText(game.relayUrl); void showToast('Relay copiado'); },
       onCredits: () => showGameCredits(game),
     }, catalogCSS);
-    // The React action receives the same cache/download lifecycle as the old card.
+    cardControllers.set(card,controller);
+    // React owns disabled/installed/progress visibility; DOM labels only show byte progress.
     updateGameStatsElement(card.querySelector('.game-stats'), game.id);
     return card;
   }
 
   function setCardInstalled(card, installed) {
     card.classList.toggle("installed", installed);
+    updateCard(card,{installed,actionDisabled:false,actionLabel:installed?"Jogar":"Baixar"});
     const action = card.querySelector(".action");
     if (!action) return;
     action.disabled = false;
@@ -1983,6 +1930,7 @@ async function showGameCatalog() {
     const action = card.querySelector(".action");
     const bar = card.querySelector(".progress span");
     card.classList.add("downloading");
+    updateCard(card,{actionDisabled:true,downloading:true});
     action.disabled = true;
     (action.querySelector("[data-action-label]") || action).textContent = "Conectando ao GitHub…";
     try {
@@ -2050,7 +1998,7 @@ async function showGameCatalog() {
       bar.style.width = "100%";
       (action.querySelector("[data-action-label]") || action).textContent = "HTML baixado";
     } catch (error) {
-      (action.querySelector("[data-action-label]") || action).textContent = "Tentar novamente";
+      updateCard(card,{actionLabel:"Tentar novamente",actionDisabled:false});
       window.alert(
         `Não foi possível baixar ${game.name}: ${
           error instanceof Error ? error.message : "erro desconhecido"
@@ -2060,9 +2008,10 @@ async function showGameCatalog() {
       action.disabled = false;
       window.setTimeout(() => {
         card.classList.remove("downloading");
+        updateCard(card,{actionDisabled:false,downloading:false});
         bar.style.width = "0";
         if ((action.querySelector("[data-action-label]") || action).textContent === "HTML baixado") {
-          (action.querySelector("[data-action-label]") || action).textContent = "Baixar novamente";
+          updateCard(card,{actionLabel:"Baixar novamente",actionDisabled:false});
         }
       }, 900);
     }
@@ -2133,6 +2082,7 @@ async function showGameCatalog() {
     const action = card.querySelector(".action");
     const bar = card.querySelector(".progress span");
     card.classList.add("downloading");
+    updateCard(card,{actionDisabled:true,downloading:true});
     action.disabled = true;
     (action.querySelector("[data-action-label]") || action).textContent = "Baixando 0%";
     try {
@@ -2141,7 +2091,7 @@ async function showGameCatalog() {
       let completedBytes = 0;
       for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
-        const response = await fetch(gameFileUrl(file), { cache: "no-cache" });
+        const response = await fetch(new URL(`games/${file.path}`, "https://juninsb.github.io/organizeon-static-site/"), { cache: "no-cache" });
         if (!response.ok) throw new Error(`${file.path}: HTTP ${response.status}`);
         const reader = response.body?.getReader();
         const chunks = [];
@@ -2175,6 +2125,7 @@ async function showGameCatalog() {
           throw new Error(`${file.path}: verificação de integridade falhou.`);
         }
         const headers = new Headers(response.headers);
+        for(const name of ["x-frame-options","content-security-policy","content-security-policy-report-only"])headers.delete(name);
         headers.set("X-OrganizeOn-Game-Hash", file.sha256);
         await cache.put(
           gameFileUrl(file),
@@ -2193,7 +2144,7 @@ async function showGameCatalog() {
       bar.style.width = "100%";
     } catch (error) {
       action.disabled = false;
-      (action.querySelector("[data-action-label]") || action).textContent = "Tentar novamente";
+      updateCard(card,{actionLabel:"Tentar novamente",actionDisabled:false});
       window.alert(
         `Não foi possível baixar ${game.name}: ${
           error instanceof Error ? error.message : "erro desconhecido"
@@ -2202,6 +2153,7 @@ async function showGameCatalog() {
     } finally {
       window.setTimeout(() => {
         card.classList.remove("downloading");
+        updateCard(card,{actionDisabled:false,downloading:false});
         bar.style.width = "0";
       }, 350);
     }
@@ -2362,27 +2314,15 @@ async function showGameCatalog() {
 
   async function ensureGameServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
-    const registration = await navigator.serviceWorker.register(
-      assetUrl("games/game-sw.js").href,
-      { scope: assetUrl("games/").pathname },
-    );
-    if (registration.active) return;
-    const worker = registration.installing || registration.waiting;
-    if (!worker) return;
-    await new Promise((resolve, reject) => {
-      const timeout = window.setTimeout(
-        () => reject(new Error("Tempo esgotado ao iniciar o cache de jogos.")),
-        8000,
-      );
-      worker.addEventListener("statechange", () => {
-        if (worker.state === "activated") {
-          clearTimeout(timeout);
-          resolve();
-        } else if (worker.state === "redundant") {
-          clearTimeout(timeout);
-          reject(new Error("Service worker rejeitado."));
-        }
-      });
+    const workerURL=assetUrl("games/game-sw.js");workerURL.searchParams.set("v","games-runtime-2");
+    const registration=await navigator.serviceWorker.register(workerURL.href,{scope:assetUrl("games/").pathname,updateViaCache:"none"});
+    const worker=registration.installing||registration.waiting||registration.active;
+    if(!worker||worker.state==="activated")return;
+    await new Promise((resolve,reject)=>{
+      const finish=error=>{clearTimeout(timeout);worker.removeEventListener("statechange",check);error?reject(error):resolve();};
+      const check=()=>{if(worker.state==="activated")finish();else if(worker.state==="redundant")finish(new Error("Service worker rejeitado."));};
+      const timeout=window.setTimeout(()=>finish(new Error("Tempo esgotado ao iniciar o cache de jogos.")),8000);
+      worker.addEventListener("statechange",check);check();
     });
   }
 

@@ -1,28 +1,17 @@
 {
-  "name": "Fern",
-  "short_name": "Fern",
-  "description": "Fern - fast, private web proxy",
+  "name": "OrganizeOn",
+  "short_name": "OrganizeOn",
+  "description": "OrganizeOn · Cliente Web",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
-  "theme_color": "#2b2b2b",
-  "background_color": "#2b2b2b",
+  "theme_color": "#09090b",
+  "background_color": "#09090b",
   "icons": [
     {
-      "src": "./fernleaf-192.png",
-      "sizes": "192x192",
+      "src": "./brand/organizeon-icon.png",
+      "sizes": "any",
       "type": "image/png"
-    },
-    {
-      "src": "./fernleaf.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "./fernleaf.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }

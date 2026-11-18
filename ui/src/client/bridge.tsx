@@ -60,14 +60,10 @@ export function mountGameCard(
   inlineMounts.get(host)?.unmount();
   ensureDocumentStylesheet(stylesheetHref, host);
   const root = createRoot(host);
-  flushSync(() =>
-    root.render(
-      <div className="organizeon-ui dark min-h-full">
-        <GameCard game={game} />
-      </div>,
-    ),
-  );
-  inlineMounts.set(host, root);
+  let current=game;
+  const render=()=>flushSync(()=>root.render(<div className="organizeon-ui dark min-h-full"><GameCard game={current}/></div>));
+  render();inlineMounts.set(host,root);
+  return {update:(patch:Partial<GameCardData>)=>{current={...current,...patch};render();}};
 }
 
 export function unmountGameCard(host: HTMLElement) {
@@ -363,6 +359,9 @@ export function mountClientToaster(host: HTMLElement, stylesheetHref: string) {
         position="bottom-right"
         theme="dark"
         closeButton
+        expand
+        gap={12}
+        visibleToasts={5}
         richColors={false}
       />
     </PortalContextProvider>,
