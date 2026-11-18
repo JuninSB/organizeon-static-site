@@ -17,7 +17,7 @@ function loadRuntime(base) {
     });
   return runtimePromise;
 }
-function workerReady(worker) {
+function workerReady(worker, type = "organizeon:scramjet-ready") {
   return new Promise((resolve, reject) => {
     const channel = new MessageChannel();
     const finish = (error) => {
@@ -35,7 +35,7 @@ function workerReady(worker) {
           ? null
           : new Error(data?.error || "Falha ao preparar o Scramjet."),
       );
-    worker.postMessage({ type: "organizeon:scramjet-ready" }, [channel.port2]);
+    worker.postMessage({ type }, [channel.port2]);
   });
 }
 export async function initializeScramjet(base) {
@@ -43,6 +43,7 @@ export async function initializeScramjet(base) {
     throw new Error("O service worker ainda não controla esta página.");
   if (!controllerPromise)
     controllerPromise = (async () => {
+      await workerReady(navigator.serviceWorker.controller, "organizeon:scramjet-schema");
       const { ScramjetController } = await loadRuntime(base);
       const controller = new ScramjetController({
         prefix: `${base}dtix/`,

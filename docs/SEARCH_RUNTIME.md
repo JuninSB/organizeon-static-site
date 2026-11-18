@@ -42,3 +42,11 @@ As mudanças em `rlr/obmw.bundle.js` e `xzmo/grhp.all.js` são patches locais so
 Runtime: reconstruir com `node scripts/update-manifest.mjs` e `node scripts/build-live-client.mjs`. D3/D4 usam assets novos e índices atômicos, preservando hashes antigos; no D4 o `d4.html` do build vira `index.html` no servidor. D2 recebe revisão do bundle após Pages concluir e verificação de SHA-256.
 
 Backup privado: `~/organizeon/backend/staging/search-summary-20261117/backup/` (código, runtime, índices e snapshot consistente do DM ativo). Restaurar código/índices anteriores e recarregar somente backend se necessário. A tabela de recibos é aditiva; não substituir banco ativo por snapshot antigo sobre mensagens novas. O Xiaomi não participa desta alteração.
+
+### Verificação publicada
+
+Código `fd647ac`, distribuição `7aa8ff4`, Pages execução `44211727938` concluída. Os quatro bundles client/admin tiveram SHA-256 público comparado ao build local. D2 usa revisão `search-7aa8ff4`; D3/D4 receberam os builds compartilhados. Backend PID8346, D3 PID7602, D4 PID6525 e Xiaomi ativo após publicação; SQLite ativo passou quick_check.
+
+A rodada final encontrou outra condição de restauração: o controlador não criava stores se um banco de versão maior já existisse incompleto. O handshake `organizeon:scramjet-schema` agora prepara o esquema antes de controller.init. O worker usa revisão explícita `proxy-runtime-3` para aguardar o controlador correto, inclusive em navegadores com workers anteriores.
+
+`ui/e2e/live-search-public.cjs`, executado separadamente com MODE=ultraviolet e MODE=scramjet, passou para ambos no domínio público: página externa pelo relay público real, contexto mobile, bancos locais na versão79, container/controles e recarga direta da rota. Capturas reais do Chromium em `/tmp/live-search-public-{ultraviolet,scramjet}.png`. O teste do seletor WISP também passou no endereço público, usando WebSocket simulado para verificar a cadência e o encerramento. Nenhuma conversa real foi apagada nem mensagens foram marcadas como lidas para testar o resumo.

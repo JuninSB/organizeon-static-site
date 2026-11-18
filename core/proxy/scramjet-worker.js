@@ -53,6 +53,10 @@ async function prepareScramjetWorker() {
   return worker;
 }
 self.addEventListener("message", (event) => {
+  if(event.data?.type === "organizeon:scramjet-schema"){
+    event.waitUntil(ensureScramjetSchema().then(()=>event.ports[0]?.postMessage({ok:true}),()=>event.ports[0]?.postMessage({ok:false,error:"Não foi possível preparar o armazenamento do Scramjet."})));
+    return;
+  }
   if (event.data?.type !== "organizeon:scramjet-ready") return;
   event.waitUntil(
     prepareScramjetWorker().then(
