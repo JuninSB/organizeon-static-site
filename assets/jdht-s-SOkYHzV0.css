@@ -28,3 +28,6 @@
 @media (prefers-reduced-motion: reduce) {
   #root *, #root *::before, #root *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
 }
+
+/* Browser controls: a full address row on touch-sized viewports. */
+:root{--organizeon-browser-controls-height:70px}.oo-browser-controls{display:flex;align-items:center;gap:8px}.oo-browser-address{flex:1;min-width:0}@media(max-width:639px){:root{--organizeon-browser-controls-height:112px}.oo-browser-controls{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.oo-browser-address{grid-column:1/-1;grid-row:1;min-width:0}.oo-browser-controls>button{justify-self:center}}
