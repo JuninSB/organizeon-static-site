@@ -22986,6 +22986,7 @@ var CP, wP, TP, EP = o((() => {
 	} catch {}
 })), DP, OP, kP, AP, jP, MP = o((() => {
 	Jc(), _(), DP = encodeURIComponent, OP = 0, kP = null, AP = /* @__PURE__ */ new Map(), jP = {
+		unreadSummary: () => p("/dm/notifications/unread-summary", { method: "POST" }),
 		invalidateConversation(e) {
 			OP++, AP.delete(e), kP = null;
 		},
@@ -23357,26 +23358,26 @@ function eF(e) {
 async function tF() {
 	if (lF || !aF.username || !sF) return;
 	cF && clearTimeout(cF), lF = !0;
-	let e = oF, t = uF;
+	let e = oF, t = uF, n = !aF.inbox;
 	try {
-		let n = aF.open && !document.hidden ? aF.selectedId : null, r = n ? aF.threads[n] : null, i = n && !r?.loading ? jP.messages(n, r?.messages.length ? { after: r.messages.at(-1).seq } : {}) : null, [a, o] = await Promise.all([jP.inbox(dF), i]), s = ZP(a);
+		let r = aF.open && !document.hidden ? aF.selectedId : null, i = r ? aF.threads[r] : null, a = r && !i?.loading ? jP.messages(r, i?.messages.length ? { after: i.messages.at(-1).seq } : {}) : null, [o, s] = await Promise.all([jP.inbox(dF), a]), c = ZP(o);
 		if (e !== oF) return;
-		if (!Array.isArray(s.conversations) || !Array.isArray(s.requests) || s.me?.username !== aF.username) throw Error("As mensagens estão temporariamente indisponíveis.");
+		if (!Array.isArray(c.conversations) || !Array.isArray(c.requests) || c.me?.username !== aF.username) throw Error("As mensagens estão temporariamente indisponíveis.");
 		if (t !== uF) return;
-		let c = new Set(s.events.filter((e) => e.kind === "reset").map((e) => e.conversationId));
-		for (let e of s.conversations) {
+		let l = new Set(c.events.filter((e) => e.kind === "reset").map((e) => e.conversationId));
+		for (let e of c.conversations) {
 			let t = aF.inbox?.conversations.find((t) => t.id === e.id);
-			t && (t.resetVersion || 0) !== (e.resetVersion || 0) && c.add(e.id);
+			t && (t.resetVersion || 0) !== (e.resetVersion || 0) && l.add(e.id);
 		}
-		if (o && n) {
-			let e = s.conversations.find((e) => e.id === n);
-			(o.conversation.resetVersion || 0) > (e?.resetVersion || 0) && (c.add(n), s = {
-				...s,
-				conversations: s.conversations.map((e) => e.id === n ? o.conversation : e)
+		if (s && r) {
+			let e = c.conversations.find((e) => e.id === r);
+			(s.conversation.resetVersion || 0) > (e?.resetVersion || 0) && (l.add(r), c = {
+				...c,
+				conversations: c.conversations.map((e) => e.id === r ? s.conversation : e)
 			});
 		}
-		for (let e of c) eF(e);
-		for (let e of s.events) {
+		for (let e of l) eF(e);
+		for (let e of c.events) {
 			if (!e.messageId || ![
 				"edited",
 				"deleted",
@@ -23385,60 +23386,70 @@ async function tF() {
 			let t = fF.get(e.conversationId) || /* @__PURE__ */ new Set();
 			t.add(e.messageId), fF.set(e.conversationId, t);
 		}
-		dF = s.cursor, _F({
-			inbox: s,
+		if (dF = c.cursor, _F({
+			inbox: c,
 			connected: !0,
 			updatedAt: Date.now(),
 			error: ""
-		});
-		let l = aF.selectedId;
-		if (aF.open && l && !document.hidden && o && n === l) {
-			let n = aF.threads[l] || hF(), r = c.has(l) ? await jP.messages(l) : o;
+		}), n && c.settings.notifications) try {
+			let n = await jP.unreadSummary();
+			if (e !== oF || t !== uF) return;
+			n.count > 0 && _F({ notices: [...aF.notices, {
+				id: -2,
+				conversationId: "",
+				person: c.me,
+				kind: "unread_summary",
+				text: `Você tem ${n.count} ${n.count === 1 ? "mensagem não lida" : "mensagens não lidas"}.`
+			}] });
+		} catch {}
+		let u = aF.selectedId;
+		if (aF.open && u && !document.hidden && s && r === u) {
+			let n = aF.threads[u] || hF(), r = l.has(u) ? await jP.messages(u) : s;
 			if (e !== oF || t !== uF || e !== oF || t !== uF) return;
-			let i = vF(n.messages, r.messages), a = fF.get(l);
+			let i = vF(n.messages, r.messages), a = fF.get(u);
 			for (let n of [...a || []]) if (!i.some((e) => e.id === n)) a?.delete(n);
 			else try {
 				let r = await jP.message(n);
 				if (e !== oF || t !== uF) return;
 				i = vF(i, [r.message]), a?.delete(n);
 			} catch {}
-			a?.size || fF.delete(l), JP(l, {
+			a?.size || fF.delete(u), JP(u, {
 				messages: i,
 				hasMore: n.messages.length ? n.hasMore : r.hasMore,
 				typing: r.typing,
 				error: ""
 			});
-			let u = i.at(-1);
-			if (r.conversation.unread && u && document.hasFocus()) {
-				if (await jP.read(l, u.seq), e !== oF) return;
+			let o = i.at(-1);
+			if (r.conversation.unread && o && document.hasFocus()) {
+				if (await jP.read(u, o.seq), e !== oF) return;
 				_F({ inbox: {
-					...s,
-					conversations: s.conversations.map((e) => e.id === l ? {
+					...c,
+					conversations: c.conversations.map((e) => e.id === u ? {
 						...r.conversation,
 						unread: 0
 					} : e)
 				} });
 			}
 		}
-		if (s.goldBadgeNotificationPending && !document.hidden && document.hasFocus()) {
+		if (c.goldBadgeNotificationPending && !document.hidden && document.hasFocus()) {
 			let t = await jP.claimGoldBadge();
 			if (e !== oF) return;
-			t.claimed && (bP(s.me.username, s.me.profile), _F({ notices: [...aF.notices.filter((e) => e.kind !== "gold_badge"), {
+			t.claimed && (bP(c.me.username, c.me.profile), _F({ notices: [...aF.notices.filter((e) => e.kind !== "gold_badge"), {
 				id: -1,
 				conversationId: "",
-				person: s.me,
+				person: c.me,
 				text: "Você ganhou o emblema dourado OrganizeOn.",
 				kind: "gold_badge"
 			}].slice(-3) }));
 		}
-		let u = s.settings.desktop && typeof Notification < "u" && Notification.permission === "granted";
-		if (s.settings.notifications && (!document.hidden && document.hasFocus() || u)) for (let t of s.events.filter((e) => !e.claimed && ["message", "request"].includes(e.kind)).slice(-3)) {
+		let d = c.settings.desktop && typeof Notification < "u" && Notification.permission === "granted";
+		if (c.settings.notifications && (!document.hidden && document.hasFocus() || d)) for (let t of c.events.filter((e) => !e.claimed && ["message", "request"].includes(e.kind)).slice(-3)) {
 			if (aF.open && t.conversationId === aF.selectedId && !document.hidden && document.hasFocus()) continue;
 			let n = await jP.claim(t.seq);
 			if (e !== oF) return;
 			if (!n.claimed || !n.conversation) continue;
-			let r = n.conversation.peer, i = n.kind === "request" ? "Quer iniciar uma conversa com você." : s.settings.previews ? n.message?.content || "Enviou um arquivo." : "Nova mensagem direta.";
-			if (document.hidden && u) {
+			let r = n.conversation.peer, i = n.kind === "request" ? "Quer iniciar uma conversa com você." : c.settings.previews ? n.message?.content || "Enviou um arquivo." : "Nova mensagem direta.";
+			if (document.hidden && d) {
 				let e = new Notification(r.profile.displayName, {
 					body: i,
 					icon: r.profile.avatar || void 0,
@@ -23453,7 +23464,7 @@ async function tF() {
 				person: r,
 				text: i,
 				kind: n.kind || "message"
-			}].slice(-3) }), s.settings.sound && XP();
+			}].slice(-3) }), c.settings.sound && XP();
 		}
 	} catch (t) {
 		e === oF && (t instanceof g && t.status === 401 ? (dF = null, fF.clear(), pF.clear(), _F({
@@ -29009,7 +29020,7 @@ function zW({ notice: e, onProfile: t }) {
 		children: /* @__PURE__ */ (0, Y.jsxs)("div", {
 			className: "flex items-start gap-3",
 			children: [
-				e.kind === "gold_badge" ? /* @__PURE__ */ (0, Y.jsx)(EF, {}) : /* @__PURE__ */ (0, Y.jsx)(jF, {
+				e.kind === "gold_badge" ? /* @__PURE__ */ (0, Y.jsx)(EF, {}) : e.kind === "unread_summary" ? /* @__PURE__ */ (0, Y.jsx)(pn, { className: "size-9 p-1.5 text-muted-foreground" }) : /* @__PURE__ */ (0, Y.jsx)(jF, {
 					profile: e.person.profile,
 					className: "size-9"
 				}),
@@ -29018,7 +29029,7 @@ function zW({ notice: e, onProfile: t }) {
 					children: [
 						/* @__PURE__ */ (0, Y.jsx)("p", {
 							className: "truncate text-sm font-medium",
-							children: e.kind === "gold_badge" ? "OrganizeOn" : e.person.profile.displayName
+							children: e.kind === "gold_badge" ? "OrganizeOn" : e.kind === "unread_summary" ? "Mensagens diretas" : e.person.profile.displayName
 						}),
 						/* @__PURE__ */ (0, Y.jsx)("p", {
 							className: "mt-1 line-clamp-2 break-words text-xs text-muted-foreground",
@@ -29030,7 +29041,7 @@ function zW({ notice: e, onProfile: t }) {
 							size: "sm",
 							className: "mt-2",
 							onClick: () => {
-								e.kind === "gold_badge" ? t() : Q.open(e.conversationId), i();
+								e.kind === "gold_badge" ? t() : e.kind === "unread_summary" ? (Q.view("inbox"), Q.open()) : Q.open(e.conversationId), i();
 							},
 							children: e.kind === "gold_badge" ? "Ver perfil" : "Abrir"
 						})
@@ -29069,7 +29080,7 @@ function BW() {
 					children: /* @__PURE__ */ (0, Y.jsx)(Yr, { className: "size-4" })
 				})]
 			}),
-			e.map((e) => /* @__PURE__ */ (0, Y.jsx)(zW, {
+			e.filter((e) => e.kind !== "unread_summary" || t?.conversations.some((e) => e.unread > 0)).map((e) => /* @__PURE__ */ (0, Y.jsx)(zW, {
 				notice: e,
 				onProfile: () => r(t?.me.username || null)
 			}, e.id)),

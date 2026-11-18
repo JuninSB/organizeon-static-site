@@ -1,7 +1,7 @@
 {
-  "version": "v2-b7bc9c2ba86264b1",
-  "generatedAt": "2026-11-17T23:55:48.696Z",
-  "totalBytes": 13623552,
+  "version": "v2-afc22875203357b8",
+  "generatedAt": "2026-11-18T00:54:19.463Z",
+  "totalBytes": 13630485,
   "files": [
     {
       "path": "404.html",
@@ -11,7 +11,7 @@
     {
       "path": "admin.html",
       "size": 731,
-      "sha256": "9a9fcbd642621f473a9b8608e8a30b6e8bb8c9bc5b7604622b4cdb7ec346f38d"
+      "sha256": "0f55fb9a5a02783f404ebe649576b0400d01d7124eaf12d2864d862c1671f721"
     },
     {
       "path": "admin.js",
@@ -145,8 +145,8 @@
     },
     {
       "path": "assets/jdht-c-B8DlGlSe.js",
-      "size": 15669,
-      "sha256": "eecdfa971ecc870fd4c3c9932a0f505841f439292f34efc91960a503ece93822"
+      "size": 15745,
+      "sha256": "c26a57f18f1e737d9e83db7f51f78839f47aca3bc32cdea1e547286a672b805f"
     },
     {
       "path": "assets/jdht-c-B9pBM47N.js",
@@ -155,8 +155,8 @@
     },
     {
       "path": "assets/jdht-c-BElH72MW.js",
-      "size": 12259,
-      "sha256": "4cba60373d02ce57c1200e35a4623358973bc9359eb0cde065de571106ed4861"
+      "size": 12132,
+      "sha256": "89b3f43bec56b8e399f473b4eeac053041fbd9a79a4751aa2cac761b33fd6efb"
     },
     {
       "path": "assets/jdht-c-BQ94-5j3.js",
@@ -185,8 +185,8 @@
     },
     {
       "path": "assets/jdht-c-ChjuTX8m.js",
-      "size": 8059,
-      "sha256": "9a09db558e33b6c153392495873ab881aeb921a3795718a3f1bdb4f86071d2ca"
+      "size": 9260,
+      "sha256": "799efe81cbbf689e18be639a9bdac8e06abba516281af99d2fdef42696705605"
     },
     {
       "path": "assets/jdht-c-CjfsCP1K.js",
@@ -275,8 +275,8 @@
     },
     {
       "path": "assets/jdht-c-Dmeu_Fqa.js",
-      "size": 35509,
-      "sha256": "ba1dc77674b45421e006c356f23b0d153b247e06b9032ac687b9b961021642f2"
+      "size": 35505,
+      "sha256": "3a9ddaf42a5541f153ccedbd5b14515992b06b377f7b8e8a6228a74656f93a61"
     },
     {
       "path": "assets/jdht-c-DNCVJGp4.js",
@@ -320,8 +320,8 @@
     },
     {
       "path": "assets/jdht-e-DdM4s9z4.js",
-      "size": 328713,
-      "sha256": "c92f479d0cce4e46955f4c7d98da4258d339d38ea7fbe695302dc26ed7b3475f"
+      "size": 328779,
+      "sha256": "6323837aac49342bcefe2901ff5ec2589a86c4c28fb897ee11fe15f51da04b5a"
     },
     {
       "path": "assets/jdht-s-D35wvt0F.css",
@@ -335,8 +335,8 @@
     },
     {
       "path": "auth-client.js",
-      "size": 141416,
-      "sha256": "3a3a8b18ca7ee89b9eae4fac78f7b3d14fbb987b5077a67a01fb09d1b1d729f8"
+      "size": 141192,
+      "sha256": "d38bb5d732b3d8129a0f669d122a6dc1244875531f0e87fa8497a6af631de6c9"
     },
     {
       "path": "config.js",
@@ -705,8 +705,8 @@
     },
     {
       "path": "rlr/obmw.bundle.js",
-      "size": 369005,
-      "sha256": "46d27fc112283d1154f26e1cdf9add7909fc665d14fd84fd60a19341bdcd2095"
+      "size": 369481,
+      "sha256": "6664a1a2117aa2476e556d8eea84dd4f8393e3f831014f8127d2835735c9b1f2"
     },
     {
       "path": "rlr/obmw.client.js",
@@ -730,8 +730,8 @@
     },
     {
       "path": "tbojzp.js",
-      "size": 2245,
-      "sha256": "16449ef98fbc637aa1e6317e36011cb08590765fc46e39cac769832468fd7490"
+      "size": 2340,
+      "sha256": "5abf98d235c9de2aa7a2da3ed9fd8ee5e9129913c74d7831615dd9c0e6a21026"
     },
     {
       "path": "vendor/lumin.min.js",
@@ -760,8 +760,8 @@
     },
     {
       "path": "xzmo/grhp.all.js",
-      "size": 180322,
-      "sha256": "2c554a03140ed0f021ed29554ae085defb40d4d6e8144bc136b365094bc2e293"
+      "size": 180370,
+      "sha256": "3b5a400306773cfe89bc57fa8c942b0f6d598a999440cc22ab0b5d745bde7c40"
     },
     {
       "path": "xzmo/grhp.sync.js",
@@ -775,8 +775,8 @@
     },
     {
       "path": "ui-dist/client-ui.js",
-      "size": 1205183,
-      "sha256": "74afc0cac8b1b6fc390e9fc7f741039d7db6859757a2529b263354ff1acaddd3"
+      "size": 1205966,
+      "sha256": "28addf6715e8134e05b0569ff842c05f07eb9eb47b1db95eef31a1ed0b096335"
     },
     {
       "path": "ui-dist/client-ui.css",
@@ -785,8 +785,8 @@
     },
     {
       "path": "ui-dist/admin-ui.js",
-      "size": 1629998,
-      "sha256": "b93b1d583a6e03d767b522fa91afc9a0b8af992864c97db00cf5646ff12b172c"
+      "size": 1630793,
+      "sha256": "32382fd54a7796dc180e38dfa689c753081f34e259621d27e999be34d6cf525b"
     },
     {
       "path": "ui-dist/admin-ui.css",
@@ -800,8 +800,23 @@
     },
     {
       "path": "core/proxy/scramjet-worker.js",
-      "size": 1909,
-      "sha256": "2d0d8cf0e0ae38815d9c36e56c199fadb9f51d95b9ae61f404f9a5063c268d39"
+      "size": 2240,
+      "sha256": "6b7693fb5deccf9a04ea61492f0fecc64545f5e52365a73e17505623438cd3ef"
+    },
+    {
+      "path": "core/storage/indexed-db.js",
+      "size": 1853,
+      "sha256": "bb57409bfd01236f6fdc6f54732273890965b35ddc12806f1e1f23b278ecebec"
+    },
+    {
+      "path": "core/navigation/injected-links.js",
+      "size": 818,
+      "sha256": "99f7d8c502555794d1504bebf5ee1b1ec0542f202451fa5357c77111ebdf4904"
+    },
+    {
+      "path": "core/network/wisp-monitor.js",
+      "size": 746,
+      "sha256": "4ea753435c87c7b5b637fd304335d5fee41040fc31130227c9e7a883adad814b"
     }
   ]
 }
