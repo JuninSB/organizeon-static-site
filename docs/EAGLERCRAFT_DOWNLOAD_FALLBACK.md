@@ -28,3 +28,7 @@ Atualização do catálogo/runtime e adição do pacote à allowlist, sem mudar 
 ## Testes
 
 Testes unitários incluem fallback, integridade, arquivos incompletos, origem real e entrega de ZIP intacto com MIME/nome corretos. `ui/e2e/eagler-fallback.cjs` compara o ZIP efetivamente baixado com o SHA-256 do catálogo. `game-download-regression.cjs` verifica jogos anteriores, ausência do Beta e presença do 26.2. A validação de download não certifica gameplay de cada distribuição externa.
+
+## Resultado da revisão ZIP — 18/11/2026
+
+Runtime `v2-3bdcab83e4661698`: 17 testes passaram. Navegador mobile automatizado baixou pelo `/d1/live` o ZIP original 26.2 (57.907.967 bytes) e o ZIP 1.5.2 (9.283.201 bytes), conferindo hashes e nomes. Jogos simples e com vários arquivos continuaram passando, e o teste confirmou ausência do Beta e presença de “Baixar ZIP” no 26.2. Backend permaneceu no mesmo PID durante esta publicação; D3/D4 e Xiaomi continuaram ativos.
