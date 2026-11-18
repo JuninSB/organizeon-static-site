@@ -194,6 +194,6 @@ test("Fern search and settings remain owned by the original client", async () =>
   assert.doesNotMatch(auth, /showHomePanel|mountHomePage/);
   assert.match(auth, /if \(action === "home"\) navigateClientRoute\("\/"\)/);
   assert.match(auth, /if \(action === "settings"\) navigateClientRoute\("\/settings"\)/);
-  assert.match(await text("config.js"), /appModule: "\.\/assets\/jdht-e-DdM4s9z4\.js"/);
+  assert.match(await text("config.js"), /appModule: "\.\/assets\/jdht-e-DdM4s9z4\.js\?v=runtime-[a-f0-9]{16}"/);
   assert.match(auth, /catalogHost\.attachShadow/);
 });
