@@ -1,18 +1,18 @@
-import { fetchExternalGame } from "./core/games/external-download.js?v=runtime-bd09dde12c1faf88";
-import {toPortable,fromPortable} from "./core/storage/portable.js?v=runtime-bd09dde12c1faf88";
-import { clientNotificationsEnabled, installNotificationSettings } from "./core/ui/client-notifications.js?v=runtime-bd09dde12c1faf88";
-import { installBrandFavicon } from "./core/ui/brand.js?v=runtime-bd09dde12c1faf88";
-import { startWispMonitor } from "./core/network/wisp-monitor.js?v=runtime-bd09dde12c1faf88";
-import { openBackupDatabase } from "./core/storage/indexed-db.js?v=runtime-bd09dde12c1faf88";
-const CLIENT_UI_REVISION = "ui-46dd214fc5bd8690";
-const RUNTIME_ASSETS_REVISION = "runtime-bd09dde12c1faf88";
+import { fetchExternalGame } from "./core/games/external-download.js?v=runtime-6c57f9e998b24962";
+import {toPortable,fromPortable} from "./core/storage/portable.js?v=runtime-6c57f9e998b24962";
+import { clientNotificationsEnabled, installNotificationSettings } from "./core/ui/client-notifications.js?v=runtime-6c57f9e998b24962";
+import { installBrandFavicon } from "./core/ui/brand.js?v=runtime-6c57f9e998b24962";
+import { startWispMonitor } from "./core/network/wisp-monitor.js?v=runtime-6c57f9e998b24962";
+import { openBackupDatabase } from "./core/storage/indexed-db.js?v=runtime-6c57f9e998b24962";
+const CLIENT_UI_REVISION = "ui-dbfc7147370f032f";
+const RUNTIME_ASSETS_REVISION = "runtime-6c57f9e998b24962";
 // Shared lazy UI loader: all surfaces use the same compiled React bundle.
 let clientUIPromise;
 function loadClientUI() {
   if (!clientUIPromise) clientUIPromise = (async () => {
     const base = new URL(window.__groveBase || "./", document.baseURI);
-    const script = new URL("ui-dist/client-ui.js?v=runtime-bd09dde12c1faf88", base);
-    const css = new URL("ui-dist/client-ui.css?v=runtime-bd09dde12c1faf88", base);
+    const script = new URL("ui-dist/client-ui.js?v=runtime-6c57f9e998b24962", base);
+    const css = new URL("ui-dist/client-ui.css?v=runtime-6c57f9e998b24962", base);
     const version = window.__ORGANIZEON_CLIENT_VERSION__ || CLIENT_UI_REVISION;
     if (version) { script.searchParams.set("v", version); css.searchParams.set("v", version); }
     return { ui: await import(script.href), css: css.href };
@@ -2222,7 +2222,7 @@ async function showGameCatalog() {
 
   async function ensureGameServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
-    const workerURL=assetUrl("games/game-sw.js?v=runtime-bd09dde12c1faf88");workerURL.searchParams.set("v","games-runtime-2");
+    const workerURL=assetUrl("games/game-sw.js?v=runtime-6c57f9e998b24962");workerURL.searchParams.set("v","games-runtime-2");
     const registration=await navigator.serviceWorker.register(workerURL.href,{scope:assetUrl("games/").pathname,updateViaCache:"none"});
     const worker=registration.installing||registration.waiting||registration.active;
     if(!worker||worker.state==="activated")return;
@@ -3285,8 +3285,8 @@ function showLogin(message = "") {
   });
 
   const uiBase = new URL(window.__groveBase || "./", document.baseURI);
-  const script = new URL("ui-dist/client-ui.js?v=runtime-bd09dde12c1faf88", uiBase);
-  const stylesheet = new URL("ui-dist/client-ui.css?v=runtime-bd09dde12c1faf88", uiBase);
+  const script = new URL("ui-dist/client-ui.js?v=runtime-6c57f9e998b24962", uiBase);
+  const stylesheet = new URL("ui-dist/client-ui.css?v=runtime-6c57f9e998b24962", uiBase);
   const version = window.__ORGANIZEON_CLIENT_VERSION__ || CLIENT_UI_REVISION;
   if (version) { script.searchParams.set("v", version); stylesheet.searchParams.set("v", version); }
   void import(script.href).then((module) => {

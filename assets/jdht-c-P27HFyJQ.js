@@ -1,1 +1,1 @@
-import{j as o}from"./jdht-c-B2CXxlfg.js?v=runtime-bd09dde12c1faf88";function e(){return o.jsx("div",{children:"looks like you tried to make a request to Scramjet but it didn't go through correctly - please report this in our discord server"})}export{e as component};
+import{j as o}from"./jdht-c-B2CXxlfg.js?v=runtime-6c57f9e998b24962";function e(){return o.jsx("div",{children:"looks like you tried to make a request to Scramjet but it didn't go through correctly - please report this in our discord server"})}export{e as component};

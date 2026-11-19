@@ -1,4 +1,4 @@
-import { Terminal } from "./vendor/xterm.mjs?v=runtime-bd09dde12c1faf88";
+import { Terminal } from "./vendor/xterm.mjs?v=runtime-6c57f9e998b24962";
 
 const config = window.__ORGANIZEON_CONFIG__;
 const tokenKey = "organizeon-access-token";
