@@ -38,4 +38,8 @@ Frontend compartilhado: `features/messages/media-policy.ts`, stores, serviço e 
 
 ## Validação
 
-52 testes backend passaram, incluindo upload real de 50 MiB, compartilhamento, reenvio idêntico, prazo global, permissões A/B, exclusão da última referência, limites exatos, meses/leap year, migração e remoção dos bytes. Nove testes de mídia/HTTP também passaram no Android com banco de teste. Clone da base real migrou com integrity_check=ok, preservando bytes e contagem de mídia. Cinco testes UI passaram; typecheck/build client/admin/D3/D4 passaram. Teste de navegador com duas contas fictícias passou: solicitações, mensagens, edição, notificações, imagem privada, gestos e responsividade. Não foram enviadas DMs de teste entre contas reais.
+53 testes backend passaram, incluindo upload real de 50 MiB, compartilhamento, reenvio idêntico, prazo global, permissões A/B, exclusão da última referência, limites exatos, meses/leap year, migração e remoção dos bytes. Nove testes de mídia/HTTP também passaram no Android com banco de teste. Clone da base real migrou com integrity_check=ok, preservando bytes e contagem de mídia. Cinco testes UI passaram; typecheck/build client/admin/D3/D4 passaram. Teste de navegador com duas contas fictícias passou: solicitações, mensagens, edição, notificações, imagem privada, gestos e responsividade. Não foram enviadas DMs de teste entre contas reais.
+
+## Publicação de 19/11/2026
+
+Runtime `v2-26fe22c6316a0148`, D2 `dm50-80e29d996462`, D3 `index-Dn_8WGpr.js`, D4 `d4-BFrSF4sc.js`. Client/admin e entrada do admin públicos conferidos por SHA-256 após publicação Pages. Node foi reiniciado para carregar o store e o timer; D3/D4 receberam overlay de assets e troca atômica de index, sem restart. O banco ativo passou em integrity_check, com a mídia existente preservada. Endpoints sem sessão continuam retornando 401.
