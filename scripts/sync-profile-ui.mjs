@@ -61,6 +61,7 @@ const files = [
   "features/messages/new-conversation.tsx",
   "features/messages/requests-list.tsx",
   "features/messages/types.ts",
+  "features/messages/media-policy.ts",
   "features/messages/use-message-gestures.ts",
 ];
 for (const file of files) {

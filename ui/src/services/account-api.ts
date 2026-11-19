@@ -1,4 +1,4 @@
-export type AccountRequestOptions = RequestInit & { onUploadProgress?: (loaded: number, total: number) => void };
+export type AccountRequestOptions = RequestInit & { timeoutMs?: number; onUploadProgress?: (loaded: number, total: number) => void };
 type AccountTransport = (path: string, options: AccountRequestOptions) => Promise<any>;
 let transport: AccountTransport | undefined;
 export function configureAccountTransport(next: AccountTransport) {
@@ -16,6 +16,7 @@ const messages: Record<string, string> = {
   password_confirmation_mismatch: "As novas senhas não coincidem.",
   too_many_attempts: "Muitas tentativas. Aguarde antes de tentar novamente.",
   request_too_large: "O arquivo excede o tamanho permitido.",
+  dm_attachment_expired: "Este arquivo expirou e foi removido.",
   dm_user_not_found: "Conta não encontrada. Confira o @usuário.",
   dm_self_request: "Escolha outra conta para iniciar uma conversa.",
   dm_request_pending: "Aguarde a solicitação ser aceita.",
@@ -26,7 +27,7 @@ const messages: Record<string, string> = {
   dm_conversation_not_found: "Conversa não encontrada.",
   dm_message_not_found: "Esta mensagem não está mais disponível.",
   dm_rate_limited: "Aguarde um momento antes de tentar novamente.",
-  dm_file_too_large: "Cada arquivo pode ter até 8 MB.",
+  dm_file_too_large: "Cada arquivo pode ter até 50 MB.",
   dm_media_quota: "Você atingiu o limite de mídia das DMs.",
   dm_storage_full: "O armazenamento de mídia está cheio.",
   dm_invalid_message: "Confira o texto e os anexos da mensagem.",
@@ -92,7 +93,7 @@ export async function accountRequest<T = any>(
     headers.set("Authorization", "Bearer " + token);
   if (options.onUploadProgress) {
     return new Promise<T>((resolve,reject)=>{
-      const xhr=new XMLHttpRequest();xhr.open(options.method || "POST",endpoint(path));xhr.withCredentials=true;xhr.timeout=120000;
+      const xhr=new XMLHttpRequest();xhr.open(options.method || "POST",endpoint(path));xhr.withCredentials=true;xhr.timeout=options.timeoutMs || 120000;
       headers.forEach((value,key)=>xhr.setRequestHeader(key,value));
       xhr.upload.onprogress=event=>{if(event.lengthComputable)options.onUploadProgress?.(event.loaded,event.total);};
       xhr.onerror=()=>reject(new AccountApiError(0,"network_error"));xhr.ontimeout=xhr.onerror;

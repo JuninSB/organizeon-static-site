@@ -1,3 +1,4 @@
+import { DM_FILE_LIMIT, DM_FILE_LIMIT_MESSAGE } from "@/features/messages/media-policy";
 import { accountSession } from "@/core/account-session";
 import { accountRequest } from "./account-api";
 import type {
@@ -186,8 +187,8 @@ export const dmService = {
     onProgress?: (loaded: number, total: number) => void,
     resetVersion = 0,
   ) => {
-    if (file.size > 8 * 1024 * 1024)
-      throw Error("Cada arquivo pode ter até 8 MB.");
+    if (file.size > DM_FILE_LIMIT)
+      throw Error(DM_FILE_LIMIT_MESSAGE);
     const session = accountSession.get();
     const data = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -202,6 +203,7 @@ export const dmService = {
       {
         method: "POST",
         onUploadProgress: onProgress,
+        timeoutMs: 600000,
         body: JSON.stringify({
           name: file.name,
           mime: file.type || "application/octet-stream",
@@ -214,6 +216,7 @@ export const dmService = {
   attachment: (attachmentId: string) =>
     accountRequest<{ attachment: DmAttachment & { data: string } }>(
       "/dm/attachments/" + id(attachmentId),
+      {signal: AbortSignal.timeout(300000)},
     ),
   discardAttachment: (attachmentId: string) =>
     accountRequest("/dm/attachments/" + id(attachmentId), { method: "DELETE" }),

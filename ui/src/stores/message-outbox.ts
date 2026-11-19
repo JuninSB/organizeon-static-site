@@ -1,3 +1,4 @@
+import { DM_FILE_LIMIT, DM_FILE_LIMIT_MESSAGE } from "@/features/messages/media-policy";
 import { useSyncExternalStore } from "react";
 import { dmService } from "@/services/messages-service";
 import { uniqueId } from "@/utils/unique-id";
@@ -37,7 +38,7 @@ async function transmit(id:string):Promise<void>{
 export const messageOutbox={
  get:()=>state,
  subscribe(listener:()=>void){listeners.add(listener);return()=>{listeners.delete(listener);};},
- stage(conversationId:string,file:File){if(file.size>8*1024*1024)throw Error("Cada arquivo pode ter até 8 MB.");const current=state.drafts[conversationId]||[];if(current.length>=4)throw Error("Você pode adicionar até quatro arquivos.");const item={id:uniqueId(),name:file.name,size:file.size,mime:file.type,preview:/^(image|video)\//.test(file.type)?URL.createObjectURL(file):undefined};files.set(item.id,file);state={...state,drafts:{...state.drafts,[conversationId]:[...current,item]}};emit();},
+ stage(conversationId:string,file:File){if(file.size>DM_FILE_LIMIT)throw Error(DM_FILE_LIMIT_MESSAGE);const current=state.drafts[conversationId]||[];if(current.length>=4)throw Error("Você pode adicionar até quatro arquivos.");const item={id:uniqueId(),name:file.name,size:file.size,mime:file.type,preview:/^(image|video)\//.test(file.type)?URL.createObjectURL(file):undefined};files.set(item.id,file);state={...state,drafts:{...state.drafts,[conversationId]:[...current,item]}};emit();},
  removeDraft(conversationId:string,id:string){const list=state.drafts[conversationId]||[];release(list.filter(item=>item.id===id));state={...state,drafts:{...state.drafts,[conversationId]:list.filter(item=>item.id!==id)}};emit();},
  enqueue(values:{conversationId:string;resetVersion?:number;content:string;replyId:string|null;attachmentIds:string[]},confirmed:(message:DmMessage)=>void){const nonce=uniqueId(),id="pending-"+nonce;const row:PendingMessage={...values,id,nonce,media:state.drafts[values.conversationId]||[],status:"sending",progress:null,error:""};callbacks.set(id,confirmed);state={drafts:{...state.drafts,[values.conversationId]:[]},pending:[...state.pending,row]};emit();return transmit(id);},
  retry:transmit,

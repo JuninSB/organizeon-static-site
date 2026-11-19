@@ -244,3 +244,7 @@ Gradiente: a malha agora usa a cor-base saturada (`body`) em quatro variações 
 Validação/publicação: oito testes backend passaram localmente e no Termux com fixtures; 40/41 testes UI passaram na execução concorrente, um teste D2 atingiu timeout de 5s e passou na repetição isolada. Typecheck, builds client/admin/D3 e 13 testes distribuição passaram. Fluxo de aparência testado em navegador com API fixture: cor independente, patch salvo, máscara oficial, crop e navegação; screenshot mobile inspecionado. Toque físico não testado. Gradiente saturado inspecionado no catálogo. Distribuição `7da1064`, Pages `43985433465` concluído; SHA-256 dos quatro bundles públicos conferidos. D2 referências `bannercolor-7da1064`, D3 entry `index-Cwfd6iXz.js`. Backend health 200, D3/Survival e tmux Xiaomi ativos. Rollback backend `~/.local/share/organizeon/rollback/bannercolor-20261116-210950/profiles.mjs` (restaurar arquivo e reiniciar somente backend); D3/template `~/organizeon/backend/staging/d3-bannercolor-rollback-20261116-211028/` (restaurar index/template/fontes). Não remover assets antigos. Nenhuma requisição Xiaomi ou modificação em conta real nos testes.
 
 Reset privilegiado, versões de conversa e publicação web: [DM_RESET_AND_LIVE.md](DM_RESET_AND_LIVE.md).
+
+## Mídia: limite de 50 MB e retenção compartilhada
+
+A política atual, deduplicação por SHA-256, renovação por reenvio, expiração e testes estão em [DM_MEDIA_RETENTION.md](DM_MEDIA_RETENTION.md). Essa revisão substitui os limites de 8 MB mencionados no histórico acima.

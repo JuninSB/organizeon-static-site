@@ -1,6 +1,6 @@
 import { m } from "@/core/motion";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, File, Image, LoaderCircle, Play } from "lucide-react";
+import { Download, File, FileClock, Image, LoaderCircle, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dmService } from "@/services/messages-service";
 import type { DmAttachment } from "./types";
@@ -29,6 +29,7 @@ export function MessageMedia({
   bookmarked?: boolean;
 }) {
   const [viewing, setViewing] = useState(false);
+  const [expired, setExpired] = useState(!!attachment.expired);
   const host = useRef<HTMLDivElement>(null),
     alive = useRef(true),
     inFlight = useRef(false),
@@ -48,15 +49,25 @@ export function MessageMedia({
     },
     [url],
   );
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const check = () => {
+      const remaining = attachment.expiresAt ? Date.parse(attachment.expiresAt) - Date.now() : Infinity;
+      if (attachment.expired || remaining <= 0) { setExpired(true); setViewing(false); setUrl(null); }
+      else { setExpired(false); if(Number.isFinite(remaining)) timer=setTimeout(check,Math.min(remaining,2_000_000_000)); }
+    };
+    check();return () => clearTimeout(timer);
+  }, [attachment.expired,attachment.expiresAt]);
   const type = attachment.mime.split("/")[0],
     preview = ["image", "video", "audio"].includes(type);
   const load = useCallback(async () => {
-    if (inFlight.current || url) return;
+    if (inFlight.current || url || expired) return;
     inFlight.current = true;
     setLoading(true);
     setError("");
     try {
       const result = await dmService.attachment(attachment.id);
+      if (attachment.expired || (attachment.expiresAt && Date.parse(attachment.expiresAt) <= Date.now())) { setExpired(true); return; }
       const binary = atob(result.attachment.data),
         array = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
@@ -83,9 +94,10 @@ export function MessageMedia({
       inFlight.current = false;
       if (alive.current) setLoading(false);
     }
-  }, [attachment.id, attachment.mime, attachment.name, preview, url]);
+  }, [attachment.id, attachment.mime, attachment.name, attachment.expired, attachment.expiresAt, expired, preview, url]);
   useEffect(() => {
     if (
+      expired ||
       type !== "image" ||
       attachment.size > 1048576 ||
       !host.current ||
@@ -107,7 +119,11 @@ export function MessageMedia({
     );
     observer.observe(host.current);
     return () => observer.disconnect();
-  }, [attachment.size, type, load]);
+  }, [attachment.size, type, expired, load]);
+  if (expired) return <div className="mt-2 flex max-w-full items-center gap-2 rounded-xl bg-card p-3 text-muted-foreground" data-no-swipe>
+    <FileClock className="size-4 shrink-0" aria-hidden="true" />
+    <span className="min-w-0"><span className="block max-w-52 truncate text-xs">{attachment.name}</span><span className="text-[10px]">Arquivo expirado</span></span>
+  </div>;
   return (
     <div
       ref={host}
@@ -167,6 +183,7 @@ export function MessageMedia({
           {!preview && <Download className="size-3" />}
         </Button>
       )}
+      {attachment.expiresAt && <p className="px-3 pb-2 text-[10px] text-muted-foreground">Disponível até {new Intl.DateTimeFormat("pt-BR",{dateStyle:"short"}).format(new Date(attachment.expiresAt))}</p>}
       {error && (
         <p role="alert" className="mt-1 max-w-60 text-xs text-destructive">
           {error}

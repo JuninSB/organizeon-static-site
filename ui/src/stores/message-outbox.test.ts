@@ -20,3 +20,10 @@ it("separates actual upload progress from acknowledgement and reuses uploaded at
  messageOutbox.stage("c",new File(["hello"],"test.txt",{type:"text/plain"}));const work=messageOutbox.enqueue({conversationId:"c",content:"",replyId:null,attachmentIds:[]},vi.fn());
  await vi.waitFor(()=>expect(messageOutbox.get().pending[0].status).toBe("confirming"));expect(messageOutbox.get().pending[0].progress).toBe(100);ack({message:{id:"m"}});await work;expect(messageOutbox.get().pending).toHaveLength(0);
 });
+it("accepts 50 MB in the draft and rejects anything above it",()=>{
+ accountSession.activate("limit-fixture");
+ const exact=new File(["a"],"large.bin");Object.defineProperty(exact,"size",{value:50*1024*1024});
+ expect(()=>messageOutbox.stage("limits",exact)).not.toThrow();
+ const oversized=new File(["b"],"too-large.bin");Object.defineProperty(oversized,"size",{value:50*1024*1024+1});
+ expect(()=>messageOutbox.stage("limits",oversized)).toThrow("50 MB");
+});

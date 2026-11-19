@@ -11,6 +11,8 @@ export type DmAttachment = {
   name: string;
   mime: string;
   size: number;
+  expiresAt?: string | null;
+  expired?: boolean;
 };
 export type DmMessage = {
   clientNonce?: string;
